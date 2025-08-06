@@ -1,0 +1,23 @@
+using Godot;
+using System;
+using CombatCore;
+
+public partial class CombatState : Node
+{
+	public PhaseContext PhaseCtx;
+	//public Actor Player;
+
+	public CombatState()
+	{
+		// ✅ 這裡執行在 new 時，無法 GetNode 或操作場景
+		PhaseCtx.Init();
+	}
+
+
+	public override void _Ready()
+	{
+		GD.Print("Combat state is ready");
+	}
+
+
+}

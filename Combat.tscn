@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://c82pb1vuwbgl8"]
+
+[ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Script/Combat.cs" id="1_vj48t"]
+[ext_resource type="Script" uid="uid://tnab43xblpur" path="res://CombatState.cs" id="2_h3bse"]
+
+[node name="Combat" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatState")]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_vj48t")
+CombatState = NodePath("../CombatState")
+
+[node name="CombatState" type="Node" parent="."]
+script = ExtResource("2_h3bse")
