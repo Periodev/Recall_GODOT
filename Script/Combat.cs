@@ -4,8 +4,8 @@ using CombatCore;
 
 public partial class Combat : Control
 {
-	[Export] public CombatState CombatState;	// manually bind in inspector
-	[Export] public PlayerView PlayerView;		// manually bind in inspector
+	[Export] public CombatState CombatState;	// manually bind model.cs in inspector
+	[Export] public PlayerView PlayerView;		// manually bind view.tscn instance in inspector
 
 	public override void _Ready()
 	{
