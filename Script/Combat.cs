@@ -4,8 +4,9 @@ using CombatCore;
 
 public partial class Combat : Control
 {
-	[Export] public CombatState CombatState;
-	
+	[Export] public CombatState CombatState;	// manually bind in inspector
+	[Export] public PlayerView PlayerView;		// manually bind in inspector
+
 	public override void _Ready()
 	{
 		GD.Print("Combat is ready");
@@ -18,7 +19,12 @@ public partial class Combat : Control
 		if (CombatState != null)
 		{
 			GD.Print("read CombatState success");
+			
+			
 		}
+
+		PlayerView.BindActor(CombatState.Player);
+
 
 		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
 

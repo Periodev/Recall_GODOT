@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3284mdfjg13m"]
+
+[ext_resource type="Script" uid="uid://drb6gylfe86wb" path="res://Script/UI/PlayerView.cs" id="1_r3aac"]
+
+[node name="PlayerView" type="Node2D" node_paths=PackedStringArray("HpLabel")]
+script = ExtResource("1_r3aac")
+HpLabel = NodePath("HpLabel")
+
+[node name="HpLabel" type="Label" parent="."]
+offset_left = 41.0
+offset_top = 33.0
+offset_right = 209.0
+offset_bottom = 113.0
