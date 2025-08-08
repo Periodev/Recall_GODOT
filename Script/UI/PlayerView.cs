@@ -1,9 +1,13 @@
 using Godot;
 using System;
+using CombatCore;
 
 public partial class PlayerView : Node2D
 {
+	[Export] public Combat Control;
+
 	[Export] public Label HpLabel;
+	[Export] public Label ChargeLabel;
 
 	private Actor _actor;
 	
@@ -13,11 +17,15 @@ public partial class PlayerView : Node2D
 		UpdateVisual();
 	}
 
+	public override void _Ready()
+	{
+	}
+
+
 	public void UpdateVisual()
 	{
 		if (_actor == null) return;
 		HpLabel.Text = $"HP: {_actor.HP}/{_actor.MaxHP}";
+		ChargeLabel.Text = $"Charge: {_actor.Charge?.Value ?? 0}/3";
 	}
-
-	
 }

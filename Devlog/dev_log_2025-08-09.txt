@@ -1,0 +1,70 @@
+✅ 2025-08-08《Recall》Combat UI Signal Relay 系統開發紀錄
+🎯 核心目標
+建立從資料層 (Charge) 到 UI (PlayerView) 的訊號更新機制，不經過 Godot signal，並保持資料邏輯與 UI 完全解耦。
+
+✅ 完成項目
+🔧 1. Charge Component 實作通知邏輯
+改為純資料結構 Charge.cs，不繼承 Node
+
+每次變化時呼叫 UISignalHub.NotifyChargeChanged(Value);
+
+完全不依賴 EmitSignal、Node、Callback，單向資料回報
+
+🔧 2. 建立 UISignalHub 中介層
+使用 static class + Action<int>? 結構設計
+
+方法：NotifyChargeChanged(int) → 呼叫註冊者
+
+UI 層可直接 += 或 -= 訂閱變化，不需 Godot signal
+
+🔧 3. PlayerView 成功接收訊號並更新 UI
+加入 UISignalHub.OnChargeChanged += (...) 訂閱邏輯
+
+使用 ChargeLabel.Text = $"Charge: {value}/3" 實時更新畫面
+
+加上 BindActor(Actor) + UpdateVisual() 模組化邏輯
+
+🧼 4. 移除 Combat 發送 Godot Signal 的過時寫法
+原本嘗試用 EmitSignal(nameof(ChargeChangedEventHandler)) 發送 UI 更新
+
+最終因未被 PlayerView 訂閱 + runtime register 錯誤（GD0201, ERR_UNAVAILABLE）→ 移除
+
+改為單純轉發 UI 事件的 UISignalHub 設計
+
+🛠️ 5. Debug 支援與錯誤處理
+多次排查 Godot signal 無法註冊問題，最終確定是 Combat 節點未刷新 C# signal metadata 導致
+
+成功切換架構至 UI hub 訂閱式模式後，一切行為穩定
+
+❗ 遇到的錯誤與處理方式
+錯誤類型	解法
+CS0103 signal 名稱不存在	原因：未加 [Signal] 或命名不符合 Godot 規範
+GD0201 signal 名稱需以 EventHandler 結尾	✅ 改名為 ChargeChangedEventHandler
+ERR_UNAVAILABLE emit signal 不存在	✅ 最終捨棄 EmitSignal 做法，改為 UI Hub callback
+Control GetNode() 錯誤	✅ 使用 [Export] 或相對路徑取得節點
+
+📁 影響與更新的檔案
+Component.cs（Charge）
+
+UISignalHub.cs
+
+PlayerView.cs
+
+Combat.cs（後來簡化，移除 signal）
+
+📈 今日成果總結
+模組	狀態
+Charge → Notify	✅ 成功
+UISignalHub 中繼	✅ 成功
+PlayerView 訂閱更新	✅ 成功
+Godot Signal 測試	✅ 嘗試過 → 最終移除
+UI 連動測試	✅ 顯示 Charge: X/3 正常更新
+
+🔜 建議下個步驟
+支援更多屬性（如 HP、Shield）→ 加入 OnHPChanged 等欄位
+
+加入 actorId → 支援多角色訊號（e.g., NotifyChargeChanged(string actorId, int value))
+
+轉為 ActorView 泛型結構 → 可支援 Player / Enemy
+
+加入 Disconnect 清理 (-=) 或 _ExitTree() 清除訂閱

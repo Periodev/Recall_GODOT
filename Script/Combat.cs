@@ -4,23 +4,26 @@ using CombatCore;
 
 public partial class Combat : Control
 {
-	[Export] public CombatState CombatState;	// manually bind model.cs in inspector
-	[Export] public PlayerView PlayerView;		// manually bind view.tscn instance in inspector
+	[Export] public CombatState CombatState;    // manually bind model.cs in inspector
+	[Export] public PlayerView PlayerView;      // manually bind view.tscn instance in inspector
 
 	public override void _Ready()
 	{
+
 		GD.Print("Combat is ready");
+
 		// Initialize combat state
 		if (CombatState == null)
 		{
 			//AddChild(CombatState);
-			GD.Print("need to create CombatState");		
+			GD.Print("need to create CombatState");
 		}
 		if (CombatState != null)
 		{
 			GD.Print("read CombatState success");
-			
-			
+
+			UISignalHub.OnChargeChanged += OnChargeChanged;
+
 		}
 
 		PlayerView.BindActor(CombatState.Player);
@@ -28,6 +31,18 @@ public partial class Combat : Control
 
 		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
 
+		CombatState.Player.Charge.Add(1);
 	}
 	
+	public override void _ExitTree()
+	{
+		// 記得取消訂閱避免記憶體洩漏
+		UISignalHub.OnChargeChanged -= OnChargeChanged;
+	}
+	
+	private void OnChargeChanged(int newCharge)
+	{
+		GD.Print($"Combat received charge changed: {newCharge}");
+		PlayerView.UpdateVisual(); // 通知 View 更新
+	}
 }

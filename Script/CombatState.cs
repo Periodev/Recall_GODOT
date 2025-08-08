@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using CombatCore;
+using CombatCore.Component;
 
 public partial class CombatState : Node
 {
@@ -13,7 +14,6 @@ public partial class CombatState : Node
 		PhaseCtx.Init();
 		Player = new Actor(100);
 	}
-
 
 	public override void _Ready()
 	{

@@ -23,4 +23,5 @@ script = ExtResource("2_vvyul")
 
 [node name="UI" type="Node2D" parent="."]
 
-[node name="PlayerView" parent="UI" instance=ExtResource("3_vvyul")]
+[node name="PlayerView" parent="UI" node_paths=PackedStringArray("Control") instance=ExtResource("3_vvyul")]
+Control = NodePath("../../Control")
