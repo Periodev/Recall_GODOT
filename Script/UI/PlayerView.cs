@@ -25,7 +25,7 @@ public partial class PlayerView : Node2D
 	public void UpdateVisual()
 	{
 		if (_actor == null) return;
-		HpLabel.Text = $"HP: {_actor.HP}/{_actor.MaxHP}";
+		HpLabel.Text = $"HP: {_actor.HP.Value}/{_actor.HP.Max}";
 		ChargeLabel.Text = $"Charge: {_actor.Charge?.Value ?? 0}/3";
 	}
 }

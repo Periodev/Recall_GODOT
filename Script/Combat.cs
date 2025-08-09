@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using CombatCore;
+using CombatCore.Component;
 
 public partial class Combat : Control
 {
@@ -31,15 +32,15 @@ public partial class Combat : Control
 
 		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
 
-		CombatState.Player.Charge.Add(1);
+		ActorOp.Add(CombatState.Player, ComponentType.Charge, 1); // 使用 ActorOp 來增加 Charge
 	}
-	
+
 	public override void _ExitTree()
 	{
 		// 記得取消訂閱避免記憶體洩漏
 		UISignalHub.OnChargeChanged -= OnChargeChanged;
 	}
-	
+
 	private void OnChargeChanged(int newCharge)
 	{
 		GD.Print($"Combat received charge changed: {newCharge}");

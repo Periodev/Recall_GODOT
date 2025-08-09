@@ -4,44 +4,36 @@ using CombatCore;
 
 namespace CombatCore.Component
 {
-	public class Charge
+	public enum ComponentType { HP, Shield, Charge, MaxNum }
+
+	// 統一的基類，但只有數據
+	public class Component
 	{
-		public const int MaxCharge = 3;
 		public int Value;
-		public void Add(int amount)
-		{
-			Value = Math.Min(Value + amount, MaxCharge);
-			UISignalHub.NotifyChargeChanged(Value);
-		}
+		public int? Max;  // 統一的可選上限
 
-		public void Cut(int amount)
+		public Component(int? max = null)
 		{
-			Value = Math.Max(0, Value - amount);
-			UISignalHub.NotifyChargeChanged(Value);
+			Max = max;
 		}
-
-		public bool Use(int amount)
-		{
-			if (Value < amount) return false;
-			Value -= amount;
-			UISignalHub.NotifyChargeChanged(Value);
-			return true;
-		}
-
-		public bool UseAll()
-		{
-			if (Value == 0) return false;
-			Value = 0;
-			UISignalHub.NotifyChargeChanged(Value);
-			return true;
-		}
-
-		public void Clear()
-		{
-			Value = 0;
-			UISignalHub.NotifyChargeChanged(Value);
-		}
-
 	}
 
+	// 具體的 component 只是不同的實例
+	public class Shield : Component
+	{
+		public Shield() : base(int.MaxValue) { }  // 無上限
+	}
+
+	public class Charge : Component  
+	{
+		public Charge() : base(3) { }     // 上限 3
+	}
+
+	public class HP : Component
+	{
+		public HP(int maxHP) : base(maxHP) 
+		{
+			Value = maxHP;  // 初始滿血
+		}
+	}
 }
