@@ -10,6 +10,8 @@ public static class UISignalHub
 	public static Action<int>? OnHPChanged;
 	public static Action<int>? OnChargeChanged;
 	public static Action<int>? OnShieldChanged;
+	public static Action<int>? OnAPChanged;
+
 
 	public static void NotifyHPChanged(int value)
 	{
@@ -24,6 +26,11 @@ public static class UISignalHub
 	public static void NotifyShieldChanged(int value)
 	{
 		OnShieldChanged?.Invoke(value);
+	}
+
+	public static void NotifyAPChanged(int value)
+	{
+		OnAPChanged?.Invoke(value);
 	}
 
 }

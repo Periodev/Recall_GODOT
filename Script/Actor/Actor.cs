@@ -5,24 +5,23 @@ using CombatCore.Component;
 
 public class Actor
 {
-	public Component[] _components;
+	public HP HP { get; }
+	public Shield Shield { get; }
+	public AP AP { get; }
+	public Charge? Charge { get; }
 
-	public Actor(int maxHP)
+	public Actor(int maxHP, bool withCharge = true)
 	{
-		_components = new Component[(int)ComponentType.MaxNum];  
-		_components[(int)ComponentType.HP]     = new HP(maxHP);
-		_components[(int)ComponentType.Shield] = new Shield();
-		_components[(int)ComponentType.Charge] = new Charge();
+		HP = new HP(maxHP);
+		Shield = new Shield();
+		if (withCharge) Charge = new Charge();
 	}
 
-	// 型別安全的存取器：回傳物件本身（class），直接改它的 Value 就行
-	public HP HP         => (HP)_components[(int)ComponentType.HP];
-	public Shield Shield => (Shield)_components[(int)ComponentType.Shield];
-	public Charge Charge => (Charge)_components[(int)ComponentType.Charge];
-	
-	// 內部用的 slot 存取
-	public T Get<T>(ComponentType type) where T : Component
-		=> (T)_components[(int)type];	// 這樣可以直接用 ActorOp 的方法來操作
-
-
+	public T? Get<T>() where T : Component
+	{
+		if (typeof(T) == typeof(HP)) return HP as T;
+		if (typeof(T) == typeof(Shield)) return Shield as T;
+		if (typeof(T) == typeof(Charge)) return Charge as T;
+		return null;
+	}
 }

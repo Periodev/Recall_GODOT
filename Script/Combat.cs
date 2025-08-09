@@ -32,7 +32,7 @@ public partial class Combat : Control
 
 		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
 
-		ActorOp.Add(CombatState.Player, ComponentType.Charge, 1); // 使用 ActorOp 來增加 Charge
+		ActorOp.Add<Charge>(CombatState.Player, 1); // 初始充能
 	}
 
 	public override void _ExitTree()
