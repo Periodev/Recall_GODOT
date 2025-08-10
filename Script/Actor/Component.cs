@@ -6,10 +6,10 @@ namespace CombatCore.Component
 {
 	public class Component
 	{
-        // Interface, only for type checking
-        public interface IBasic { }
-        public interface IAbility { }
-        public interface IBuff { }
+		// Interface, only for type checking
+		public interface IBasic { }
+		public interface IAbility { }
+		public interface IBuff { }
 
 		public int Value;
 		public int? Max;
@@ -54,13 +54,13 @@ namespace CombatCore.Component
 
 	public class AP : Component, Component.IBasic
 	{
-        public int PerTurn { get; private set; }
+		public int PerTurn { get; private set; }
 
 		public AP(int perTurn) : base(null)
-        {
-            PerTurn = perTurn;      // 設定每回合恢復量
-            Value = perTurn;        // 初始 AP 設定為每回合恢復的值
-        }
+		{
+			PerTurn = perTurn;      // 設定每回合恢復量
+			Value = perTurn;        // 初始 AP 設定為每回合恢復的值
+		}
 
 		public void Refill()
 		{
