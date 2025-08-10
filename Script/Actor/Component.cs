@@ -6,6 +6,11 @@ namespace CombatCore.Component
 {
 	public class Component
 	{
+        // Interface, only for type checking
+        public interface IBasic { }
+        public interface IAbility { }
+        public interface IBuff { }
+
 		public int Value;
 		public int? Max;
 
@@ -39,7 +44,7 @@ namespace CombatCore.Component
 		}
 	}
 
-	public class HP : Component
+	public class HP : Component, Component.IBasic
 	{
 		public HP(int maxHP) : base(maxHP)
 		{
@@ -47,20 +52,15 @@ namespace CombatCore.Component
 		}
 	}
 
-	public class AP : Component
+	public class AP : Component, Component.IBasic
 	{
-		public int PerTurn => Max ?? 0;     // 每回合恢復的 AP
+        public int PerTurn { get; private set; }
 
-		public AP(int perTurn) : base(perTurn)
-		{
-			Value = perTurn;        // 初始 AP 設定為每回合恢復的值
-		}
-
-		public override void Add(int amount)
-		{
-			if (amount <= 0) return;
-			Value += amount;        //  no Max limit for AP
-		}
+		public AP(int perTurn) : base(null)
+        {
+            PerTurn = perTurn;      // 設定每回合恢復量
+            Value = perTurn;        // 初始 AP 設定為每回合恢復的值
+        }
 
 		public void Refill()
 		{
@@ -69,12 +69,12 @@ namespace CombatCore.Component
 	}
 
 
-	public class Shield : Component
+	public class Shield : Component, Component.IBasic
 	{
-		public Shield() : base(int.MaxValue) { }
+		public Shield() : base(null) { }
 	}
 
-	public class Charge : Component
+	public class Charge : Component, Component.IBasic
 	{
 		public Charge() : base(3) { }
 	}
