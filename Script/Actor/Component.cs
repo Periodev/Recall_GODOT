@@ -21,19 +21,26 @@ namespace CombatCore.Component
 
 		public virtual void Clear() => Value = 0;
 
-		public virtual void Add(int amount)
+		public virtual int Add(int amount)
 		{
-			if (amount <= 0) return;
+			int lastValue = Value;
+
+			if (amount <= 0) return 0;
 			if (Max.HasValue)
 				Value = Math.Min(Value + amount, Max.Value);
 			else
 				Value += amount;
+
+			return Value - lastValue; // 返回實際增加的值
 		}
 
-		public virtual void Cut(int amount)
+		public virtual int Cut(int amount)
 		{
-			if (amount <= 0) return;
+			int lastValue = Value;
+
+			if (amount <= 0) return 0;
 			Value = Math.Max(0, Value - amount);
+			return lastValue - Value;      // 返回實際減少的值
 		}
 
 		public virtual bool Use(int amount)
@@ -62,9 +69,11 @@ namespace CombatCore.Component
 			Value = perTurn;        // 初始 AP 設定為每回合恢復的值
 		}
 
-		public void Refill()
+		public int Refill()
 		{
-			Value = PerTurn;        // 每回合恢復 AP
+			int lastValue = Value;
+			Value = PerTurn;
+			return Value - lastValue;  // 返回實際恢復量		
 		}
 	}
 
