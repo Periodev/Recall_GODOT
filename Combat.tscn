@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://c82pb1vuwbgl8"]
+[gd_scene load_steps=5 format=3 uid="uid://c82pb1vuwbgl8"]
 
 [ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Script/Combat.cs" id="1_vj48t"]
 [ext_resource type="Script" uid="uid://d3m3ldps8oa6u" path="res://Script/CombatState.cs" id="2_vvyul"]
 [ext_resource type="PackedScene" uid="uid://d3284mdfjg13m" path="res://PlayerView.tscn" id="3_vvyul"]
+[ext_resource type="PackedScene" uid="uid://brmojt2s5oqgf" path="res://BasicMoveUI.tscn" id="4_tppsp"]
 
 [node name="Combat" type="Control"]
 layout_mode = 3
@@ -25,3 +26,9 @@ script = ExtResource("2_vvyul")
 
 [node name="PlayerView" parent="UI" node_paths=PackedStringArray("Control") instance=ExtResource("3_vvyul")]
 Control = NodePath("../../Control")
+
+[node name="Control" parent="UI" instance=ExtResource("4_tppsp")]
+offset_left = 73.0
+offset_top = 545.0
+offset_right = 113.0
+offset_bottom = 585.0

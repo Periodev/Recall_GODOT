@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://brmojt2s5oqgf"]
+
+[ext_resource type="Script" uid="uid://b2pmv3u3xiq1e" path="res://Script/UI/BasicMoveUI.cs" id="1_a7nm2"]
+
+[node name="Control" type="Control" node_paths=PackedStringArray("ButtonA", "ButtonB", "ButtonC")]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_a7nm2")
+ButtonA = NodePath("HBoxContainer/ButtonA")
+ButtonB = NodePath("HBoxContainer/ButtonB")
+ButtonC = NodePath("HBoxContainer/ButtonC")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+offset_right = 150.0
+offset_bottom = 40.0
+
+[node name="ButtonA" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "A"
+
+[node name="ButtonB" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "B"
+
+[node name="ButtonC" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "C"
