@@ -4,4 +4,12 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>Recall_V0.Empty</RootNamespace>
   </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- 不讓 Godot 專案編譯 tests 內的 .cs -->
+    <Compile Remove="tests\**\*.cs" />
+    <!-- 仍把測試檔當作一般檔案保留在解決方案中 -->
+    <None Include="tests\**\*.cs" />
+  </ItemGroup>
 </Project>

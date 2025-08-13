@@ -1,4 +1,4 @@
-using Godot;
+
 using System;
 using CombatCore;
 
@@ -25,22 +25,18 @@ public static class CombatKernel
 
 			if (rslt == PhaseResult.WaitInput)
 			{
-				GD.Print("Wait Input");
 				break;
 			}
 			else if (rslt == PhaseResult.Pending)
 			{
-				GD.Print("Pending");
 				break;
 			}
 			else if (rslt == PhaseResult.Interrupt)
 			{
-				GD.Print("Interrupt");
 				break;
 			}
 			else
 			{
-				GD.Print("Continue to next step ", ctx.Step.ToString());
 			}
 		}
 
