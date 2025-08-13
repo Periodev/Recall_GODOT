@@ -5,8 +5,8 @@ using static CombatCore.Result;
 
 namespace CombatCore.ActorOp
 {
-    public static class InterOp
-    {
+	public static class InterOp
+	{
 
-    }
+	}
 }
