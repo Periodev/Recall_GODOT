@@ -2,3 +2,9 @@
 .godot/
 /android/
 *.uid
+*.dll
+*.exe
+*.json
+*.cache
+Tests/bin/
+Tests/obj/
