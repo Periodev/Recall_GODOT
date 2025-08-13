@@ -34,6 +34,12 @@
     <Compile Include="..\Script\Command\AtomicCmd.cs" />
     <Compile Include="..\Script\Command\CmdExecutor.cs" />
 
+    <!-- 中介層 -->
+    <Compile Include="..\Script\InterOp\InterOpCall.cs" />    
+    <Compile Include="..\Script\InterOp\IInterOps.cs" />
+    <Compile Include="..\Script\InterOp\InterOps.cs" />
+
+
     <!-- 記憶軸 -->
     <Compile Include="..\Script\Memory\IMemoryQueue.cs" />
     <Compile Include="..\Script\Memory\MemoryQueue.cs" />
@@ -41,6 +47,11 @@
 
     <!-- Phase 核心（僅限無 Godot 相依者） -->
     <Compile Include="..\Script\Kernel\PhaseContext.cs" />
+
+    <!-- 抽象方法 -->
+    <Compile Include="..\Script\Abstractions\IActorLookup.cs" />
+
+
   </ItemGroup>
 
   <!-- 🧪 測試檔自身，排除自動生成檔案 -->
