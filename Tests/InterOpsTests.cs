@@ -196,7 +196,7 @@ public class InterOpsTests
         Assert.AreEqual(5, body[1].Value);
 
         Assert.AreEqual(CmdType.AddShield, body[2].Type);
-        Assert.AreSame(_enemy, body[2].Target); // InterOps 設計：Block 目標 = plan.Target
+        Assert.AreSame(_player, body[2].Target); // 新的期望：B 加盾給自己
         Assert.AreEqual(6, body[2].Value);
     }
 

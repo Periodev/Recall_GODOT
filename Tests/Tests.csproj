@@ -35,8 +35,10 @@
     <Compile Include="..\Script\Command\CmdExecutor.cs" />
 
     <!-- 中介層 -->
-    <Compile Include="..\Script\InterOp\InterOps.cs" />
     <Compile Include="..\Script\InterOp\ActionType.cs" />
+    <Compile Include="..\Script\InterOp\InterOps.cs" />
+    <Compile Include="..\Script\InterOp\HLATranslator.cs" />
+  
 
     <!-- 記憶軸 -->
     <Compile Include="..\Script\Memory\MemoryQueue.cs" />
