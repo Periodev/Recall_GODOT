@@ -1,213 +1,131 @@
 
 using System;
-
 using System.Collections.Generic;
-using CombatCore.Abstractions;
-using CombatCore.Memory;
 using CombatCore.Command;
 
 namespace CombatCore.InterOp
 {
-	public sealed class InterOps : IInterOps
+	public enum BasicKind { A, B, C }
+
+	public readonly struct BasicPlan
 	{
-		public string LastError { get; private set; } = string.Empty;
-
-		// 遊戲常數（後續移至 GameConstants）
-		private const int AP_COST = 1;
-		private const int BASE_A = 5, BASE_B = 5, BASE_C = 1;
-		private const int CHARGE_BONUS_A = 3, CHARGE_BONUS_B = 2;
-		private const int CHARGE_COST_PER_USE = 1;
-
-		public AtomicCmd[] Translate(InterOpCall call, IActorLookup lookup, IMemoryQueue queue)
+		public BasicPlan(BasicKind kind, Actor src, Actor dst,
+			int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0, int apCost = 1)
 		{
-			LastError = string.Empty;
+			Kind = kind; Source = src; Target = dst;
+			Damage = damage; Block = block; 
+			ChargeCost = chargeCost; GainAmount = gainAmount;
+			APCost = apCost;
+		}
+		public BasicKind Kind { get; }
+		public Actor Source { get; }
+		public Actor Target { get; }
+		public int Damage { get; }       // A
+		public int Block { get; }        // B
+		public int ChargeCost { get; }   // A/B 嘗試消耗
+		public int GainAmount { get; }   // C 獲得
+		public int APCost { get; }       // 消耗 AP 
+	}
 
-			if (!TryGetActors(lookup, call.SourceId, call.TargetId, out var src, out var dst))
-				return Fail("actor_not_found");
+	public enum EchoOp { Attack, Block, GainCharge }
 
-			return call.Op switch
+	public readonly struct RecallItemPlan
+	{
+		public RecallItemPlan(EchoOp op, int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0)
+		{
+			Op = op; Damage = damage; Block = block; 
+			ChargeCost = chargeCost; GainAmount = gainAmount;
+		}
+		public EchoOp Op { get; }
+		public int Damage { get; }       // Attack
+		public int Block { get; }        // Block
+		public int ChargeCost { get; }   // Attack/Block 嘗試消耗
+		public int GainAmount { get; }   // GainCharge
+	}
+
+	public readonly struct RecallPlan
+	{
+		public RecallPlan(Actor src, Actor dst, IReadOnlyList<RecallItemPlan> items, int batchChargeCost = 0, int apCost = 1)
+		{
+			Source = src; Target = dst; Items = items ?? Array.Empty<RecallItemPlan>();
+			BatchChargeCost = batchChargeCost;
+			APCost = apCost;
+		}
+		public Actor Source { get; }
+		public Actor Target { get; }
+		public IReadOnlyList<RecallItemPlan> Items { get; }
+		public int BatchChargeCost { get; } // 若規則為整批只扣一次，Translator 設定 >0
+		public int APCost { get; }          
+	}
+
+	public sealed class InterOps
+	{
+		public AtomicCmd[] BuildBasic(in BasicPlan plan)
+		{
+			var list = new List<AtomicCmd>(capacity: 4);
+			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // 即使 0 也加入
+
+			switch (plan.Kind)
 			{
-				InterOpCode.BasicA => TranslateBasicA(src, dst),
-				InterOpCode.BasicB => TranslateBasicB(src, dst),
-				InterOpCode.BasicC => TranslateBasicC(src),
-				InterOpCode.RecallEcho => TranslateRecallEcho(call, src, dst, queue),
-				_ => Fail("unknown_operation")
-			};
-		}
+				case BasicKind.A:
+					if (plan.ChargeCost > 0)
+						list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.ChargeCost));
+					if (plan.Damage > 0)
+						list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, plan.Damage));
+					break;
 
-		// ========== 基本動作翻譯 ==========
+				case BasicKind.B:
+					if (plan.ChargeCost > 0)
+						list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.ChargeCost));
+					if (plan.Block > 0)
+						list.Add(AtomicCmd.AddShield(plan.Target, plan.Block));
+					break;
 
-		private AtomicCmd[] TranslateBasicA(Actor src, Actor dst)
-		{
-			if (!CheckBasicActionPreconditions(src, dst)) 
-				return Array.Empty<AtomicCmd>();
-
-			var (damage, chargeSpent) = CalculateBasicAValues(src);
-			var commands = new List<AtomicCmd>(capacity: chargeSpent > 0 ? 2 : 1);
-
-			commands.Add(AtomicCmd.DealDamage(src, dst, damage));
-			
-			if (chargeSpent > 0)
-				commands.Add(AtomicCmd.GainCharge(src, -chargeSpent));
-
-			return commands.ToArray();
-		}
-
-		private AtomicCmd[] TranslateBasicB(Actor src, Actor dst)
-		{
-			if (!CheckBasicActionPreconditions(src, dst)) 
-				return Array.Empty<AtomicCmd>();
-
-			var (shield, chargeSpent) = CalculateBasicBValues(src);
-			var commands = new List<AtomicCmd>(capacity: chargeSpent > 0 ? 2 : 1);
-
-			commands.Add(AtomicCmd.AddShield(dst, shield));
-			
-			if (chargeSpent > 0)
-				commands.Add(AtomicCmd.GainCharge(src, -chargeSpent));
-
-			return commands.ToArray();
-		}
-
-		private AtomicCmd[] TranslateBasicC(Actor src)
-		{
-			if (!HasSufficientAP(src)) 
-				return Fail("insufficient_ap");
-
-			return new[] { AtomicCmd.GainCharge(src, BASE_C) };
-		}
-
-		// ========== Echo 系統翻譯 ==========
-
-		private AtomicCmd[] TranslateRecallEcho(InterOpCall call, Actor src, Actor dst, IMemoryQueue queue)
-		{
-			if (call.Indices == null || call.Indices.Count == 0)
-				return Fail("empty_indices");
-
-			if (!ValidateEchoIndices(call.Indices, queue))
-				return Array.Empty<AtomicCmd>();
-
-			var commands = new List<AtomicCmd>();
-			bool hasUsedChargeInBatch = false;
-
-			foreach (var index in call.Indices)
-			{
-				var action = queue.Peek(index);
-				var echoCmds = TranslateEchoAction(action, src, dst, ref hasUsedChargeInBatch);
-				commands.AddRange(echoCmds);
+				case BasicKind.C:
+					if (plan.GainAmount > 0)
+						list.Add(AtomicCmd.GainCharge(plan.Source, plan.GainAmount));
+					break;
 			}
 
-			// 批次結束後統一扣除 Charge（如果本批次有使用）
-			if (hasUsedChargeInBatch)
-				commands.Add(AtomicCmd.GainCharge(src, -CHARGE_COST_PER_USE));
-
-			return commands.ToArray();
+			return list.ToArray();
 		}
 
-		private AtomicCmd[] TranslateEchoAction(ActionType action, Actor src, Actor dst, ref bool hasUsedChargeInBatch)
+		public AtomicCmd[] BuildRecall(in RecallPlan plan)
 		{
-			return action switch
+			// 預估：一次性扣費 + N 個項目
+			var list = new List<AtomicCmd>(capacity: (plan.BatchChargeCost > 0 ? 1 : 0) + plan.Items.Count + 2);
+			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // 即使 0 也加入
+
+			// 批次一次性嘗試扣費（若規則需要）
+			if (plan.BatchChargeCost > 0)
+				list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.BatchChargeCost));
+
+			foreach (var item in plan.Items)
 			{
-				ActionType.A => CreateEchoAttack(src, dst, ref hasUsedChargeInBatch),
-				ActionType.B => CreateEchoBlock(src, dst, ref hasUsedChargeInBatch),
-				ActionType.C => new[] { AtomicCmd.GainCharge(src, BASE_C) },
-				_ => Array.Empty<AtomicCmd>()
-			};
-		}
+				switch (item.Op)
+				{
+					case EchoOp.Attack:
+						if (item.ChargeCost > 0)
+							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
+						if (item.Damage > 0)
+							list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, item.Damage));
+						break;
 
-		private AtomicCmd[] CreateEchoAttack(Actor src, Actor dst, ref bool hasUsedChargeInBatch)
-		{
-			var canUseCharge = !hasUsedChargeInBatch && CanUseCharge(src);
-			var damage = BASE_A + (canUseCharge ? CHARGE_BONUS_A : 0);
-			
-			if (canUseCharge)
-				hasUsedChargeInBatch = true;
+					case EchoOp.Block:
+						if (item.ChargeCost > 0)
+							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
+						if (item.Block > 0)
+							list.Add(AtomicCmd.AddShield(plan.Target, item.Block));
+						break;
 
-			return new[] { AtomicCmd.DealDamage(src, dst, damage) };
-		}
-
-		private AtomicCmd[] CreateEchoBlock(Actor src, Actor dst, ref bool hasUsedChargeInBatch)
-		{
-			var canUseCharge = !hasUsedChargeInBatch && CanUseCharge(src);
-			var shield = BASE_B + (canUseCharge ? CHARGE_BONUS_B : 0);
-			
-			if (canUseCharge)
-				hasUsedChargeInBatch = true;
-
-			return new[] { AtomicCmd.AddShield(dst, shield) };
-		}
-
-		// ========== 輔助計算方法 ==========
-
-		private (int damage, int chargeSpent) CalculateBasicAValues(Actor src)
-		{
-			var canUseCharge = CanUseCharge(src);
-			var damage = BASE_A + (canUseCharge ? CHARGE_BONUS_A : 0);
-			var chargeSpent = canUseCharge ? CHARGE_COST_PER_USE : 0;
-			return (damage, chargeSpent);
-		}
-
-		private (int shield, int chargeSpent) CalculateBasicBValues(Actor src)
-		{
-			var canUseCharge = CanUseCharge(src);
-			var shield = BASE_B + (canUseCharge ? CHARGE_BONUS_B : 0);
-			var chargeSpent = canUseCharge ? CHARGE_COST_PER_USE : 0;
-			return (shield, chargeSpent);
-		}
-
-		// ========== 前置條件檢查 ==========
-
-		private bool CheckBasicActionPreconditions(Actor src, Actor dst)
-		{
-			if (!HasSufficientAP(src)) 
-				return FailBool("insufficient_ap");
-			
-			if (!dst.IsAlive) 
-				return FailBool("target_not_alive");
-			
-			return true;
-		}
-
-		private bool ValidateEchoIndices(IReadOnlyList<int> indices, IMemoryQueue queue)
-		{
-			foreach (var index in indices)
-			{
-				if (index < 0 || index >= queue.Count)
-					return FailBool("index_out_of_range");
-				
-				// TODO: 檢查是否指向「當回合」動作（需要額外的回合邊界資訊）
-				// 暫時跳過此檢查，由上層 EchoExecutor 負責
+					case EchoOp.GainCharge:
+						if (item.GainAmount > 0)
+							list.Add(AtomicCmd.GainCharge(plan.Source, item.GainAmount));
+						break;
+				}
 			}
-			return true;
-		}
 
-		// ========== 基礎檢查方法 ==========
-
-		private bool HasSufficientAP(Actor actor) => 
-			actor?.AP?.Value >= AP_COST;
-
-		private bool CanUseCharge(Actor actor) => 
-			actor?.Charge?.Value >= CHARGE_COST_PER_USE;
-
-		private bool TryGetActors(IActorLookup lookup, int sourceId, int targetId, out Actor src, out Actor dst)
-		{
-			src = lookup.GetActor(sourceId);
-			dst = lookup.GetActor(targetId);
-			return src != null && dst != null;
-		}
-
-		// ========== 錯誤處理 ==========
-
-		private AtomicCmd[] Fail(string errorMessage)
-		{
-			LastError = errorMessage;
-			return Array.Empty<AtomicCmd>();
-		}
-
-		private bool FailBool(string errorMessage)
-		{
-			LastError = errorMessage;
-			return false;
+			return list.ToArray();
 		}
 	}
 }

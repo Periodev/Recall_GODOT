@@ -9,7 +9,9 @@ namespace CombatCore.Command
 	{
 		DealDamage = 0x01,
 		AddShield = 0x02,
-		GainCharge = 0x03
+		GainCharge = 0x03, 
+		ConsumeCharge = 0x04,
+		ConsumeAP = 0x05     // ← 新增
 	}
 
 	/// <summary>
@@ -41,11 +43,19 @@ namespace CombatCore.Command
 		public static AtomicCmd GainCharge(Actor target, int amount) =>
 			new AtomicCmd(CmdType.GainCharge, null, target, amount);
 
+		public static AtomicCmd ConsumeCharge(Actor target, int amount) =>
+			new AtomicCmd(CmdType.ConsumeCharge, null, target, amount);
+
+		public static AtomicCmd ConsumeAP(Actor src, int amount) =>
+			new AtomicCmd(CmdType.ConsumeAP, src, src, amount);
+
 		/// <summary>
 		/// 執行命令並返回主要資源變動量
 		/// DealDamage = HP損失量（不含護盾吸收）
 		/// AddShield = 實際新增護盾量
 		/// GainCharge = 實際新增充能量
+		/// ConsumeCharge = 實際消耗的充能量
+		/// ConsumeAP = 實際消耗的 AP
 		/// </summary>
 		/// <returns>主要資源的實際變動量</returns>
 		public int Execute()
@@ -57,9 +67,14 @@ namespace CombatCore.Command
 				CmdType.DealDamage => ExecuteDealDamage(),
 				CmdType.AddShield => ExecuteAddShield(),
 				CmdType.GainCharge => ExecuteGainCharge(),
+				CmdType.ConsumeCharge => ExecuteConsumeCharge(),
+				CmdType.ConsumeAP => ExecuteConsumeAP(),
 				_ => 0
 			};
 		}
+
+
+		// Self execute functions
 
 		private int ExecuteDealDamage()
 		{
@@ -113,6 +128,34 @@ namespace CombatCore.Command
 			return actualGained;
 		}
 
+		private int ExecuteConsumeCharge()
+		{
+			int actualConsumed = SelfOp.ConsumeCharge(Target, Value) ? Value : 0 ;
+#if DEBUG
+			if (actualConsumed > 0)
+			{
+				Debug.WriteLine($"[ConsumeCharge] {GetTargetName()} consumed {actualConsumed} charge");
+			}
+#endif
+
+			return actualConsumed;
+		}
+
+		private int ExecuteConsumeAP()
+		{
+			int actualConsumed = SelfOp.ConsumeAP(Source, Value) ? Value : throw new InvalidOperationException("AP not enough");
+#if DEBUG
+			if (actualConsumed > 0)
+			{
+				Debug.WriteLine($"[ConsumeAP] {GetSourceName()} consumed {actualConsumed} AP");
+			}
+#endif
+
+			return actualConsumed;
+		}
+
+
+		// Debug functions
 #if DEBUG
 		private string GetSourceName() => Source?.GetType().Name ?? "Unknown";
 		private string GetTargetName() => Target.GetType().Name;

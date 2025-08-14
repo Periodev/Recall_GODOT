@@ -1,163 +1,275 @@
-// File: Tests/InterOpsTests.cs
-using NUnit.Framework;
+// Tests/InterOpsTests.cs
+using System;
+using System.Linq;
 using System.Collections.Generic;
+using NUnit.Framework;
 using CombatCore.InterOp;
-using CombatCore.Memory;
+using CombatCore.Command;
 
-namespace Tests
+[TestFixture]
+public class InterOpsTests
 {
-    [TestFixture]
-    public class InterOpsTests
+    private Actor _player;
+    private Actor _enemy;
+    private InterOps _ops;
+
+    [SetUp]
+    public void Setup()
     {
-        private FakeCombatState _state;
-        private IMemoryQueue _q;
-        private InterOps _ops;
+        _player = new Actor(maxHP: 30, apPerTurn: 3, withCharge: true);
+        _enemy  = new Actor(maxHP: 30, apPerTurn: 0, withCharge: false);
+        _ops = new InterOps();
+    }
 
-        [SetUp]
-        public void Setup()
+    /// <summary>
+    /// 驗證並跳過第一個 AP 命令：
+    /// - 必為 ConsumeAP
+    /// - Source/Target 為同一個執行者
+    /// - Value 等於期望 AP 值（可為 0）
+    /// 回傳剩餘命令序列以供後續斷言。
+    /// </summary>
+    private static AtomicCmd[] SkipAP(AtomicCmd[] cmds, int expectedAP, Actor expectedSrc)
+    {
+        Assert.GreaterOrEqual(cmds.Length, 1);
+        Assert.AreEqual(CmdType.ConsumeAP, cmds[0].Type);
+        Assert.AreSame(expectedSrc, cmds[0].Source);
+        Assert.AreSame(expectedSrc, cmds[0].Target);
+        Assert.AreEqual(expectedAP, cmds[0].Value);
+        return cmds.Skip(1).ToArray();
+    }
+
+    // ---------- Basic ----------
+
+    [Test]
+    public void BuildBasic_A_WithTryConsume_NoCharge_StillDealsDamage()
+    {
+        // Arrange: damage=5, chargeCost=1，但玩家當前 Charge=0
+        var plan = new BasicPlan(
+            kind: BasicKind.A, src: _player, dst: _enemy,
+            damage: 5, block: 0, chargeCost: 1, gainAmount: 0, apCost: 1
+        );
+
+        // Act
+        var cmds = _ops.BuildBasic(plan);
+        var body = SkipAP(cmds, expectedAP: 1, expectedSrc: _player);
+
+        // Assert: 之後應為 ConsumeCharge(1) → DealDamage(5)
+        Assert.AreEqual(2, body.Length);
+
+        Assert.AreEqual(CmdType.ConsumeCharge, body[0].Type);
+        Assert.AreSame(_player, body[0].Target);
+        Assert.AreEqual(1, body[0].Value);
+
+        Assert.AreEqual(CmdType.DealDamage, body[1].Type);
+        Assert.AreSame(_player, body[1].Source);
+        Assert.AreSame(_enemy,  body[1].Target);
+        Assert.AreEqual(5, body[1].Value);
+    }
+
+    [Test]
+    public void BuildBasic_A_WithTryConsume_HasCharge_OrderAndParamsCorrect()
+    {
+        // Arrange: 假設 Translator 已把加成算入 damage
+        var plan = new BasicPlan(
+            kind: BasicKind.A, src: _player, dst: _enemy,
+            damage: 8, block: 0, chargeCost: 1, gainAmount: 0, apCost: 2
+        );
+
+        var cmds = _ops.BuildBasic(plan);
+        var body = SkipAP(cmds, expectedAP: 2, expectedSrc: _player);
+
+        Assert.AreEqual(2, body.Length);
+
+        Assert.AreEqual(CmdType.ConsumeCharge, body[0].Type);
+        Assert.AreSame(_player, body[0].Target);
+        Assert.AreEqual(1, body[0].Value);
+
+        Assert.AreEqual(CmdType.DealDamage, body[1].Type);
+        Assert.AreEqual(8, body[1].Value);
+    }
+
+    [Test]
+    public void BuildBasic_B_WithTryConsume_AddsShieldThenNoExtra()
+    {
+        var plan = new BasicPlan(
+            kind: BasicKind.B, src: _player, dst: _player,
+            damage: 0, block: 6, chargeCost: 1, gainAmount: 0, apCost: 1
+        );
+
+        var cmds = _ops.BuildBasic(plan);
+        var body = SkipAP(cmds, expectedAP: 1, expectedSrc: _player);
+
+        Assert.AreEqual(2, body.Length);
+
+        Assert.AreEqual(CmdType.ConsumeCharge, body[0].Type);
+        Assert.AreSame(_player, body[0].Target);
+        Assert.AreEqual(1, body[0].Value);
+
+        Assert.AreEqual(CmdType.AddShield, body[1].Type);
+        Assert.AreSame(_player, body[1].Target);
+        Assert.AreEqual(6, body[1].Value);
+    }
+
+    [Test]
+    public void BuildBasic_C_GainChargeOnly_NoConsumeOrDamage()
+    {
+        var plan = new BasicPlan(
+            kind: BasicKind.C, src: _player, dst: _player,
+            damage: 0, block: 0, chargeCost: 0, gainAmount: 2, apCost: 1
+        );
+
+        var cmds = _ops.BuildBasic(plan);
+        var body = SkipAP(cmds, expectedAP: 1, expectedSrc: _player);
+
+        Assert.AreEqual(1, body.Length);
+        Assert.AreEqual(CmdType.GainCharge, body[0].Type);
+        Assert.AreEqual(2, body[0].Value);
+    }
+
+    // ---------- AP Cost 專項 ----------
+
+    [Test]
+    public void BuildBasic_A_AlwaysConsumesAP_FirstCmd()
+    {
+        var plan = new BasicPlan(
+            kind: BasicKind.A, src: _player, dst: _enemy,
+            damage: 5, block: 0, chargeCost: 0, gainAmount: 0, apCost: 2
+        );
+
+        var cmds = _ops.BuildBasic(plan);
+
+        Assert.GreaterOrEqual(cmds.Length, 1);
+        Assert.AreEqual(CmdType.ConsumeAP, cmds[0].Type);
+        Assert.AreSame(_player, cmds[0].Source);
+        Assert.AreSame(_player, cmds[0].Target);
+        Assert.AreEqual(2, cmds[0].Value);
+    }
+
+    [Test]
+    public void BuildBasic_A_WithZeroAPCost_StillEmitsConsumeAP_Zero()
+    {
+        var plan = new BasicPlan(
+            kind: BasicKind.A, src: _player, dst: _enemy,
+            damage: 4, block: 0, chargeCost: 0, gainAmount: 0, apCost: 0
+        );
+
+        var cmds = _ops.BuildBasic(plan);
+
+        Assert.GreaterOrEqual(cmds.Length, 1);
+        Assert.AreEqual(CmdType.ConsumeAP, cmds[0].Type);
+        Assert.AreSame(_player, cmds[0].Source);
+        Assert.AreSame(_player, cmds[0].Target);
+        Assert.AreEqual(0, cmds[0].Value);
+
+        var body = cmds.Skip(1).ToArray();
+        Assert.AreEqual(1, body.Length);
+        Assert.AreEqual(CmdType.DealDamage, body[0].Type);
+        Assert.AreEqual(4, body[0].Value);
+    }
+
+    // ---------- Recall ----------
+
+    [Test]
+    public void BuildRecall_BatchOnceConsume_AttackThenBlock()
+    {
+        // Arrange: 批次一次扣 1 點，然後打5、擋6
+        var items = new List<RecallItemPlan>
         {
-            // 使用 CombatStateFactory 建立測試狀態
-            _state = CombatStateFactory.Create();      // Player: id=0, Enemy: id=1
-            _q = new MemoryQueue(3);
-            _ops = new InterOps();
+            new RecallItemPlan(EchoOp.Attack, damage:5, block:0,  chargeCost:0, gainAmount:0),
+            new RecallItemPlan(EchoOp.Block,  damage:0, block:6,  chargeCost:0, gainAmount:0),
+        };
+        var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 1, apCost: 1);
 
-            // 預設記憶：A, B, C（0=最舊）
-            _q.PushBasic(ActionType.A);
-            _q.PushBasic(ActionType.B);
-            _q.PushBasic(ActionType.C);
-        }
+        var cmds = _ops.BuildRecall(plan);
+        var body = SkipAP(cmds, expectedAP: 1, expectedSrc: _player);
 
-        [Test]
-        public void BasicA_NoCharge_ShouldProduce1Cmd()
+        // Assert: 先批次 ConsumeCharge(1)，再 DealDamage(5) → AddShield(6)
+        Assert.AreEqual(3, body.Length);
+
+        Assert.AreEqual(CmdType.ConsumeCharge, body[0].Type);
+        Assert.AreEqual(1, body[0].Value);
+
+        Assert.AreEqual(CmdType.DealDamage, body[1].Type);
+        Assert.AreSame(_player, body[1].Source);
+        Assert.AreSame(_enemy,  body[1].Target);
+        Assert.AreEqual(5, body[1].Value);
+
+        Assert.AreEqual(CmdType.AddShield, body[2].Type);
+        Assert.AreSame(_enemy, body[2].Target); // InterOps 設計：Block 目標 = plan.Target
+        Assert.AreEqual(6, body[2].Value);
+    }
+
+    [Test]
+    public void BuildRecall_PerItemConsume_AttackAndBlockEachTryConsume()
+    {
+        var items = new List<RecallItemPlan>
         {
-            var call = InterOpCall.BasicA(0, 1);
-            var cmds = _ops.Translate(call, _state, _q);
+            new RecallItemPlan(EchoOp.Attack, damage:5, block:0, chargeCost:1, gainAmount:0),
+            new RecallItemPlan(EchoOp.Block,  damage:0, block:6, chargeCost:1, gainAmount:0),
+            new RecallItemPlan(EchoOp.GainCharge, damage:0, block:0, chargeCost:0, gainAmount:2),
+        };
+        var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 0, apCost: 3);
 
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            Assert.That(cmds.Length, Is.EqualTo(1));   // 只有 DealDamage
-        }
+        var cmds = _ops.BuildRecall(plan);
+        var body = SkipAP(cmds, expectedAP: 3, expectedSrc: _player);
 
-        [Test]
-        public void BasicA_WithCharge_ShouldProduce2Cmds_AndSpendOnce()
+        // 序列：Consume(1), DealDamage(5), Consume(1), AddShield(6), GainCharge(2)
+        Assert.AreEqual(5, body.Length);
+
+        Assert.AreEqual(CmdType.ConsumeCharge, body[0].Type);
+        Assert.AreEqual(1, body[0].Value);
+
+        Assert.AreEqual(CmdType.DealDamage, body[1].Type);
+        Assert.AreEqual(5, body[1].Value);
+
+        Assert.AreEqual(CmdType.ConsumeCharge, body[2].Type);
+        Assert.AreEqual(1, body[2].Value);
+
+        Assert.AreEqual(CmdType.AddShield, body[3].Type);
+        Assert.AreEqual(6, body[3].Value);
+
+        Assert.AreEqual(CmdType.GainCharge, body[4].Type);
+        Assert.AreEqual(2, body[4].Value);
+    }
+
+    [Test]
+    public void BuildRecall_AlwaysConsumesAP_FirstCmd()
+    {
+        var items = new List<RecallItemPlan>
         {
-            _state = CombatStateFactory.Create(playerCharge: 1);
+            new RecallItemPlan(EchoOp.Attack, damage: 5)
+        };
+        var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 0, apCost: 3);
 
-            var call = InterOpCall.BasicA(0, 1);
-            var cmds = _ops.Translate(call, _state, _q);
+        var cmds = _ops.BuildRecall(plan);
 
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            Assert.That(cmds.Length, Is.EqualTo(2));   // DealDamage + GainCharge(-1)
-        }
+        Assert.GreaterOrEqual(cmds.Length, 1);
+        Assert.AreEqual(CmdType.ConsumeAP, cmds[0].Type);
+        Assert.AreSame(_player, cmds[0].Source);
+        Assert.AreSame(_player, cmds[0].Target);
+        Assert.AreEqual(3, cmds[0].Value);
+    }
 
-        [Test]
-        public void BasicB_WithCharge_ShouldProduce2Cmds_AndSpendOnce()
+    [Test]
+    public void BuildRecall_WithZeroAPCost_StillEmitsConsumeAP_Zero()
+    {
+        var items = new List<RecallItemPlan>
         {
-            _state = CombatStateFactory.Create(playerCharge: 1);
+            new RecallItemPlan(EchoOp.GainCharge, gainAmount: 2)
+        };
+        var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 0, apCost: 0);
 
-            var call = InterOpCall.BasicB(0, 1);
-            var cmds = _ops.Translate(call, _state, _q);
+        var cmds = _ops.BuildRecall(plan);
 
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            Assert.That(cmds.Length, Is.EqualTo(2));   // AddShield + GainCharge(-1)
-        }
+        Assert.GreaterOrEqual(cmds.Length, 1);
+        Assert.AreEqual(CmdType.ConsumeAP, cmds[0].Type);
+        Assert.AreSame(_player, cmds[0].Source);
+        Assert.AreSame(_player, cmds[0].Target);
+        Assert.AreEqual(0, cmds[0].Value);
 
-        [Test]
-        public void BasicC_ShouldProduce1Cmd_AndNotSpendCharge()
-        {
-            _state = CombatStateFactory.Create(playerCharge: 2);
-
-            var call = InterOpCall.BasicC(0);
-            var cmds = _ops.Translate(call, _state, _q);
-
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            Assert.That(cmds.Length, Is.EqualTo(1));   // GainCharge(+1)
-        }
-
-        [Test]
-        public void BasicA_InsufficientAP_ShouldFail_AndReturnEmpty()
-        {
-            _state = CombatStateFactory.Create(playerAP: 0);
-
-            var call = InterOpCall.BasicA(0, 1);
-            var cmds = _ops.Translate(call, _state, _q);
-
-            Assert.That(cmds.Length, Is.EqualTo(0));
-            Assert.That(_ops.LastError, Is.EqualTo("insufficient_ap"));
-        }
-
-        [Test]
-        public void BasicA_TargetDead_ShouldFail_AndReturnEmpty()
-        {
-            _state = CombatStateFactory.Create(enemyHP: 0);
-
-            var call = InterOpCall.BasicA(0, 1);
-            var cmds = _ops.Translate(call, _state, _q);
-
-            Assert.That(cmds.Length, Is.EqualTo(0));
-            Assert.That(_ops.LastError, Is.EqualTo("target_not_alive"));
-        }
-
-        [Test]
-        public void RecallEcho_IndicesOutOfRange_ShouldFail_AndReturnEmpty()
-        {
-            var call = InterOpCall.RecallEcho(0, 1, new List<int> { 0, 3 }); // 3 越界
-            var before = _q.Snapshot();
-            var cmds = _ops.Translate(call, _state, _q);
-            var after = _q.Snapshot();
-
-            Assert.That(cmds.Length, Is.EqualTo(0));
-            Assert.That(_ops.LastError, Is.EqualTo("index_out_of_range"));
-            CollectionAssert.AreEqual(before, after);  // 不改變記憶
-        }
-
-        [Test]
-        public void RecallEcho_AB_WithCharge_ShouldSpendOnceAtBatchEnd()
-        {
-            // 記憶目前為 [A, B, C]，取前兩個索引 0,1
-            _state = CombatStateFactory.Create(playerCharge: 2);
-
-            var call = InterOpCall.RecallEcho(0, 1, new List<int> { 0, 1 });
-            var cmds = _ops.Translate(call, _state, _q);
-
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            // 期望：A → DealDamage，B → AddShield，批次尾端 GainCharge(-1)
-            Assert.That(cmds.Length, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void RecallEcho_AA_WithCharge_ShouldSpendOnceForTwoAttacks()
-        {
-            // 將記憶改成 [A, A, C]
-            _q = new MemoryQueue(3);
-            _q.PushBasic(ActionType.A);
-            _q.PushBasic(ActionType.A);
-            _q.PushBasic(ActionType.C);
-
-            _state = CombatStateFactory.Create(playerCharge: 2);
-
-            var call = InterOpCall.RecallEcho(0, 1, new List<int> { 0, 1 });
-            var cmds = _ops.Translate(call, _state, _q);
-
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            // 期望：兩個 DealDamage + 批次尾端 GainCharge(-1) = 3
-            Assert.That(cmds.Length, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void RecallEcho_AC_WithCharge_ShouldHave3Cmds_Dmg_GainC_SpendOnce()
-        {
-            // 記憶 [A, B, C]，選 A 與 C
-            _state = CombatStateFactory.Create(playerCharge: 1);
-
-            var call = InterOpCall.RecallEcho(0, 1, new List<int> { 0, 2 });
-            var before = _q.Snapshot();
-            var cmds = _ops.Translate(call, _state, _q);
-            var after = _q.Snapshot();
-
-            Assert.That(_ops.LastError, Is.EqualTo(string.Empty));
-            // 期望：DealDamage, GainCharge(+1 from C), GainCharge(-1 spend) = 3
-            Assert.That(cmds.Length, Is.EqualTo(3));
-            CollectionAssert.AreEqual(before, after);  // Echo 不入隊
-        }
+        var body = cmds.Skip(1).ToArray();
+        Assert.AreEqual(1, body.Length);
+        Assert.AreEqual(CmdType.GainCharge, body[0].Type);
+        Assert.AreEqual(2, body[0].Value);
     }
 }

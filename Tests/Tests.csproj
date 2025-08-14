@@ -35,10 +35,7 @@
     <Compile Include="..\Script\Command\CmdExecutor.cs" />
 
     <!-- 中介層 -->
-    <Compile Include="..\Script\InterOp\InterOpCall.cs" />    
-    <Compile Include="..\Script\InterOp\IInterOps.cs" />
     <Compile Include="..\Script\InterOp\InterOps.cs" />
-
 
     <!-- 記憶軸 -->
     <Compile Include="..\Script\Memory\IMemoryQueue.cs" />
