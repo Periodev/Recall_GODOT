@@ -1,23 +1,23 @@
 
 using System;
 using System.Collections.Generic;
+using CombatCore;
 using CombatCore.Command;
+using CombatCore.Memory;
 
 namespace CombatCore.InterOp
 {
-	public enum BasicKind { A, B, C }
-
 	public readonly struct BasicPlan
 	{
-		public BasicPlan(BasicKind kind, Actor src, Actor dst,
+		public BasicPlan(ActionType act, Actor src, Actor dst,
 			int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0, int apCost = 1)
 		{
-			Kind = kind; Source = src; Target = dst;
+			Act = act; Source = src; Target = dst;
 			Damage = damage; Block = block; 
 			ChargeCost = chargeCost; GainAmount = gainAmount;
 			APCost = apCost;
 		}
-		public BasicKind Kind { get; }
+		public ActionType Act { get; }
 		public Actor Source { get; }
 		public Actor Target { get; }
 		public int Damage { get; }       // A
@@ -27,16 +27,14 @@ namespace CombatCore.InterOp
 		public int APCost { get; }       // 消耗 AP 
 	}
 
-	public enum EchoOp { Attack, Block, GainCharge }
-
 	public readonly struct RecallItemPlan
 	{
-		public RecallItemPlan(EchoOp op, int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0)
+		public RecallItemPlan(ActionType op, int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0)
 		{
 			Op = op; Damage = damage; Block = block; 
 			ChargeCost = chargeCost; GainAmount = gainAmount;
 		}
-		public EchoOp Op { get; }
+		public ActionType Op { get; }
 		public int Damage { get; }       // Attack
 		public int Block { get; }        // Block
 		public int ChargeCost { get; }   // Attack/Block 嘗試消耗
@@ -65,23 +63,23 @@ namespace CombatCore.InterOp
 			var list = new List<AtomicCmd>(capacity: 4);
 			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // 即使 0 也加入
 
-			switch (plan.Kind)
+			switch (plan.Act)
 			{
-				case BasicKind.A:
+				case ActionType.A:
 					if (plan.ChargeCost > 0)
 						list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.ChargeCost));
 					if (plan.Damage > 0)
 						list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, plan.Damage));
 					break;
 
-				case BasicKind.B:
+				case ActionType.B:
 					if (plan.ChargeCost > 0)
 						list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.ChargeCost));
 					if (plan.Block > 0)
 						list.Add(AtomicCmd.AddShield(plan.Target, plan.Block));
 					break;
 
-				case BasicKind.C:
+				case ActionType.C:
 					if (plan.GainAmount > 0)
 						list.Add(AtomicCmd.GainCharge(plan.Source, plan.GainAmount));
 					break;
@@ -104,21 +102,21 @@ namespace CombatCore.InterOp
 			{
 				switch (item.Op)
 				{
-					case EchoOp.Attack:
+					case ActionType.A:
 						if (item.ChargeCost > 0)
 							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
 						if (item.Damage > 0)
 							list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, item.Damage));
 						break;
 
-					case EchoOp.Block:
+					case ActionType.B:
 						if (item.ChargeCost > 0)
 							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
 						if (item.Block > 0)
 							list.Add(AtomicCmd.AddShield(plan.Target, item.Block));
 						break;
 
-					case EchoOp.GainCharge:
+					case ActionType.C:
 						if (item.GainAmount > 0)
 							list.Add(AtomicCmd.GainCharge(plan.Source, item.GainAmount));
 						break;

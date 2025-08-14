@@ -36,9 +36,9 @@
 
     <!-- 中介層 -->
     <Compile Include="..\Script\InterOp\InterOps.cs" />
+    <Compile Include="..\Script\InterOp\ActionType.cs" />
 
     <!-- 記憶軸 -->
-    <Compile Include="..\Script\Memory\IMemoryQueue.cs" />
     <Compile Include="..\Script\Memory\MemoryQueue.cs" />
     
 

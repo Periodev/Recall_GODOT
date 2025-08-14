@@ -4,57 +4,37 @@ using CombatCore;
 
 namespace CombatCore.Memory
 {
-	public sealed class MemoryQueue : IMemoryQueue
+	public sealed class MemoryQueue
 	{
-		private readonly ActionType[] _buf;
-		private int _head;   // 指向最舊元素位置
-		private int _count;  // 目前元素數
-
-		public int Capacity { get; }
-		public int Count => _count;
+		private readonly int _capacity;
+		private readonly List<ActionType> _ops = new();
+		private readonly List<int> _turns = new();          // 每格寫入時的回合號，用於 Translator 過濾「本回合」
 
 		public MemoryQueue(int capacity)
 		{
 			if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
-			Capacity = capacity;
-			_buf = new ActionType[capacity];
-			_head = 0;
-			_count = 0;
+			_capacity = capacity;
 		}
 
-		public void PushBasic(ActionType a)
+		public int Capacity => _capacity;
+		public int Count => _ops.Count;
+
+		public void Push(ActionType op, int turnNumber)
 		{
-			if (_count < Capacity)
-			{
-				int tail = (_head + _count) % Capacity;
-				_buf[tail] = a;
-				_count++;
-			}
-			else
-			{
-				// 滿則淘汰最舊：覆寫 _head 並前移 _head
-				_buf[_head] = a;
-				_head = (_head + 1) % Capacity;
-			}
+			if (_ops.Count == _capacity) { _ops.RemoveAt(0); _turns.RemoveAt(0); } // 滿了丟最舊
+			_ops.Add(op);
+			_turns.Add(turnNumber);
 		}
 
-		public ActionType Peek(int idxFromOldest)
+		public void Clear()
 		{
-			if (idxFromOldest < 0 || idxFromOldest >= _count)
-				throw new ArgumentOutOfRangeException(nameof(idxFromOldest));
-			int idx = (_head + idxFromOldest) % Capacity;
-			return _buf[idx];
+			_ops.Clear();
+			_turns.Clear();
 		}
 
-		public IReadOnlyList<ActionType> Snapshot()
-		{
-			var list = new List<ActionType>(_count);
-			for (int i = 0; i < _count; i++)
-			{
-				int idx = (_head + i) % Capacity;
-				list.Add(_buf[idx]);
-			}
-			return list.AsReadOnly();
-		}
+		// —— 唯讀快照 —— //
+		public IReadOnlyList<ActionType> SnapshotOps()   => _ops;
+		public IReadOnlyList<int>        SnapshotTurns() => _turns;
 	}
+
 }

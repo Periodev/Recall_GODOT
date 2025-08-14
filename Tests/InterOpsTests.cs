@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
+using CombatCore;
 using CombatCore.InterOp;
 using CombatCore.Command;
 
@@ -45,7 +46,7 @@ public class InterOpsTests
     {
         // Arrange: damage=5, chargeCost=1，但玩家當前 Charge=0
         var plan = new BasicPlan(
-            kind: BasicKind.A, src: _player, dst: _enemy,
+            act: ActionType.A, src: _player, dst: _enemy,
             damage: 5, block: 0, chargeCost: 1, gainAmount: 0, apCost: 1
         );
 
@@ -71,7 +72,7 @@ public class InterOpsTests
     {
         // Arrange: 假設 Translator 已把加成算入 damage
         var plan = new BasicPlan(
-            kind: BasicKind.A, src: _player, dst: _enemy,
+            act: ActionType.A, src: _player, dst: _enemy,
             damage: 8, block: 0, chargeCost: 1, gainAmount: 0, apCost: 2
         );
 
@@ -92,7 +93,7 @@ public class InterOpsTests
     public void BuildBasic_B_WithTryConsume_AddsShieldThenNoExtra()
     {
         var plan = new BasicPlan(
-            kind: BasicKind.B, src: _player, dst: _player,
+            act: ActionType.B, src: _player, dst: _player,
             damage: 0, block: 6, chargeCost: 1, gainAmount: 0, apCost: 1
         );
 
@@ -114,7 +115,7 @@ public class InterOpsTests
     public void BuildBasic_C_GainChargeOnly_NoConsumeOrDamage()
     {
         var plan = new BasicPlan(
-            kind: BasicKind.C, src: _player, dst: _player,
+            act: ActionType.C, src: _player, dst: _player,
             damage: 0, block: 0, chargeCost: 0, gainAmount: 2, apCost: 1
         );
 
@@ -132,7 +133,7 @@ public class InterOpsTests
     public void BuildBasic_A_AlwaysConsumesAP_FirstCmd()
     {
         var plan = new BasicPlan(
-            kind: BasicKind.A, src: _player, dst: _enemy,
+            act: ActionType.A, src: _player, dst: _enemy,
             damage: 5, block: 0, chargeCost: 0, gainAmount: 0, apCost: 2
         );
 
@@ -149,7 +150,7 @@ public class InterOpsTests
     public void BuildBasic_A_WithZeroAPCost_StillEmitsConsumeAP_Zero()
     {
         var plan = new BasicPlan(
-            kind: BasicKind.A, src: _player, dst: _enemy,
+            act: ActionType.A, src: _player, dst: _enemy,
             damage: 4, block: 0, chargeCost: 0, gainAmount: 0, apCost: 0
         );
 
@@ -175,8 +176,8 @@ public class InterOpsTests
         // Arrange: 批次一次扣 1 點，然後打5、擋6
         var items = new List<RecallItemPlan>
         {
-            new RecallItemPlan(EchoOp.Attack, damage:5, block:0,  chargeCost:0, gainAmount:0),
-            new RecallItemPlan(EchoOp.Block,  damage:0, block:6,  chargeCost:0, gainAmount:0),
+            new RecallItemPlan(ActionType.A, damage:5, block:0,  chargeCost:0, gainAmount:0),
+            new RecallItemPlan(ActionType.B,  damage:0, block:6,  chargeCost:0, gainAmount:0),
         };
         var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 1, apCost: 1);
 
@@ -204,9 +205,9 @@ public class InterOpsTests
     {
         var items = new List<RecallItemPlan>
         {
-            new RecallItemPlan(EchoOp.Attack, damage:5, block:0, chargeCost:1, gainAmount:0),
-            new RecallItemPlan(EchoOp.Block,  damage:0, block:6, chargeCost:1, gainAmount:0),
-            new RecallItemPlan(EchoOp.GainCharge, damage:0, block:0, chargeCost:0, gainAmount:2),
+            new RecallItemPlan(ActionType.A, damage:5, block:0, chargeCost:1, gainAmount:0),
+            new RecallItemPlan(ActionType.B,  damage:0, block:6, chargeCost:1, gainAmount:0),
+            new RecallItemPlan(ActionType.C, damage:0, block:0, chargeCost:0, gainAmount:2),
         };
         var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 0, apCost: 3);
 
@@ -237,7 +238,7 @@ public class InterOpsTests
     {
         var items = new List<RecallItemPlan>
         {
-            new RecallItemPlan(EchoOp.Attack, damage: 5)
+            new RecallItemPlan(ActionType.A, damage: 5)
         };
         var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 0, apCost: 3);
 
@@ -255,7 +256,7 @@ public class InterOpsTests
     {
         var items = new List<RecallItemPlan>
         {
-            new RecallItemPlan(EchoOp.GainCharge, gainAmount: 2)
+            new RecallItemPlan(ActionType.C, gainAmount: 2)
         };
         var plan = new RecallPlan(_player, _enemy, items, batchChargeCost: 0, apCost: 0);
 

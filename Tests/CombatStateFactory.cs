@@ -20,7 +20,7 @@ namespace Tests
         /// <summary>
         /// 根據 ID 獲取 Actor
         /// </summary>
-        public Actor GetActor(int id)
+        public Actor GetById(int id)
         {
             return id switch
             {

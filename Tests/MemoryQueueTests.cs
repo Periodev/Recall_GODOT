@@ -1,6 +1,7 @@
 // File: tests/MemoryQueueTests.cs
 using NUnit.Framework;
 using System;
+using System.Linq;
 using CombatCore;
 using CombatCore.Memory;
 
@@ -9,47 +10,55 @@ namespace Tests
     public class MemoryQueueTests
     {
         [Test]
-        public void Capacity3_PushABCA_ShouldBeBCA()
+        public void Capacity3_PushABCA_ShouldKeepBCA_WithTurns()
         {
             var q = new MemoryQueue(3);
-            q.PushBasic(ActionType.A);
-            q.PushBasic(ActionType.B);
-            q.PushBasic(ActionType.C);
-            q.PushBasic(ActionType.A); // 滿則淘汰最舊 A
+            q.Push(ActionType.A, 1);
+            q.Push(ActionType.B, 1);
+            q.Push(ActionType.C, 2);
+            q.Push(ActionType.A, 3); // 滿則淘汰最舊 A
 
             Assert.AreEqual(3, q.Count);
-            var snap = q.Snapshot();
-            CollectionAssert.AreEqual(new[] { ActionType.B, ActionType.C, ActionType.A }, snap);
-            Assert.AreEqual(ActionType.B, q.Peek(0));
-            Assert.AreEqual(ActionType.C, q.Peek(1));
-            Assert.AreEqual(ActionType.A, q.Peek(2));
+
+            var ops   = q.SnapshotOps();
+            var turns = q.SnapshotTurns();
+
+            CollectionAssert.AreEqual(new[] { ActionType.B, ActionType.C, ActionType.A }, ops);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, turns);
         }
 
         [Test]
-        public void RecallSimulation_ReadOnly_ShouldNotChangeQueue()
+        public void RecallSimulation_ReadOnlySnapshot_DoesNotMutateQueue()
         {
             var q = new MemoryQueue(3);
-            q.PushBasic(ActionType.A);
-            q.PushBasic(ActionType.B);
-            q.PushBasic(ActionType.C);
+            q.Push(ActionType.A, 1);
+            q.Push(ActionType.B, 1);
+            q.Push(ActionType.C, 2);
 
-            // 模擬 Echo/Recall：僅讀取，不呼叫 PushBasic
-            var before = q.Snapshot();
-            // 假裝把 before 轉命令，但不寫入 q
-            var after = q.Snapshot();
+            var beforeOps   = q.SnapshotOps().ToArray();
+            var beforeTurns = q.SnapshotTurns().ToArray();
 
-            CollectionAssert.AreEqual(before, after);
+            // 模擬回放：只讀不寫
+            var afterOps   = q.SnapshotOps().ToArray();
+            var afterTurns = q.SnapshotTurns().ToArray();
+
+            CollectionAssert.AreEqual(beforeOps, afterOps);
+            CollectionAssert.AreEqual(beforeTurns, afterTurns);
             Assert.AreEqual(3, q.Count);
         }
 
         [Test]
-        public void Peek_OutOfRange_ShouldThrow()
+        public void Clear_ShouldEmptyBothOpsAndTurns()
         {
             var q = new MemoryQueue(2);
-            q.PushBasic(ActionType.A);
+            q.Push(ActionType.A, 10);
+            q.Push(ActionType.B, 11);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => q.Peek(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => q.Peek(1)); // 目前 count=1，索引1無效
+            q.Clear();
+
+            Assert.AreEqual(0, q.Count);
+            Assert.AreEqual(0, q.SnapshotOps().Count);
+            Assert.AreEqual(0, q.SnapshotTurns().Count);
         }
 
         [Test]
