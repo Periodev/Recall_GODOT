@@ -9,6 +9,6 @@ namespace CombatCore.Abstractions
 	/// </summary>
 	public interface IActorLookup
 	{
-		Actor GetActor(int id);
+		Actor GetById(int id);
 	}
 }

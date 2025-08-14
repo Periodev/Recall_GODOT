@@ -23,7 +23,7 @@ public partial class CombatState : Node, IActorLookup
 		GD.Print("Combat state is ready");
 	}
 
-	public Actor GetActor(int actorId)
+	public Actor GetById(int actorId)
 	{
 		return actorId switch
 		{
