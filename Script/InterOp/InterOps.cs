@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using CombatCore;
@@ -22,9 +21,9 @@ namespace CombatCore.InterOp
 		public Actor Target { get; }
 		public int Damage { get; }       // A
 		public int Block { get; }        // B
-		public int ChargeCost { get; }   // A/B 嘗試消耗
-		public int GainAmount { get; }   // C 獲得
-		public int APCost { get; }       // 消耗 AP 
+		public int ChargeCost { get; }   // A/B charge consumption attempt
+		public int GainAmount { get; }   // C gain amount
+		public int APCost { get; }       // AP consumption
 	}
 
 	public readonly struct RecallItemPlan
@@ -37,7 +36,7 @@ namespace CombatCore.InterOp
 		public ActionType Op { get; }
 		public int Damage { get; }       // Attack
 		public int Block { get; }        // Block
-		public int ChargeCost { get; }   // Attack/Block 嘗試消耗
+		public int ChargeCost { get; }   // Attack/Block charge consumption attempt
 		public int GainAmount { get; }   // GainCharge
 	}
 
@@ -52,7 +51,7 @@ namespace CombatCore.InterOp
 		public Actor Source { get; }
 		public Actor Target { get; }
 		public IReadOnlyList<RecallItemPlan> Items { get; }
-		public int BatchChargeCost { get; } // 若規則為整批只扣一次，Translator 設定 >0
+		public int BatchChargeCost { get; } // If rules require batch deduction only once, Translator sets >0
 		public int APCost { get; }          
 	}
 
@@ -61,7 +60,7 @@ namespace CombatCore.InterOp
 		public AtomicCmd[] BuildBasic(in BasicPlan plan)
 		{
 			var list = new List<AtomicCmd>(capacity: 4);
-			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // 即使 0 也加入
+			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // Add even if 0
 
 			switch (plan.Act)
 			{
@@ -90,11 +89,11 @@ namespace CombatCore.InterOp
 
 		public AtomicCmd[] BuildRecall(in RecallPlan plan)
 		{
-			// 預估：一次性扣費 + N 個項目
+			// Estimate: one-time batch cost + N items
 			var list = new List<AtomicCmd>(capacity: (plan.BatchChargeCost > 0 ? 1 : 0) + plan.Items.Count + 2);
-			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // 即使 0 也加入
+			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // Add even if 0
 
-			// 批次一次性嘗試扣費（若規則需要）
+			// Batch one-time charge cost (if rules require)
 			if (plan.BatchChargeCost > 0)
 				list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.BatchChargeCost));
 
@@ -113,7 +112,7 @@ namespace CombatCore.InterOp
 						if (item.ChargeCost > 0)
 							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
 						if (item.Block > 0)
-							list.Add(AtomicCmd.AddShield(plan.Target, item.Block));
+							list.Add(AtomicCmd.AddShield(plan.Source, item.Block)); // Fix: B always adds shield to source
 						break;
 
 					case ActionType.C:
