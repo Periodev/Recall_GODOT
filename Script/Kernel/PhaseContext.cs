@@ -48,16 +48,30 @@ namespace CombatCore
 		CombatEnd = 0xF
 	}
 
-
 	public struct PhaseContext
 	{
 		public PhaseStep Step;
 		public int TurnNum;
+		public bool RecallUsedThisTurn; // Track if Recall has been used this turn
 
 		public void Init()
 		{
 			Step = PhaseStep.TurnStart;
 			TurnNum = 0;
+			RecallUsedThisTurn = false;
+		}
+
+		// Method to reset turn-specific flags
+		public void StartNewTurn()
+		{
+			TurnNum++;
+			RecallUsedThisTurn = false;
+		}
+
+		// Method to mark recall as used
+		public void MarkRecallUsed()
+		{
+			RecallUsedThisTurn = true;
 		}
 	}
 }
