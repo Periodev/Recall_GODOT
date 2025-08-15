@@ -7,6 +7,7 @@ using CombatCore.InterOp;
 using CombatCore.Abstractions;
 using CombatCore.Command;
 using CombatCore.Memory;
+using static CombatCore.GameConst;
 
 public abstract record HLAIntent(int? TargetId);
 public sealed record BasicIntent(ActionType Act, int? TargetId) : HLAIntent(TargetId);
@@ -88,9 +89,13 @@ public sealed class HLATranslator
 		if (numbers.APCost > 0 && !self.HasAP(numbers.APCost))
 			return Fail("no ap", out fail);
 		
-		// Charge 檢查：A/B 動作需要檢查 Charge
-		if (numbers.ChargeCost > 0 && !self.HasCharge(numbers.ChargeCost))
-			return Fail("no charge", out fail);
+		// 動態決定此次可用的 Charge 數量與加成
+		int use = 0;
+		if (bi.Act == ActionType.A || bi.Act == ActionType.B)
+			use = Math.Min(self.Charge?.Value ?? 0, CHARGE_MAX_PER_ACTION);
+
+		int dmg = numbers.Damage + (bi.Act == ActionType.A ? A_BONUS_PER_CHARGE * use : 0);
+		int blk = numbers.Block  + (bi.Act == ActionType.B ? B_BONUS_PER_CHARGE * use : 0);
 
 		plan = new BasicPlan(bi.Act, self, tgt, 
 			numbers.Damage, numbers.Block, numbers.ChargeCost, numbers.GainAmount, numbers.APCost);
@@ -139,12 +144,8 @@ public sealed class HLATranslator
 			var op = memory.Ops[idx];
 			var itemNumbers = ComputeBasicNumbers(op);
 			
-			// 逐項扣費策略：A/B 各扣 1 Charge
-			int itemChargeCost = (op == ActionType.A || op == ActionType.B) ? 1 : 0;
-			totalChargeCost += itemChargeCost;
-			
 			items.Add(new RecallItemPlan(op, 
-				itemNumbers.Damage, itemNumbers.Block, itemChargeCost, itemNumbers.GainAmount));
+				itemNumbers.Damage, itemNumbers.Block, 0, itemNumbers.GainAmount));
 		}
 
 		// Charge 檢查：檢查總需求量
@@ -166,8 +167,8 @@ public sealed class HLATranslator
 	{
 		return act switch
 		{
-			ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 1, APCost: 1),
-			ActionType.B => (Damage: 0, Block: 6, GainAmount: 0, ChargeCost: 1, APCost: 1),
+			ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: 1),
+			ActionType.B => (Damage: 0, Block: 6, GainAmount: 0, ChargeCost: 0, APCost: 1),
 			ActionType.C => (Damage: 0, Block: 0, GainAmount: 2, ChargeCost: 0, APCost: 1),
 			_ => (0, 0, 0, 0, 1)
 		};
