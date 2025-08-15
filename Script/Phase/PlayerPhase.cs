@@ -18,7 +18,7 @@ public static class PlayerPhase
 
     public static PhaseResult Input(ref PhaseContext ctx)
     {
-        ctx.Step = PhaseStep.PlayerExecute;
+        ctx.Step = PhaseStep.PlayerInput;
         return PhaseResult.WaitInput;
     }
 
