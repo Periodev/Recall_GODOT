@@ -1,0 +1,41 @@
+[gd_scene load_steps=3 format=3 uid="uid://dqbfm5aptvpyf"]
+
+[ext_resource type="PackedScene" uid="uid://bpc2p5fd8gggf" path="res://TimelineSelector.tscn" id="1_neier"]
+[ext_resource type="Script" uid="uid://dm2aen53gq2t6" path="res://Script/UI/RecallPanel.cs" id="1_ty0qy"]
+
+[node name="RecallPanel" type="Control" node_paths=PackedStringArray("BtnRecall", "BtnConfirm", "BtnCancel", "Timeline")]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 271.0
+offset_bottom = 84.0
+script = ExtResource("1_ty0qy")
+BtnRecall = NodePath("HBoxContainer/BtnRecall")
+BtnConfirm = NodePath("HBoxContainer/BtnConfirm")
+BtnCancel = NodePath("HBoxContainer/BtnCancel")
+Timeline = NodePath("Timeline")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 268.0
+offset_bottom = 79.0
+
+[node name="BtnRecall" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Recall"
+
+[node name="BtnConfirm" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Confirm"
+
+[node name="BtnCancel" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[node name="Timeline" parent="." instance=ExtResource("1_neier")]
+offset_left = 3.0
+offset_top = 119.0
+offset_right = 43.0
+offset_bottom = 159.0

@@ -2,32 +2,41 @@
 
 [ext_resource type="Script" uid="uid://b2pmv3u3xiq1e" path="res://Script/UI/BasicMoveUI.cs" id="1_a7nm2"]
 
-[node name="Control" type="Control" node_paths=PackedStringArray("ButtonA", "ButtonB", "ButtonC")]
+[node name="Control" type="Control" node_paths=PackedStringArray("BtnA", "BtnB", "BtnC", "BtnEnd")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("1_a7nm2")
-ButtonA = NodePath("HBoxContainer/ButtonA")
-ButtonB = NodePath("HBoxContainer/ButtonB")
-ButtonC = NodePath("HBoxContainer/ButtonC")
+BtnA = NodePath("HBoxContainer/BtnA")
+BtnB = NodePath("HBoxContainer/BtnB")
+BtnC = NodePath("HBoxContainer/BtnC")
+BtnEnd = NodePath("BtnEnd")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 offset_right = 150.0
 offset_bottom = 40.0
 
-[node name="ButtonA" type="Button" parent="HBoxContainer"]
+[node name="BtnA" type="Button" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "A"
 
-[node name="ButtonB" type="Button" parent="HBoxContainer"]
+[node name="BtnB" type="Button" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "B"
 
-[node name="ButtonC" type="Button" parent="HBoxContainer"]
+[node name="BtnC" type="Button" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "C"
+
+[node name="BtnEnd" type="Button" parent="."]
+layout_mode = 2
+offset_left = 2.0
+offset_top = 93.0
+offset_right = 141.0
+offset_bottom = 133.0
+text = "End Turn"

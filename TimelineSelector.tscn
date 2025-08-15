@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://bpc2p5fd8gggf"]
+
+[node name="TimelineSelector" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 267.0
+offset_bottom = 53.0
+
+[node name="BtnSlot1" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnSlot2" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnSlot3" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnSlot4" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnSlot5" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

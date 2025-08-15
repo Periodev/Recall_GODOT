@@ -14,7 +14,7 @@ offset_right = 333.0
 offset_bottom = 351.0
 
 [node name="ChargeLabel" type="Label" parent="."]
-offset_left = 93.0
-offset_top = 324.0
-offset_right = 333.0
-offset_bottom = 468.0
+offset_left = 132.0
+offset_top = 347.0
+offset_right = 372.0
+offset_bottom = 491.0
