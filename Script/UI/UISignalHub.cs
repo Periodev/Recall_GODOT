@@ -12,6 +12,7 @@ public static class UISignalHub
 	public static Action<int>? OnShieldChanged;
 	public static Action<int>? OnAPChanged;
 
+	public static Action? OnPlayerDrawComplete;
 
 	public static void NotifyHPChanged(int value)
 	{
@@ -32,5 +33,10 @@ public static class UISignalHub
 	{
 		OnAPChanged?.Invoke(value);
 	}
+
+    public static void NotifyPlayerDrawComplete()
+    {
+        OnPlayerDrawComplete?.Invoke();
+    }
 
 }

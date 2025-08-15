@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://c82pb1vuwbgl8"]
+[gd_scene load_steps=7 format=3 uid="uid://c82pb1vuwbgl8"]
 
 [ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Script/Combat.cs" id="1_vj48t"]
 [ext_resource type="Script" uid="uid://d3m3ldps8oa6u" path="res://Script/CombatState.cs" id="2_vvyul"]
 [ext_resource type="PackedScene" uid="uid://d3284mdfjg13m" path="res://PlayerView.tscn" id="3_vvyul"]
 [ext_resource type="PackedScene" uid="uid://brmojt2s5oqgf" path="res://BasicMoveUI.tscn" id="4_tppsp"]
 [ext_resource type="PackedScene" uid="uid://dqbfm5aptvpyf" path="res://RecallPanel.tscn" id="5_lnhn1"]
+[ext_resource type="PackedScene" uid="uid://ogmhcsudweq1" path="res://EnemyView.tscn" id="6_brs8u"]
 
 [node name="Combat" type="Control"]
 layout_mode = 3
@@ -12,7 +13,7 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatState", "PlayerView", "RecallPanel")]
+[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatState", "PlayerView", "RecallPanel", "EnemyView")]
 visible = false
 anchors_preset = 0
 offset_right = 40.0
@@ -21,6 +22,7 @@ script = ExtResource("1_vj48t")
 CombatState = NodePath("../CombatState")
 PlayerView = NodePath("../UI/PlayerView")
 RecallPanel = NodePath("../UI/RecallPanel")
+EnemyView = NodePath("../UI/EnemyView")
 
 [node name="CombatState" type="Node" parent="."]
 script = ExtResource("2_vvyul")
@@ -38,10 +40,11 @@ offset_bottom = 466.0
 CombatCtrl = NodePath("../../Control")
 
 [node name="Enemy" type="Button" parent="UI"]
-offset_left = 716.0
-offset_top = 295.0
-offset_right = 837.0
-offset_bottom = 410.0
+visible = false
+offset_left = 747.0
+offset_top = 93.0
+offset_right = 868.0
+offset_bottom = 208.0
 text = "Enemy"
 
 [node name="RecallPanel" parent="UI" instance=ExtResource("5_lnhn1")]
@@ -49,3 +52,6 @@ offset_left = 256.0
 offset_top = 444.0
 offset_right = 530.0
 offset_bottom = 518.0
+
+[node name="EnemyView" parent="UI" instance=ExtResource("6_brs8u")]
+position = Vector2(825, 242)

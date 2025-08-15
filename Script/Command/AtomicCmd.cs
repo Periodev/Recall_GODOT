@@ -87,7 +87,7 @@ namespace CombatCore.Command
 			
 			// 計算實際 HP 傷害
 			int hpDamage = SelfOp.CutHP(Target, penetrating);
-
+			UISignalHub.NotifyHPChanged(hpDamage);
 #if DEBUG
 			if (hpDamage > 0 || shieldAbsorbed > 0)
 			{
@@ -157,8 +157,8 @@ namespace CombatCore.Command
 
 		// Debug functions
 #if DEBUG
-		private string GetSourceName() => Source?.GetType().Name ?? "Unknown";
-		private string GetTargetName() => Target.GetType().Name;
+		private string GetSourceName() => Source?.DebugName ?? "Unknown";
+		private string GetTargetName() => Target.DebugName;
 #endif
 
 		public override string ToString()

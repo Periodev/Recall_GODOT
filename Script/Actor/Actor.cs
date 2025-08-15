@@ -9,6 +9,9 @@ public class Actor
 	public Shield Shield { get; }
 	public AP AP { get; }
 	public Charge? Charge { get; }
+	
+	public string DebugName { get; set; } = "Actor";
+
 
 	public Actor(int maxHP, int apPerTurn = 3, bool withCharge = true)
 	{

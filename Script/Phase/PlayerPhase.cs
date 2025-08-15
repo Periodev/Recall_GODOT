@@ -12,6 +12,7 @@ public static class PlayerPhase
 
     public static PhaseResult Draw(ref PhaseContext ctx)
     {
+        UISignalHub.NotifyPlayerDrawComplete();
         ctx.Step = PhaseStep.PlayerInput;
         return PhaseResult.Continue;
     }

@@ -13,7 +13,7 @@ public partial class Combat : Control
 	[Export] public CombatState CombatState;    // manually bind model.cs in inspector
 	[Export] public PlayerView PlayerView;      // manually bind view.tscn instance in inspector
 	[Export] public RecallPanel RecallPanel;
-
+	[Export] public EnemyView EnemyView;
 
 	// Intent to command pipeline
 	private readonly HLATranslator _translator = new();
@@ -32,12 +32,17 @@ public partial class Combat : Control
 		if (CombatState != null)
 		{
 			GD.Print("read CombatState success");
-
-			UISignalHub.OnChargeChanged += OnChargeChanged;
+			UISignalHub.OnHPChanged += OnStatusChanged;
+			UISignalHub.OnChargeChanged += OnStatusChanged;
+			UISignalHub.OnShieldChanged += OnStatusChanged;
+			UISignalHub.OnAPChanged += OnStatusChanged;
 
 		}
 
 		PlayerView.BindActor(CombatState.Player);
+		EnemyView.BindActor(CombatState.Enemy);
+		CombatState.Player.DebugName = "Player";
+		CombatState.Enemy.DebugName = "Enemy";
 
 
 		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
@@ -48,11 +53,9 @@ public partial class Combat : Control
 		//CombatState.Mem.Push(ActionType.A, 0);
 		//CombatState.Mem.Push(ActionType.B, 1);
 
+		UISignalHub.OnPlayerDrawComplete += OnPlayerDrawComplete;
 
-		//RecallPanel.RecallPressed += OnRecallStart;
-		//RecallPanel.SelectionChanged += OnRecallSelectionChanged;
-		//RecallPanel.ConfirmPressed += OnRecallConfirm;
-		//RecallPanel.CancelPressed += OnRecallCancel;
+		RecallPanel.ConfirmPressed += OnRecallConfirm;
 
 		RefreshTimelineSnapshot();
 	}
@@ -60,15 +63,24 @@ public partial class Combat : Control
 	public override void _ExitTree()
 	{
 		// 記得取消訂閱避免記憶體洩漏
-		UISignalHub.OnChargeChanged -= OnChargeChanged;
+		UISignalHub.OnChargeChanged -= OnStatusChanged;
+		UISignalHub.OnHPChanged -= OnStatusChanged;
+		UISignalHub.OnShieldChanged -= OnStatusChanged;
+		UISignalHub.OnAPChanged -= OnStatusChanged;
+		UISignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
 	}
 
-	private void OnChargeChanged(int newCharge)
+	private void OnStatusChanged(int newSts)
 	{
-		GD.Print($"Combat received charge changed: {newCharge}");
 		PlayerView.UpdateVisual(); // 通知 View 更新
+		EnemyView.UpdateVisual();
+
+		GD.Print("[UI] OnStatusChanged");
 	}
 
+
+
+	// Move options
 	public void TryRunBasic(ActionType act, int? targetId)
 	{
 		GD.Print($"[UI] Basic Intent {act} pressed");
@@ -89,14 +101,27 @@ public partial class Combat : Control
 		if (!ok) { GD.PrintErr($"[HLA] {fail}"); return; }
 		else { GD.Print($"[HLA] success"); }
 
-		//_exec.ExecuteAll(cmds);
-		CombatState.Mem.Push(act, phase.TurnNum);
-		RefreshTimelineSnapshot();
 
+		try
+		{
+			var cmds = _interops.BuildBasic(basic);
+			_exec.ExecuteAll(cmds);
+			CombatState.Mem.Push(act, phase.TurnNum);
 
-		// process phase step
-		CombatState.PhaseCtx.Step = PhaseStep.PlayerExecute;
-		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx); // 跑到下一次 WaitInput
+			// 刷新
+			PlayerView?.UpdateVisual();
+			RecallPanel?.RefreshSnapshot(
+				CombatState.Mem.SnapshotOps(),
+				CombatState.Mem.SnapshotTurns(),
+				CombatState.PhaseCtx.TurnNum);
+			// process phase step
+			CombatState.PhaseCtx.Step = PhaseStep.PlayerExecute;
+			CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx); // 跑到下一次 WaitInput
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr(e.Message); // 例如 no ap
+		}	
 
 	}
 
@@ -105,16 +130,51 @@ public partial class Combat : Control
 		GD.Print($"[UI] End Turn Intent pressed");
 		CombatState.PhaseCtx.Step = PhaseStep.TurnEnd;
 		CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
-
 	}
 
+	public void TryRunRecall(int[] indices, int? targetId)
+	{
+		if (CombatState.PhaseCtx.Step != PhaseStep.PlayerInput) { GD.Print("[Recall] ignore: not PlayerInput"); return; }
+		if (indices == null || indices.Length == 0) { GD.Print("[Recall] empty selection"); return; }
 
-	// Recall events
-	void OnRecallStart()
-	{ 
-		GD.Print($"[UI] Recall Intent pressed");
+		var phase  = CombatState.PhaseCtx;
+		var self   = CombatState.Player;
+		var view   = CombatState.GetRecallView();   // Mem.SnapshotOps/Turns 封裝
+		var actors = CombatState;                   // IActorLookup
 
+		GD.Print($"[Recall] sel=[{string.Join(",", indices)}], tgt={(targetId?.ToString() ?? "null")}");
+
+		if (!_translator.TryTranslate(
+				new RecallIntent(indices, targetId),
+				phase, view, actors, self,
+				out _, out var plan, out var fail))
+		{
+			GD.PrintErr($"[HLA] {fail}");
+			return;
+		}
+
+		try
+		{
+			var cmds = _interops.BuildRecall(plan);
+			_exec.ExecuteAll(cmds);
+
+			CombatState.PhaseCtx.MarkRecallUsed();
+			CombatState.PhaseCtx.Step = PhaseStep.PlayerExecute;
+			CombatKernel.AdvanceUntilInput(ref CombatState.PhaseCtx);
+
+			// 刷新
+			PlayerView?.UpdateVisual();
+			RecallPanel?.RefreshSnapshot(
+				CombatState.Mem.SnapshotOps(),
+				CombatState.Mem.SnapshotTurns(),
+				CombatState.PhaseCtx.TurnNum);
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr(e.Message); // 例如 no ap
+		}
 	}
+
 
 	private void RefreshTimelineSnapshot()
 	{
@@ -125,24 +185,34 @@ public partial class Combat : Control
 	}
 
 
-	void OnRecallSelectionChanged(int[] indices)
-	{ /* 記錄索引 + 決定是否可 Confirm */
-		GD.Print($"[UI] Recall Selection Changed");
-
+	private void OnPlayerDrawComplete()
+	{
+		var memOps = CombatState.Mem.SnapshotOps();
+		if (memOps.Count > 0)
+		{
+			RecallPanel.EnterPlayerPhase();
+		}
 	}
 
-	void OnRecallConfirm()
-	{ /* TryRunRecall + 關閉選取 */
-		GD.Print($"[UI] Recall Confirm");
+	private void OnRecallConfirm(int[] indices)
+	{
+		// 檢查是否包含攻擊動作
+		bool hasAttack = false;
+		var memOps = CombatState.Mem.SnapshotOps();
 
+		foreach (int idx in indices)
+		{
+			if (idx < memOps.Count && memOps[idx] == ActionType.A)
+			{
+				hasAttack = true;
+				break;
+			}
+		}
+
+		int? targetId = hasAttack ? 1 : null;  // 1 = enemy
+
+		TryRunRecall(indices, targetId);
 	}
-
-	void OnRecallCancel()
-	{ /* 關閉選取 + 清狀態 */
-		GD.Print($"[UI] Recall Cancel");
-
-	}
-
 
 
 }

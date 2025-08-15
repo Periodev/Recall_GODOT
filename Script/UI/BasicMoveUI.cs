@@ -28,13 +28,6 @@ public partial class BasicMoveUI : Control
 	}
 
 
-	private void OnBasicMovePressed(string moveId)
-	{
-		GD.Print($"[UI] Basic Move {moveId} pressed");
-		// 🔹 這裡可以直接呼叫 CombatState 或 Kernel 的 API
-		// CombatControl.Instance.QueueBasicMove(moveId);
-	}
-
 	private void OnEndTurnPressed()
 	{
 		GD.Print($"[UI] End Turn pressed");
