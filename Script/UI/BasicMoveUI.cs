@@ -4,22 +4,40 @@ using CombatCore;
 
 public partial class BasicMoveUI : Control
 {
+	[Export] public Combat CombatCtrl;
+
 	// manually bind in inspector
-	[Export] private Button ButtonA;
-	[Export] private Button ButtonB;
-	[Export] private Button ButtonC;
+	[Export] private Button BtnA;
+	[Export] private Button BtnB;
+	[Export] private Button BtnC;
+	[Export] private Button BtnEnd;
+
 
 	public override void _Ready()
 	{
-		ButtonA.Pressed += () => OnBasicMovePressed("A");
-		ButtonB.Pressed += () => OnBasicMovePressed("B");
-		ButtonC.Pressed += () => OnBasicMovePressed("C");
+		/*
+		BtnA.Pressed += () => OnBasicMovePressed("A");
+		BtnB.Pressed += () => OnBasicMovePressed("B");
+		BtnC.Pressed += () => OnBasicMovePressed("C");
+		*/
+		BtnA.Pressed += () => CombatCtrl.TryRunBasic(ActionType.A, 1) ;
+		BtnB.Pressed += () => CombatCtrl.TryRunBasic(ActionType.B, null);
+		BtnC.Pressed += () => CombatCtrl.TryRunBasic(ActionType.C, null); 
+		BtnEnd.Pressed += () => OnEndTurnPressed();
+	
 	}
 
 
 	private void OnBasicMovePressed(string moveId)
 	{
 		GD.Print($"[UI] Basic Move {moveId} pressed");
+		// 🔹 這裡可以直接呼叫 CombatState 或 Kernel 的 API
+		// CombatControl.Instance.QueueBasicMove(moveId);
+	}
+
+	private void OnEndTurnPressed()
+	{
+		GD.Print($"[UI] End Turn pressed");
 		// 🔹 這裡可以直接呼叫 CombatState 或 Kernel 的 API
 		// CombatControl.Instance.QueueBasicMove(moveId);
 	}
