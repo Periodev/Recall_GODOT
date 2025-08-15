@@ -169,7 +169,7 @@ public sealed class HLATranslator
 		{
 			ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: 1),
 			ActionType.B => (Damage: 0, Block: 6, GainAmount: 0, ChargeCost: 0, APCost: 1),
-			ActionType.C => (Damage: 0, Block: 0, GainAmount: 2, ChargeCost: 0, APCost: 1),
+			ActionType.C => (Damage: 0, Block: 0, GainAmount: 1, ChargeCost: 0, APCost: 1),
 			_ => (0, 0, 0, 0, 1)
 		};
 	}
