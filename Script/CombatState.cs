@@ -3,12 +3,16 @@ using System;
 using CombatCore;
 using CombatCore.Component;
 using CombatCore.Abstractions;
+using CombatCore.Memory;
+
 
 public partial class CombatState : Node, IActorLookup
 {
 	public PhaseContext PhaseCtx;
 	public Actor Player { get; private set; }
 	public Actor Enemy { get; private set; }  // default enemy
+	public MemoryQueue Mem { get; private set; } = new MemoryQueue(5);
+
 
 	public CombatState()
 	{
@@ -22,6 +26,10 @@ public partial class CombatState : Node, IActorLookup
 	{
 		GD.Print("Combat state is ready");
 	}
+
+    public RecallView GetRecallView() =>
+        new RecallView(Mem.SnapshotOps(), Mem.SnapshotTurns());
+
 
 	public Actor GetById(int actorId)
 	{
