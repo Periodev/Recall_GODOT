@@ -49,10 +49,10 @@ public partial class Combat : Control
 		//CombatState.Mem.Push(ActionType.B, 1);
 
 
-		RecallPanel.RecallPressed += OnRecallStart;
-		RecallPanel.SelectionChanged += OnRecallSelectionChanged;
-		RecallPanel.ConfirmPressed += OnRecallConfirm;
-		RecallPanel.CancelPressed += OnRecallCancel;
+		//RecallPanel.RecallPressed += OnRecallStart;
+		//RecallPanel.SelectionChanged += OnRecallSelectionChanged;
+		//RecallPanel.ConfirmPressed += OnRecallConfirm;
+		//RecallPanel.CancelPressed += OnRecallCancel;
 
 		RefreshTimelineSnapshot();
 	}
