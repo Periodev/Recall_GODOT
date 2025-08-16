@@ -104,7 +104,9 @@ public partial class Combat : Control
 		try
 		{
 			var cmds = _interops.BuildBasic(basic);
-			_exec.ExecuteAll(cmds);
+			//_exec.ExecuteAll(cmds);
+			_exec.ExecuteOrDiscard(cmds);
+
 			CombatState.Mem.Push(act, phase.TurnNum);
 
 			// 刷新
@@ -154,7 +156,8 @@ public partial class Combat : Control
 		try
 		{
 			var cmds = _interops.BuildRecall(plan);
-			_exec.ExecuteAll(cmds);
+			//_exec.ExecuteAll(cmds);
+			_exec.ExecuteOrDiscard(cmds);
 
 			CombatState.PhaseCtx.MarkRecallUsed();
 			CombatState.PhaseCtx.Step = PhaseStep.PlayerExecute;
