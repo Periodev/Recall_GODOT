@@ -15,8 +15,7 @@ public partial class Combat : Control
 	[Export] public RecallPanel RecallPanel;
 	[Export] public EnemyView EnemyView;
 
-	public CombatEngine _engine = new();
-
+	
 	public override void _Ready()
 	{
 
