@@ -91,14 +91,13 @@ public partial class Combat : Control
 		var actors = CombatState;                      // IActorLookup
 
 		BasicPlan basic;
-		string fail;
 
-		bool ok = _translator.TryTranslate(
+		FailCode fail = _translator.TryTranslate(
 			new BasicIntent(act, targetId),
 			phase, memV, actors, self,
-			out basic, out _, out fail);   // <- 丟掉 RecallPlan
+			out basic, out _);   // <- 丟掉 RecallPlan
 
-		if (!ok) { GD.PrintErr($"[HLA] {fail}"); return; }
+		if (fail != FailCode.None) { GD.PrintErr($"[HLA] {fail}"); return; }
 		else { GD.Print($"[HLA] success"); }
 
 
@@ -144,14 +143,13 @@ public partial class Combat : Control
 
 		GD.Print($"[Recall] sel=[{string.Join(",", indices)}], tgt={(targetId?.ToString() ?? "null")}");
 
-		if (!_translator.TryTranslate(
+		FailCode fail = _translator.TryTranslate(
 				new RecallIntent(indices, targetId),
 				phase, view, actors, self,
-				out _, out var plan, out var fail))
-		{
-			GD.PrintErr($"[HLA] {fail}");
-			return;
-		}
+				out _, out var plan);
+
+		if (fail != FailCode.None) { GD.PrintErr($"[HLA] {fail}"); return; }
+
 
 		try
 		{
