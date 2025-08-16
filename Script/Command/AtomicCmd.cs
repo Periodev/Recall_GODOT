@@ -9,7 +9,7 @@ namespace CombatCore.Command
 	{
 		DealDamage = 0x01,
 		AddShield = 0x02,
-		GainCharge = 0x03, 
+		GainCharge = 0x03,
 		ConsumeCharge = 0x04,
 		ConsumeAP = 0x05     // ← 新增
 	}
@@ -81,10 +81,10 @@ namespace CombatCore.Command
 			// 護盾優先吸收傷害
 			int shieldAbsorbed = SelfOp.CutShield(Target, Value);
 			int penetrating = Value - shieldAbsorbed;
-			
+
 			// 短路優化：如果護盾完全吸收，直接返回 0 HP傷害
 			if (penetrating <= 0) return 0;
-			
+
 			// 計算實際 HP 傷害
 			int hpDamage = SelfOp.CutHP(Target, penetrating);
 			UISignalHub.NotifyHPChanged(hpDamage);
@@ -130,7 +130,7 @@ namespace CombatCore.Command
 
 		private int ExecuteConsumeCharge()
 		{
-			int actualConsumed = SelfOp.ConsumeCharge(Target, Value) ? Value : 0 ;
+			int actualConsumed = SelfOp.ConsumeCharge(Target, Value) ? Value : 0;
 #if DEBUG
 			if (actualConsumed > 0)
 			{
@@ -143,11 +143,17 @@ namespace CombatCore.Command
 
 		private int ExecuteConsumeAP()
 		{
-			int actualConsumed = SelfOp.ConsumeAP(Source, Value) ? Value : throw new InvalidOperationException("AP not enough");
+			bool ok = SelfOp.ConsumeAP(Source, Value);
+			int actualConsumed = ok ? Value : 0;
+
 #if DEBUG
-			if (actualConsumed > 0)
+			if (ok)
 			{
 				Debug.WriteLine($"[ConsumeAP] {GetSourceName()} consumed {actualConsumed} AP");
+			}
+			else
+			{
+				Debug.WriteLine($"[ConsumeAP] FAILED {GetSourceName()} (not enough AP)");
 			}
 #endif
 

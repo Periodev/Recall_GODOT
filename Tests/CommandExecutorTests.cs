@@ -5,7 +5,7 @@ namespace Tests
     [TestFixture]
     public class CommandExecutorTests
     {
-        private ICmdExecutor _executor;
+        private CmdExecutor _executor;
 
         [SetUp]
         public void SetUp()

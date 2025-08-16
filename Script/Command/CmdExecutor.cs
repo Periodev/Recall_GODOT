@@ -4,13 +4,7 @@ using System.Collections.Generic;
 
 namespace CombatCore.Command
 {
-	public interface ICmdExecutor
-	{
-		CmdLog ExecuteAll(IEnumerable<AtomicCmd> cmds);
-		// 之後擴充：ExecuteOrSchedule(...), ExecuteOrDiscard(...)
-	}
-
-	public class CmdExecutor : ICmdExecutor
+	public class CmdExecutor
 	{
 		public CmdLog ExecuteAll(IEnumerable<AtomicCmd> cmds)
 		{

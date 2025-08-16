@@ -13,4 +13,5 @@ namespace CombatCore
 		public const bool PASS = true;
 		public const bool FAIL = false;
 	}
+	enum FailCode { None, NoAP, NoCharge, BadTarget, BadIndices, PhaseLocked, RecallUsed };
 }
