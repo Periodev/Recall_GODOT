@@ -53,6 +53,7 @@ namespace CombatCore
 		public PhaseStep Step;
 		public int TurnNum;
 		public bool RecallUsedThisTurn; // Track if Recall has been used this turn
+		public HLAIntent PendingIntent;
 
 		public void Init()
 		{
@@ -73,5 +74,14 @@ namespace CombatCore
 		{
 			RecallUsedThisTurn = true;
 		}
+
+		public void SetIntent(HLAIntent intent) => PendingIntent = intent;
+		public bool TryConsumeIntent(out HLAIntent intent)
+		{
+			if (PendingIntent is null) { intent = null; return false; }
+			intent = PendingIntent; PendingIntent = null; return true;
+		}
+
+
 	}
 }

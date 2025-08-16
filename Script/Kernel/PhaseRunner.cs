@@ -2,7 +2,7 @@
 using System;
 using CombatCore;
 
-public static class CombatKernel
+public static class PhaseRunner
 {
 	public static PhaseResult Run(ref PhaseContext ctx)
 	{
