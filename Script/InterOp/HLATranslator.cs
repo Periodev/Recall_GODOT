@@ -64,9 +64,6 @@ public sealed class HLATranslator
 	{
 		plan = default;
 
-		// 一次/回合檢查
-		if (RecallUsedThisTurn(phase)) return FailCode.RecallUsed;
-
 		// 嚴格目標驗證
 		var tgt = ResolveTarget(bi.TargetId, actors);
 		if (bi.Act == ActionType.A)

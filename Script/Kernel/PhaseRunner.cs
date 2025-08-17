@@ -92,25 +92,14 @@ public static class PhaseRunner
 		return AdvanceUntilInput(ref state);
 	}
 
-
+	public static bool IsPlayerPhase(ref CombatState state)
+	{
+		return ((byte)state.PhaseCtx.Step & 0xF0) == 0x00;
+	}
 
 
 
 	// === 內部邏輯：狀態保護 ===
-
-	/// 檢查玩家是否可以執行動作
-	private static bool CanPlayerAct(PhaseContext ctx)
-	{
-		return ctx.Step == PhaseStep.PlayerInput;
-	}
-
-	/// 檢查敵人是否可以執行動作
-	private static bool CanEnemyAct(PhaseContext ctx)
-	{
-		return ctx.Step == PhaseStep.EnemyIntent ||
-			   ctx.Step == PhaseStep.EnemyPlanning;
-	}
-
 
 	/// 執行單個 Phase 步驟並提供服務調度
 	public static PhaseResult Run(ref CombatState state)
@@ -254,7 +243,7 @@ public static class PhaseRunner
 		var translationResult = CombatPipeline.TranslateIntent(state, state.Player, intent);
 
 #if DEBUG
-			GD.Print($"Translating.");
+		GD.Print($"Translating.");
 #endif
 
 
@@ -366,6 +355,19 @@ public static class PhaseRunner
 
 	// === 輔助方法 ===
 
+	/// 檢查玩家是否可以執行動作
+	private static bool CanPlayerAct(PhaseContext ctx)
+	{
+		return ctx.Step == PhaseStep.PlayerInput;
+	}
+
+	/// 檢查敵人是否可以執行動作
+	private static bool CanEnemyAct(PhaseContext ctx)
+	{
+		return ctx.Step == PhaseStep.EnemyIntent ||
+			   ctx.Step == PhaseStep.EnemyPlanning;
+	}
+
 	private static bool IsStoppingResult(PhaseResult result)
 	{
 		return result == PhaseResult.WaitInput ||
@@ -373,4 +375,5 @@ public static class PhaseRunner
 			   result == PhaseResult.Interrupt ||
 			   result == PhaseResult.CombatEnd;
 	}
+	
 }

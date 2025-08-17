@@ -111,7 +111,8 @@ namespace CombatCore
 		private static void CommitAction(CombatState state, HLAIntent intent, ExecResult execResult)
 		{
 			// Memory 管理：Basic 動作需要寫入記憶
-			if (intent is BasicIntent basicIntent)
+
+			if (intent is BasicIntent basicIntent && PhaseRunner.IsPlayerPhase(ref state))
 			{
 				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
 			}
@@ -121,10 +122,6 @@ namespace CombatCore
 			{
 				state.PhaseCtx.MarkRecallUsed();
 			}
-
-			// UI 刷新可以在這裡觸發，或由外部系統處理
-			// 注意：實際的反應邏輯應該由 ReactionSystem 等其他系統處理
-			// UISignalHub.NotifyActionCompleted();
 		}
 	}
 
