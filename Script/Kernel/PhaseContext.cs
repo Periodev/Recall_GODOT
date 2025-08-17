@@ -10,27 +10,23 @@ namespace CombatCore
 {
 	public enum PhaseStep : byte
 	{
-		// === Enemy Phase (0x1X) ===
-		EnemyInit = 0x10,
-		EnemyIntent = 0x11,
-		EnemyPlanning = 0x12,     // 🆕 新增：AI Intent → Commands 轉換階段
-		EnemyExecInstant = 0x13,
-
 		// === Player Phase (0x0X) ===
 		PlayerInit = 0x00,
 		PlayerDraw = 0x01,
 		PlayerInput = 0x02,
-		PlayerPlanning = 0x03,    // 🆕 新增：Intent → Commands 轉換階段
-		PlayerExecute = 0x04,     // 🆕 修改：Commands → Execute 執行階段
+		PlayerPlanning = 0x03,    // 🆕 新增
+		PlayerExecute = 0x04,     // 🆕 新增
 
-		// === Enemy action Phase (0x1X) ===
-		EnemyExecDelayed = 0x14,
+		// === Enemy Phase (0x1X) ===
+		EnemyInit = 0x10,
+		EnemyIntent = 0x11,
+		EnemyPlanning = 0x12,     // 🆕 新增
+		EnemyExecInstant = 0x13,  // 🆕 修改編號
+		EnemyExecDelayed = 0x14,  // 🆕 修改編號
 
 		// === Turn Phase (0xFX) ===
-		TurnStart = 0xF0,           // do nothing, just a marker
-		TurnEnd = 0xF1,
-
-		// === Default ===
+		TurnStart = 0xF0,
+		TurnEnd  = 0xF1,
 		CombatEnd = 0xFF
 	}
 
@@ -54,10 +50,9 @@ namespace CombatCore
 	{
 		public PhaseStep Step;
 		public int TurnNum;
-		public bool RecallUsedThisTurn; // Track if Recall has been used this turn
-
+		public bool RecallUsedThisTurn;
 		public HLAIntent PendingIntent;
-		public TranslationResult? PendingTranslation; // 🆕 等待執行的轉換結果
+		public TranslationResult? PendingTranslation; // 🆕 新增
 
 		public void Init()
 		{
@@ -74,7 +69,7 @@ namespace CombatCore
 			TurnNum++;
 			RecallUsedThisTurn = false;
 			PendingIntent = null;
-			PendingTranslation = null;
+			PendingTranslation = null; // 🆕 清理轉換結果
 		}
 
 		// Method to mark recall as used
@@ -83,34 +78,34 @@ namespace CombatCore
 			RecallUsedThisTurn = true;
 		}
 
-		// HLA
+		// Intent 管理
 		public void SetIntent(HLAIntent intent) => PendingIntent = intent;
-
+		
 		public bool TryConsumeIntent(out HLAIntent intent)
 		{
 			if (PendingIntent is null) { intent = null; return false; }
 			intent = PendingIntent; PendingIntent = null; return true;
 		}
 
-		public bool HasPendingIntent => PendingIntent is not null;
-
-		// InterOP
-		public void SetTranslation(TranslationResult translation) => PendingTranslation = translation;
+		// 🆕 TranslationResult 管理
+		public void SetTranslation(TranslationResult translation)
+		{
+			PendingTranslation = translation;
+		}
 
 		public bool TryConsumeTranslation(out TranslationResult translation)
 		{
-			if (PendingTranslation is null) { translation = default; return false; }
-			translation = PendingTranslation.Value; PendingTranslation = null; return true;
+			if (PendingTranslation is null) 
+			{ 
+				translation = default; 
+				return false; 
+			}
+			translation = PendingTranslation.Value; 
+			PendingTranslation = null; 
+			return true;
 		}
 
-		public bool HasPendingTranslation => PendingTranslation is not null;
-
-
-		public void ClearPendingStates()
-		{
-			PendingIntent = null;
-			PendingTranslation = null;
-		}
-
+		public bool HasPendingTranslation => PendingTranslation.HasValue;
+		public bool HasPendingIntent => PendingIntent is not null;
 	}
 }
