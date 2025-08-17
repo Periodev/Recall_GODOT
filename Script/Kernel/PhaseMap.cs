@@ -21,18 +21,16 @@ public static class PhaseMap
 		// === Enemy Phase - 簡單轉換 ===
 		{ PhaseStep.EnemyInit, EnemyPhase.Init },
 		{ PhaseStep.EnemyIntent, EnemyPhase.Intent },
+		{ PhaseStep.EnemyPlanning, EnemyPhase.Planning },
+		{ PhaseStep.EnemyExecInstant, EnemyPhase.ExecInstant },
 		{ PhaseStep.EnemyExecDelayed, EnemyPhase.ExecDelayed },
 
 		// === Player Phase - 簡單轉換 ===
 		{ PhaseStep.PlayerInit, PlayerPhase.Init },
 		{ PhaseStep.PlayerDraw, PlayerPhase.Draw },
 		{ PhaseStep.PlayerInput, PlayerPhase.Input },
-
-		// 注意：以下複雜 Phase 不在此表中，由 PhaseRunner 直接處理：
-		// - PhaseStep.PlayerPlanning
-		// - PhaseStep.PlayerExecute  
-		// - PhaseStep.EnemyPlanning
-		// - PhaseStep.EnemyExecInstant
+		{ PhaseStep.PlayerPlanning, PlayerPhase.Planning },
+		{ PhaseStep.PlayerExecute, PlayerPhase.Execute}
 	};
 
 	// === 簡單 Phase 處理方法 ===

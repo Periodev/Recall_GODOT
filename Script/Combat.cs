@@ -36,6 +36,7 @@ public partial class Combat : Control
 		BindActorsToUI();
 
 		// 使用新的 PhaseRunner API 推進遊戲流程
+	
 		var result = PhaseRunner.AdvanceUntilInput(CombatState);
 		GD.Print($"Initial phase advance result: {result}, Current step: {CombatState.PhaseCtx.Step}");
 

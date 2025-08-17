@@ -1,19 +1,20 @@
+#if DEBUG
+using Godot;
+#endif
+
 using System;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
 
-/// <summary>
-/// Phase 流程控制器 - 統一管理戰鬥階段推進
-/// 核心原則："Phase 決定何時與誰，Pipeline 決定做什麼；State 是唯一事實來源"
-/// </summary>
+
+/// Phase 流程控制器 - 基於回調模式的設計
+/// 根據 PhaseStep + PhaseResult 組合提供對應服務
+
 public static class PhaseRunner
 {
 	// === 保留原有簽名的方法（向後相容） ===
 	
-	/// <summary>
-	/// 執行單個 Phase 步驟（原有方法，保持向後相容）
-	/// </summary>
 	public static PhaseResult Run(ref PhaseContext ctx)
 	{
 		// 對於簡單 Phase，直接查表執行
@@ -22,94 +23,151 @@ public static class PhaseRunner
 			return stepFunc(ref ctx);
 		}
 		
-		// 對於複雜 Phase，需要 CombatState 支援
-		// 這裡只能返回 Pending，要求外部使用 Run(CombatState) 版本
-		return PhaseResult.Pending;
+#if DEBUG
+		GD.PrintErr($"[PhaseRunner] Unknown phase step: {ctx.Step}. Halting execution to prevent infinite loop.");
+#endif
+		// 未知的 Phase Step，這通常是一個錯誤（例如 PhaseMap 沒定義）。
+		// 返回 Interrupt 而不是 Continue，以防止無窮迴圈。
+		// 讓上層調用者決定如何處理這個中斷。
+		return PhaseResult.Interrupt;
 	}
 
-	/// <summary>
-	/// 推進直到需要輸入（原有方法，保持向後相容）
-	/// </summary>
 	public static PhaseResult AdvanceUntilInput(ref PhaseContext ctx)
 	{
 		PhaseResult result = PhaseResult.Continue;
-		
+		int maxIterations = 100; // 🚨 緊急保護：最多執行 100 步
+		int iterations = 0;
+
 		while (result == PhaseResult.Continue)
 		{
+			iterations++;
 			result = Run(ref ctx);
-			
-			if (result == PhaseResult.WaitInput || 
-				result == PhaseResult.Pending || 
-				result == PhaseResult.Interrupt ||
-				result == PhaseResult.CombatEnd)
+
+			if (IsStoppingResult(result))
+				break;
+
+
+			if (iterations >= maxIterations)
 			{
 				break;
 			}
+
 		}
+
+#if DEBUG
+		if (iterations >= maxIterations)
+		{
+			GD.PrintErr($"[PhaseRunner] Max iterations reached! Current step: {ctx.Step}");
+		}
+#endif
+
 
 		return result;
 	}
 
-	// === 新增的 CombatState 版本（推薦使用） ===
+	// === 新增的 CombatState 版本（服務調度器） ===
 
-	/// <summary>
-	/// 執行單個 Phase 步驟（新版本，支援複雜 Phase）
-	/// </summary>
+	/// 執行單個 Phase 步驟並提供服務調度
+	
 	public static PhaseResult Run(CombatState state)
 	{
 		var step = state.PhaseCtx.Step;
 		
-		// 先嘗試使用傳統 Phase 處理
+		// 先執行標準 Phase 邏輯
 		if (PhaseMap.StepFuncs.TryGetValue(step, out var stepFunc))
 		{
-			return stepFunc(ref state.PhaseCtx);
+			var result = stepFunc(ref state.PhaseCtx);
+			
+			// 🎯 根據 Step + Result 組合決定服務調度
+			return DispatchService(state, step, result);
 		}
 		
-		// 處理需要 CombatPipeline 的複雜 Phase
-		return step switch
-		{
-			PhaseStep.PlayerPlanning => ExecutePlayerPlanning(state),
-			PhaseStep.PlayerExecute => ExecutePlayerExecute(state),
-			PhaseStep.EnemyPlanning => ExecuteEnemyPlanning(state),
-			PhaseStep.EnemyExecInstant => ExecuteEnemyExecInstant(state),
-			_ => PhaseResult.Continue // 未知 Phase，直接繼續
-		};
+#if DEBUG
+		GD.PrintErr($"[PhaseRunner] Unknown phase step: {step}. Halting execution to prevent infinite loop.");
+#endif
+		// 未知的 Phase Step，這通常是一個錯誤（例如 PhaseMap 沒定義）。
+		// 返回 Interrupt 而不是 Continue，以防止無窮迴圈。
+		// 讓上層調用者決定如何處理這個中斷。
+		return PhaseResult.Interrupt;
 	}
 
-	/// <summary>
-	/// 推進直到需要輸入（新版本，支援複雜 Phase）
-	/// </summary>
+	
+	/// 推進直到需要輸入並提供服務調度
+	
 	public static PhaseResult AdvanceUntilInput(CombatState state)
 	{
+		int maxIterations = 100; // 🚨 緊急保護：最多執行 100 步
+		int iterations = 0;
+
 		PhaseResult result = PhaseResult.Continue;
 		
 		while (result == PhaseResult.Continue)
 		{
-			result = Run(state);
-			
-			if (result == PhaseResult.WaitInput || 
-				result == PhaseResult.Pending || 
-				result == PhaseResult.Interrupt ||
-				result == PhaseResult.CombatEnd)
+			iterations++;
+			if (iterations >= maxIterations)
 			{
 				break;
 			}
-		}
 
+			result = Run(state);
+			
+			if (IsStoppingResult(result))
+				break;
+		}
+		
+#if DEBUG
+		if (iterations >= maxIterations)
+		{
+			GD.PrintErr($"[PhaseRunner] Max iterations reached! Current step: {state.PhaseCtx.Step}");
+		}
+#endif
 		return result;
 	}
 
-	// === 複雜 Phase 處理方法 ===
+	// === 服務調度核心 ===
 
-	/// <summary>
-	/// 處理玩家計劃階段：將 Intent 轉換為 Commands
-	/// </summary>
+	
+	/// 根據 PhaseStep + PhaseResult 組合調度對應服務
+	
+	private static PhaseResult DispatchService(CombatState state, PhaseStep step, PhaseResult result)
+	{
+		// 如果不是服務請求，直接返回原結果
+		if (!result.IsServiceRequest())
+			return result;
+
+		// 根據 Step + Result 組合調度服務
+		return (step, result) switch
+		{
+			// === Player Phase 服務 ===
+			(PhaseStep.PlayerPlanning, PhaseResult.RequiresPipeline) 
+				=> ExecutePlayerPlanning(state),
+				
+			(PhaseStep.PlayerExecute, PhaseResult.RequiresExecution) 
+				=> ExecutePlayerExecution(state),
+
+			// === Enemy Phase 服務 ===
+			(PhaseStep.EnemyIntent, PhaseResult.RequiresAI) 
+				=> ExecuteEnemyIntentGeneration(state),
+				
+			(PhaseStep.EnemyPlanning, PhaseResult.RequiresPipeline) 
+				=> ExecuteEnemyPipelineProcessing(state),
+				
+			(PhaseStep.EnemyExecInstant, PhaseResult.RequiresExecution) 
+				=> ExecuteEnemyExecution(state),
+
+
+			// === 未知組合，返回錯誤 ===
+			_ => HandleUnknownServiceRequest(state, step, result)
+		};
+	}
+
+	// === Player 服務實現 ===
+
 	private static PhaseResult ExecutePlayerPlanning(CombatState state)
 	{
 		// 檢查是否有待處理的 Intent
 		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
 		{
-			// 沒有 Intent，回到輸入階段
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
 		}
@@ -119,60 +177,74 @@ public static class PhaseRunner
 		
 		if (!translationResult.Success)
 		{
-			// 轉換失敗，回到輸入階段
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
 		}
 
-		// 保存轉換結果並推進到執行階段
+		// 保存轉換結果並推進
 		state.PhaseCtx.SetTranslation(translationResult);
 		state.PhaseCtx.Step = PhaseStep.PlayerExecute;
 		return PhaseResult.Continue;
 	}
 
-	/// <summary>
-	/// 處理玩家執行階段：執行已轉換的 Commands
-	/// </summary>
-	private static PhaseResult ExecutePlayerExecute(CombatState state)
+	private static PhaseResult ExecutePlayerExecution(CombatState state)
 	{
-		// 檢查是否有待執行的轉換結果
 		if (!state.PhaseCtx.TryConsumeTranslation(out var translation))
 		{
-			// 沒有待執行的命令，回到輸入階段
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
 		}
 
-		// 執行命令
 		var execResult = CombatPipeline.ExecuteCommands(state, translation.Commands, translation.OriginalIntent);
 		
 		if (!execResult.Success)
 		{
-			// 執行失敗，回到輸入階段
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
 		}
 
-		// 執行成功，推進到敵人階段
 		state.PhaseCtx.Step = PhaseStep.EnemyExecDelayed;
 		return PhaseResult.Continue;
 	}
 
-	/// <summary>
-	/// 處理敵人計劃階段：生成 AI Intent 並轉換為 Commands
-	/// </summary>
-	private static PhaseResult ExecuteEnemyPlanning(CombatState state)
+	// === Enemy 服務實現 ===
+
+	
+	/// 處理敵人意圖生成：查詢 AI 策略表，決定敵人行動
+	
+	private static PhaseResult ExecuteEnemyIntentGeneration(CombatState state)
 	{
-		// 生成敵人 AI 意圖
+		// 查詢 AI 策略表，生成敵人意圖
 		var intent = CombatPipeline.GenerateEnemyIntent(state);
 		
-		// 轉換為命令
+		// 設定 Intent 並推進到計劃階段
+		state.PhaseCtx.SetIntent(intent);
+		state.PhaseCtx.Step = PhaseStep.EnemyPlanning;
+		return PhaseResult.Continue;
+	}
+
+	
+	/// 處理敵人管線處理：將意圖轉換為執行計劃
+	
+	private static PhaseResult ExecuteEnemyPipelineProcessing(CombatState state)
+	{
+		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
+		{
+			// 異常：沒有 Intent，回退到意圖階段
+			state.PhaseCtx.Step = PhaseStep.EnemyIntent;
+			return PhaseResult.Continue;
+		}
+
 		var translationResult = CombatPipeline.TranslateIntent(state, state.Enemy, intent);
 		
 		if (!translationResult.Success)
 		{
-			// AI 轉換失敗，跳過敵人行動
-			state.PhaseCtx.Step = PhaseStep.EnemyExecDelayed;
+			// 轉換失敗，跳過敵人行動
+			state.PhaseCtx.Step = PhaseStep.PlayerInit;
+
+#if DEBUG
+			GD.PrintErr($"[PhaseRunner] No enemy Intent.");	 
+#endif
 			return PhaseResult.Continue;
 		}
 
@@ -182,24 +254,43 @@ public static class PhaseRunner
 		return PhaseResult.Continue;
 	}
 
-	/// <summary>
-	/// 處理敵人即時執行階段：執行已轉換的 Commands
-	/// </summary>
-	private static PhaseResult ExecuteEnemyExecInstant(CombatState state)
+	private static PhaseResult ExecuteEnemyExecution(CombatState state)
 	{
-		// 檢查是否有待執行的轉換結果
 		if (!state.PhaseCtx.TryConsumeTranslation(out var translation))
 		{
-			// 沒有待執行的命令，跳過
 			state.PhaseCtx.Step = PhaseStep.PlayerInit;
 			return PhaseResult.Continue;
 		}
 
-		// 執行命令
 		var execResult = CombatPipeline.ExecuteCommands(state, translation.Commands, translation.OriginalIntent);
 		
-		// 無論成功與否，都推進到玩家階段
 		state.PhaseCtx.Step = PhaseStep.PlayerInit;
 		return PhaseResult.Continue;
+	}
+
+	// === 錯誤處理 ===
+
+	private static PhaseResult HandleUnknownServiceRequest(CombatState state, PhaseStep step, PhaseResult result)
+	{
+		// 這是個嚴重的邏輯錯誤，因為一個 Phase Function 請求了一項服務，
+		// 但 Dispatcher 不知道如何處理。
+		// 如果我們返回 Continue，將會導致無窮迴圈，因為 Step 沒有改變。
+#if DEBUG
+		GD.PrintErr($"[PhaseRunner] Unknown service request combination: Step={step}, Result={result}. Halting execution.");
+#endif
+		
+		// 返回 Interrupt 來中斷流程，防止無窮迴圈。
+		// 上層邏輯可以捕獲這個狀態並進行錯誤處理或日誌記錄。
+		return PhaseResult.Interrupt;
+	}
+
+	// === 輔助方法 ===
+
+	private static bool IsStoppingResult(PhaseResult result)
+	{
+		return result == PhaseResult.WaitInput || 
+			   result == PhaseResult.Pending || 
+			   result == PhaseResult.Interrupt ||
+			   result == PhaseResult.CombatEnd;
 	}
 }
