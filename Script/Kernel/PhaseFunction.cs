@@ -23,7 +23,7 @@ public static class PhaseFunction
 
 		// 🎯 恢復玩家 AP 到每回合最大值
 		state.Player.AP.Refill();
-
+		UISignalHub.NotifyAPChanged(state.Player.AP.Value);
 #if DEBUG
 		GD.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
 #endif
@@ -79,7 +79,13 @@ public static class PhaseFunction
 
 		var execResult = CombatPipeline.ExecuteCommands(state, translation.Commands, translation.OriginalIntent);
 
-		CommitPlayerAction(state, translation.OriginalIntent, execResult);
+		if (execResult.Success)
+        {
+			CommitPlayerAction(state, translation.OriginalIntent, execResult);
+		}
+
+		if (true == CheckCombatEnd(state))
+        	return PhaseResult.CombatEnd;
 
 		state.PhaseCtx.Step = PhaseStep.PlayerInput;
 		return PhaseResult.WaitInput;
@@ -146,6 +152,9 @@ public static class PhaseFunction
 
 		var execResult = CombatPipeline.ExecuteCommands(state, translation.Commands, translation.OriginalIntent);
 
+		if (true == CheckCombatEnd(state))
+        	return PhaseResult.CombatEnd;
+
 		state.PhaseCtx.Step = PhaseStep.PlayerInit;
 		return PhaseResult.Continue;
 	}
@@ -164,6 +173,18 @@ public static class PhaseFunction
 		{
 			state.PhaseCtx.MarkRecallUsed();
 		}
+	}
+
+
+
+	private static bool CheckCombatEnd(CombatState state)
+	{
+		if (!state.Player.IsAlive || !state.Enemy.IsAlive)
+		{
+			state.PhaseCtx.Step = PhaseStep.CombatEnd;
+			return true;
+		}
+		return false;
 	}
 
 }
