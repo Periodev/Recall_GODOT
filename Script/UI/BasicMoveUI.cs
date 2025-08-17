@@ -23,17 +23,8 @@ public partial class BasicMoveUI : Control
 		BtnA.Pressed += () => CombatCtrl.TryRunBasic(ActionType.A, 1) ;
 		BtnB.Pressed += () => CombatCtrl.TryRunBasic(ActionType.B, null);
 		BtnC.Pressed += () => CombatCtrl.TryRunBasic(ActionType.C, null); 
-		BtnEnd.Pressed += () => OnEndTurnPressed();
+		BtnEnd.Pressed += () => CombatCtrl.TryEndTurn();
 	
 	}
-
-
-	private void OnEndTurnPressed()
-	{
-		GD.Print($"[UI] End Turn pressed");
-		// 🔹 這裡可以直接呼叫 CombatState 或 Kernel 的 API
-		// CombatControl.Instance.QueueBasicMove(moveId);
-	}
-
 	
 }

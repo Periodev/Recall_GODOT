@@ -37,8 +37,8 @@ public partial class Combat : Control
 
 		// 使用新的 PhaseRunner API 推進遊戲流程
 	
-		var result = PhaseRunner.AdvanceUntilInput(CombatState);
-		GD.Print($"Initial phase advance result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+		var result = PhaseRunner.AdvanceUntilInput(ref CombatState);
+		//GD.Print($"Initial phase advance result: {result}, Current step: {CombatState.PhaseCtx.Step}");
 
 		// 初始化 UI 顯示
 		RefreshAllUI();
@@ -57,19 +57,31 @@ public partial class Combat : Control
 	/// </summary>
 	public void TryRunBasic(ActionType act, int? targetId)
 	{
-		GD.Print($"[Combat] TryRunBasic: {act}, target: {targetId}");
+		GD.Print($"[CombatUI] TryRunBasic: {act}, target: {targetId}");
 
 		// 設定玩家意圖
 		var intent = new BasicIntent(act, targetId);
-		CombatState.PhaseCtx.SetIntent(intent);
-
-		// 使用新的 PhaseRunner API 推進流程
-		var result = PhaseRunner.AdvanceUntilInput(CombatState);
-		GD.Print($"Basic action result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+        var result = PhaseRunner.TryExecutePlayerAction(ref CombatState, intent);
+       
+        GD.Print($"[CombatUI] Basic action result: {result}, Current step: {CombatState.PhaseCtx.Step}");
 
 		// 刷新 UI
 		RefreshAllUI();
 	}
+
+	public void TryEndTurn()
+	{
+		GD.Print("[CombatUI] TryEndTurn");
+
+        // 🎯 直接調用 PhaseRunner 的保護接口
+        var result = PhaseRunner.TryEndPlayerTurn(ref CombatState);
+        
+        GD.Print($"End turn result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+
+        RefreshAllUI();
+
+	}
+
 
 	/// <summary>
 	/// 處理 Recall 確認
@@ -98,8 +110,8 @@ public partial class Combat : Control
 		CombatState.PhaseCtx.SetIntent(intent);
 
 		// 推進流程
-		var result = PhaseRunner.AdvanceUntilInput(CombatState);
-		GD.Print($"Recall action result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+		var result = PhaseRunner.AdvanceUntilInput(ref CombatState);
+		GD.Print($"[CombatUI] Recall action result: {result}, Current step: {CombatState.PhaseCtx.Step}");
 
 		// 刷新 UI
 		RefreshAllUI();

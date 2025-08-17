@@ -45,7 +45,7 @@ public partial class RecallPanel : Control
 		SetState(RecallState.EnemyPhase);
 		//SetState(RecallState.PlayerPhase);
 		
-		GD.Print($"[RecallPanel] Ready - {_slots.Count} slots, state: {_state}");
+		//GD.Print($"[RecallPanel] Ready - {_slots.Count} slots, state: {_state}");
 	}
 
 	private static void CollectButtonsRecursive(Node node, List<Button> into)
@@ -97,7 +97,7 @@ public partial class RecallPanel : Control
 
 	public void SetState(RecallState newState)
 	{
-		GD.Print($"[RecallPanel] State: {_state} → {newState}");
+		//GD.Print($"[RecallPanel] State: {_state} → {newState}");
 		_state = newState;
 		
 		// 清除選取（除非是在 Selecting 狀態內操作）
@@ -202,7 +202,7 @@ public partial class RecallPanel : Control
 		// 更新視覺外觀
 		UpdateSlotAppearance(idx, !wasSelected);
 		
-		GD.Print($"[RecallPanel] Slot {idx} {(wasSelected ? "deselected" : "selected")}, total: {_selected.Count}");
+		//GD.Print($"[RecallPanel] Slot {idx} {(wasSelected ? "deselected" : "selected")}, total: {_selected.Count}");
 		
 		// 動態更新 Confirm 按鈕
 		SetButtonStates(false, _selected.Count > 0, true);
@@ -233,7 +233,7 @@ public partial class RecallPanel : Control
 	{
 		if (_state != RecallState.Selecting || _selected.Count == 0) return;
 		
-		GD.Print($"[RecallPanel] Confirm with selection: [{string.Join(", ", _selected)}]");
+		//GD.Print($"[RecallPanel] Confirm with selection: [{string.Join(", ", _selected)}]");
 		EmitSignal(SignalName.ConfirmPressed, _selected.ToArray());
 		
 		SetState(RecallState.PlayerPhase);

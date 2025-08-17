@@ -64,9 +64,6 @@ public sealed class HLATranslator
 	{
 		plan = default;
 
-		// Phase 檢查
-		if (!CanPlayerAct(phase)) return FailCode.PhaseLocked;
-
 		// 一次/回合檢查
 		if (RecallUsedThisTurn(phase)) return FailCode.RecallUsed;
 
@@ -110,9 +107,6 @@ public sealed class HLATranslator
 		out RecallPlan plan)
 	{
 		plan = default;
-
-		// Phase 檢查
-		if (!CanPlayerAct(phase)) return FailCode.PhaseLocked;
 
 		// 一次/回合檢查
 		if (RecallUsedThisTurn(phase)) return FailCode.RecallUsed;
@@ -201,13 +195,6 @@ public sealed class HLATranslator
 		id.HasValue ? actors.GetById(id.Value) : null;
 
 	private static bool Fail(string msg, out string fail) { fail = msg; return false; }
-
-	// Phase 系統整合點
-	private static bool CanPlayerAct(PhaseContext phase)
-	{
-		// 檢查是否為玩家行動階段
-		return phase.Step == PhaseStep.PlayerInput;
-	}
 
 	private static bool RecallUsedThisTurn(PhaseContext phase)
 	{
