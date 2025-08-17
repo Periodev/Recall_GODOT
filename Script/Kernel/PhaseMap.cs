@@ -5,52 +5,82 @@ using CombatCore;
 
 public static class PhaseMap
 {
-	public delegate PhaseResult StepFunc(ref PhaseContext ctx);        // typedef PhaseResult (*StepFunc)(PhaseContext* ctx);
+	// 簽名改變：接收完整 CombatState
+	public delegate PhaseResult StepMap(ref CombatState state);
 
-	/// <summary>
-	/// 簡單 Phase 的映射表
-	/// 只包含純狀態轉換的 Phase，不包含需要業務邏輯的複雜 Phase
-	/// </summary>
-	public static readonly Dictionary<PhaseStep, StepFunc> StepFuncs = new()
+	public static readonly Dictionary<PhaseStep, StepMap> StepMaps = new()
 	{
 		// === Turn Phase ===
-		{ PhaseStep.TurnStart, TurnStart },
-		{ PhaseStep.TurnEnd, TurnEnd },
-		{ PhaseStep.CombatEnd, CombatEnd },
+		{ PhaseStep.TurnStart, (ref CombatState state) => {
+			state.PhaseCtx.StartNewTurn();
+			
+			state.PhaseCtx.Step = PhaseStep.EnemyInit;
+			return PhaseResult.Continue;
+		}},
+		
+		{ PhaseStep.TurnEnd, (ref CombatState state) => {
 
-		// === Enemy Phase - 簡單轉換 ===
-		{ PhaseStep.EnemyInit, EnemyPhase.Init },
-		{ PhaseStep.EnemyIntent, EnemyPhase.Intent },
-		{ PhaseStep.EnemyPlanning, EnemyPhase.Planning },
-		{ PhaseStep.EnemyExecInstant, EnemyPhase.ExecInstant },
-		{ PhaseStep.EnemyExecDelayed, EnemyPhase.ExecDelayed },
+			state.PhaseCtx.Step = PhaseStep.TurnStart;
+			return PhaseResult.Continue;
+		}},
+		
+		{ PhaseStep.CombatEnd, (ref CombatState state) => {
+			state.PhaseCtx.Step = PhaseStep.CombatEnd;
+			return PhaseResult.CombatEnd;
+		}},
 
-		// === Player Phase - 簡單轉換 ===
-		{ PhaseStep.PlayerInit, PlayerPhase.Init },
-		{ PhaseStep.PlayerDraw, PlayerPhase.Draw },
-		{ PhaseStep.PlayerInput, PlayerPhase.Input },
-		{ PhaseStep.PlayerPlanning, PlayerPhase.Planning },
-		{ PhaseStep.PlayerExecute, PlayerPhase.Execute}
+		// === Player Phase ===
+		// 不需要 Phase 觸發的直接調用 PhaseFunction
+		{ PhaseStep.PlayerInit, (ref CombatState state) => 
+			PhaseFunction.HandlePlayerInit(ref state) },
+		
+		{ PhaseStep.PlayerDraw, (ref CombatState state) => {
+			UISignalHub.NotifyPlayerDrawComplete();
+			state.PhaseCtx.Step = PhaseStep.PlayerInput;
+			return PhaseResult.Continue;
+		}},
+		
+		// 需要 Phase 觸發的保留攔截邏輯
+		{ PhaseStep.PlayerInput, (ref CombatState state) => {
+			
+			if (state.PhaseCtx.HasPendingIntent) {
+
+				state.PhaseCtx.Step = PhaseStep.PlayerPlanning;
+				return PhaseResult.Continue;
+			}
+			return PhaseResult.WaitInput;
+		}},
+		
+		// 直接調用 PhaseFunction
+		{ PhaseStep.PlayerPlanning, (ref CombatState state) =>
+			PhaseFunction.HandlePlayerPlanning(ref state) },
+		
+		// 需要 Phase 觸發的
+		{ PhaseStep.PlayerExecute, (ref CombatState state) => {
+			
+			// 然後調用 PhaseFunction
+			return PhaseFunction.HandlePlayerExecution(ref state);
+		}},
+
+		// === Enemy Phase ===
+		{ PhaseStep.EnemyInit, (ref CombatState state) => {
+			state.PhaseCtx.Step = PhaseStep.EnemyIntent;
+			return PhaseResult.Continue;
+		}},
+		
+		// 直接調用 PhaseFunction
+		{ PhaseStep.EnemyIntent, (ref CombatState state) => 
+			PhaseFunction.HandleEnemyAI(ref state) },
+		
+		{ PhaseStep.EnemyPlanning, (ref CombatState state) =>
+			PhaseFunction.HandleEnemyPipelineProcessing(ref state) },
+		
+		{ PhaseStep.EnemyExecInstant, (ref CombatState state) => 
+			PhaseFunction.HandleEnemyExecution(ref state) },
+		
+		{ PhaseStep.EnemyExecDelayed, (ref CombatState state) => {
+			state.PhaseCtx.Step = PhaseStep.TurnEnd;
+			return PhaseResult.Continue;
+		}}
 	};
-
-	// === 簡單 Phase 處理方法 ===
-
-	private static PhaseResult TurnStart(ref PhaseContext ctx)
-	{
-		ctx.StartNewTurn(); // 使用 PhaseContext 的內建方法
-		ctx.Step = PhaseStep.EnemyInit;
-		return PhaseResult.Continue;
-	}
-
-	private static PhaseResult TurnEnd(ref PhaseContext ctx)
-	{
-		ctx.Step = PhaseStep.TurnStart;
-		return PhaseResult.Continue;
-	}
-
-	private static PhaseResult CombatEnd(ref PhaseContext ctx)
-	{
-		ctx.Step = PhaseStep.CombatEnd;
-		return PhaseResult.CombatEnd;
-	}
 }

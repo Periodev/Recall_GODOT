@@ -7,10 +7,6 @@ using CombatCore.Memory;
 
 namespace CombatCore
 {
-	/// <summary>
-	/// 戰鬥管線 - 提供靜態方法處理完整的戰鬥流程
-	/// 設計原則：在 Intent → AtomicCmd 轉換後留空檔，供其他系統介入
-	/// </summary>
 	public static class CombatPipeline
 	{
 		// === 靜態實例，避免重複創建無狀態對象 ===
@@ -18,11 +14,11 @@ namespace CombatCore
 		private static readonly InterOps InterOps = new();
 		private static readonly CmdExecutor Executor = new();
 
-		/// <summary>
+
 		/// 階段1：將 HLA Intent 轉換為 AtomicCmd 陣列
 		/// 使用時機：PlayerPlanning, EnemyPlanning 階段
 		/// 介入點：轉換完成後，執行前（預測型反應）
-		/// </summary>
+
 		/// <param name="state">戰鬥狀態</param>
 		/// <param name="actor">執行動作的角色</param>
 		/// <param name="intent">高階行動意圖</param>
@@ -54,11 +50,11 @@ namespace CombatCore
 			return TranslationResult.Pass(commands, intent);
 		}
 
-		/// <summary>
+
 		/// 階段2：執行 AtomicCmd 陣列並提交狀態變更
 		/// 使用時機：PlayerExecute, EnemyExecInstant 階段
 		/// 介入點：執行完成後（結果型反應）
-		/// </summary>
+
 		/// <param name="state">戰鬥狀態</param>
 		/// <param name="commands">要執行的命令陣列</param>
 		/// <param name="originalIntent">原始意圖（用於提交階段）</param>
@@ -70,18 +66,11 @@ namespace CombatCore
 			if (!execResult.Ok)
 				return ExecutionResult.Fail(execResult.Code);
 
-			// 提交階段：更新遊戲狀態
-			CommitAction(state, originalIntent, execResult);
-
 			return ExecutionResult.Pass(execResult.Log);
 		}
 
-		/// <summary>
 		/// AI 支援：生成敵人行動意圖
 		/// 使用時機：EnemyIntent 階段
-		/// </summary>
-		/// <param name="state">戰鬥狀態</param>
-		/// <returns>敵人的行動意圖</returns>
 		public static HLAIntent GenerateEnemyIntent(CombatState state)
 		{
 			// 簡單 AI 邏輯：血量低時防禦，否則攻擊
@@ -104,31 +93,11 @@ namespace CombatCore
 				return new BasicIntent(ActionType.C, null);
 			}
 		}
-
-		/// <summary>
-		/// 私有方法：提交行動結果到遊戲狀態
-		/// </summary>
-		private static void CommitAction(CombatState state, HLAIntent intent, ExecResult execResult)
-		{
-			// Memory 管理：Basic 動作需要寫入記憶
-
-			if (intent is BasicIntent basicIntent && PhaseRunner.IsPlayerPhase(ref state))
-			{
-				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
-			}
-
-			// Recall 標記：標記本回合已使用 Recall
-			if (intent is RecallIntent)
-			{
-				state.PhaseCtx.MarkRecallUsed();
-			}
-		}
 	}
 
-	/// <summary>
+
 	/// Intent 轉換結果 - 包含即將執行的指令序列
 	/// 用於預測型反應：其他系統可以分析 Commands 並提前應對
-	/// </summary>
 	public readonly struct TranslationResult
 	{
 		public bool Success { get; }
@@ -151,10 +120,8 @@ namespace CombatCore
 			new(false, code, Array.Empty<AtomicCmd>(), null);
 	}
 
-	/// <summary>
 	/// 命令執行結果 - 包含實際發生的效果記錄
 	/// 用於結果型反應：其他系統可以分析 Log 並觸發連鎖反應
-	/// </summary>
 	public readonly struct ExecutionResult
 	{
 		public bool Success { get; }

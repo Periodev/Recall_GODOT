@@ -45,14 +45,6 @@ namespace CombatCore
 		Interrupt = 0x3,
 		PhaseLocked = 0x4,
 		CombatEnd = 0xF,
-
-		// === 服務請求 (0x1X) ===
-		RequiresSysInit = 0x10,    // 需要系統初始化服務
-		RequiresPipeline = 0x11,   // 需要 CombatPipeline 處理
-		RequiresAI = 0x12,         // 需要 AI 生成邏輯
-		RequiresExecution = 0x13,  // 需要命令執行服務
-		RequiresValidation = 0x14, // 需要數據驗證服務
-
 	}
 
 	/// PhaseResult 的擴展方法
