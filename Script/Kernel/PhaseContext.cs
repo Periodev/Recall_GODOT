@@ -2,10 +2,6 @@
 using System;
 using CombatCore;
 
-// Phase definition for combat phases in the game.
-// Combat 系統用的 PhaseContext 定義，包含當前階段、回合數等資訊。
-// Constant and context struct for managing combat phases.
-
 namespace CombatCore
 {
 	public enum PhaseStep : byte
@@ -70,7 +66,8 @@ namespace CombatCore
 		public int TurnNum;
 		public bool RecallUsedThisTurn;
 		public HLAIntent PendingIntent;
-		public TranslationResult? PendingTranslation; // 🆕 新增
+		public TranslationResult? PendingTranslation;
+
 
 		public void Init()
 		{

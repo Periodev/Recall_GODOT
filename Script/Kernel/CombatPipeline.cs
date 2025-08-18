@@ -14,6 +14,12 @@ namespace CombatCore
 		private static readonly InterOps InterOps = new();
 		private static readonly CmdExecutor Executor = new();
 
+		private static readonly IntentQueue EnemyInstantQueue = new();
+		private static readonly IntentQueue PlayerQueue = new();
+		private static readonly IntentQueue EnemyDelayedQueue = new();
+		private static readonly IntentQueue TurnEndQueue = new();
+
+
 
 		/// 階段1：將 HLA Intent 轉換為 AtomicCmd 陣列
 		/// 使用時機：PlayerPlanning, EnemyPlanning 階段
