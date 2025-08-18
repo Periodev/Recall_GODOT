@@ -14,7 +14,7 @@ public static class PhaseFunction
 	// === Player Phase Functions ===
 
 	/// 處理玩家初始化：AP 恢復等系統操作
-	public static PhaseResult HandlePlayerInit(ref CombatState state)
+	public static PhaseResult HandlePlayerInit(CombatState state)
 	{
 #if DEBUG
 		GD.Print($"[PhaseFunction] Executing player init system services");
@@ -34,7 +34,7 @@ public static class PhaseFunction
 	}
 
 	/// 處理玩家計劃階段：Intent 轉換
-	public static PhaseResult HandlePlayerPlanning(ref CombatState state)
+	public static PhaseResult HandlePlayerPlanning(CombatState state)
 	{
 		// 檢查是否有待處理的 Intent
 		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
@@ -69,7 +69,7 @@ public static class PhaseFunction
 	}
 
 	/// 處理玩家執行階段：命令執行與狀態提交
-	public static PhaseResult HandlePlayerExecution(ref CombatState state)
+	public static PhaseResult HandlePlayerExecution(CombatState state)
 	{
 		if (!state.PhaseCtx.TryConsumeTranslation(out var translation))
 		{
@@ -94,7 +94,7 @@ public static class PhaseFunction
 	// === Enemy Phase Functions ===
 
 	/// 處理敵人意圖生成：查詢 AI 策略表，決定敵人行動
-	public static PhaseResult HandleEnemyAI(ref CombatState state)
+	public static PhaseResult HandleEnemyAI(CombatState state)
 	{
 		// 檢查是否已有 Intent
 		if (state.PhaseCtx.HasPendingIntent)
@@ -113,7 +113,7 @@ public static class PhaseFunction
 	}
 
 	/// 處理敵人管線處理：將意圖轉換為執行計劃
-	public static PhaseResult HandleEnemyPipelineProcessing(ref CombatState state)
+	public static PhaseResult HandleEnemyPipelineProcessing(CombatState state)
 	{
 		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
 		{
@@ -142,7 +142,7 @@ public static class PhaseFunction
 	}
 
 	/// 處理敵人執行階段：命令執行
-	public static PhaseResult HandleEnemyExecution(ref CombatState state)
+	public static PhaseResult HandleEnemyExecution(CombatState state)
 	{
 		if (!state.PhaseCtx.TryConsumeTranslation(out var translation))
 		{
@@ -163,7 +163,7 @@ public static class PhaseFunction
 	private static void CommitPlayerAction(CombatState state, HLAIntent intent, ExecutionResult execResult)
 	{
 		// Memory 管理：Basic 動作需要寫入記憶
-		if (intent is BasicIntent basicIntent && PhaseRunner.IsPlayerPhase(ref state))
+		if (intent is BasicIntent basicIntent && PhaseRunner.IsPlayerPhase(state))
 		{
 			state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
 		}

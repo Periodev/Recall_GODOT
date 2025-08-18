@@ -1,12 +1,10 @@
-using Godot;
+
 using System;
 using CombatCore;
 using CombatCore.Component;
-using CombatCore.Abstractions;
 using CombatCore.Memory;
 
-
-public partial class CombatState : Node, IActorLookup
+public partial class CombatState
 {
 	public PhaseContext PhaseCtx;
 	public Actor Player { get; private set; }
@@ -16,28 +14,23 @@ public partial class CombatState : Node, IActorLookup
 
 	public CombatState()
 	{
-		// ✅ 這裡執行在 new 時，無法 GetNode 或操作場景
 		PhaseCtx.Init();
 		Player = new Actor(100);
 		Enemy = new Actor(80);
 	}
 
-	public override void _Ready()
+
+	public RecallView GetRecallView() =>
+		new RecallView(Mem.SnapshotOps(), Mem.SnapshotTurns());
+
+	// 供 Translator 綁定的委派實作
+	public bool TryGetActor(int id, out Actor actor)
 	{
-		GD.Print("Combat state is ready");
-	}
-
-    public RecallView GetRecallView() =>
-        new RecallView(Mem.SnapshotOps(), Mem.SnapshotTurns());
-
-
-	public Actor GetById(int actorId)
-	{
-		return actorId switch
+		switch (id)
 		{
-			0 => Player,
-			1 => Enemy,
-			_ => null  // 無效 ID
-		};
+			case 0: actor = Player; return true;
+			case 1: actor = Enemy;  return true;
+			default: actor = default!; return false;
+		}
 	}
 }

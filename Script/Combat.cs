@@ -3,7 +3,6 @@ using System;
 using CombatCore;
 using CombatCore.Component;
 using CombatCore.InterOp;
-using CombatCore.Abstractions;
 using CombatCore.Memory;
 using CombatCore.Command;
 
@@ -13,17 +12,20 @@ using CombatCore.Command;
 /// </summary>
 public partial class Combat : Control
 {
-	[Export] public CombatState CombatState;
+	[Export] public CombatStateNode CombatNode;
 	[Export] public PlayerView PlayerView;
 	[Export] public RecallPanel RecallPanel;
 	[Export] public EnemyView EnemyView;
 
+	public CombatState State => CombatNode!.State;
+
 	public override void _Ready()
 	{
 		// 驗證必要組件
-		if (CombatState == null)
+		if (CombatNode is null)
 		{
-			GD.PrintErr("CombatState is null! Please bind it in the inspector.");
+			GD.PushError("CombatNode not bound in Inspector.");
+			SetProcess(false);
 			return;
 		}
 
@@ -36,9 +38,8 @@ public partial class Combat : Control
 		BindActorsToUI();
 
 		// 使用新的 PhaseRunner API 推進遊戲流程
-	
-		var result = PhaseRunner.AdvanceUntilInput(ref CombatState);
-		//GD.Print($"Initial phase advance result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+
+		var result = PhaseRunner.AdvanceUntilInput(State);
 
 		// 初始化 UI 顯示
 		RefreshAllUI();
@@ -61,9 +62,9 @@ public partial class Combat : Control
 
 		// 設定玩家意圖
 		var intent = new BasicIntent(act, targetId);
-        var result = PhaseRunner.TryExecutePlayerAction(ref CombatState, intent);
-       
-        GD.Print($"[CombatUI] Basic action result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
+	   
+		GD.Print($"[CombatUI] Basic action result: {result}, Current step: {State.PhaseCtx.Step}");
 
 		// 刷新 UI
 		RefreshAllUI();
@@ -73,12 +74,12 @@ public partial class Combat : Control
 	{
 		GD.Print("[CombatUI] TryEndTurn");
 
-        // 🎯 直接調用 PhaseRunner 的保護接口
-        var result = PhaseRunner.TryEndPlayerTurn(ref CombatState);
-        
-        GD.Print($"End turn result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+		// 🎯 直接調用 PhaseRunner 的保護接口
+		var result = PhaseRunner.TryEndPlayerTurn(State);
+		
+		GD.Print($"End turn result: {result}, Current step: {State.PhaseCtx.Step}");
 
-        RefreshAllUI();
+		RefreshAllUI();
 
 	}
 
@@ -92,7 +93,7 @@ public partial class Combat : Control
 
 		// 檢查是否包含攻擊動作以決定目標
 		bool hasAttack = false;
-		var memOps = CombatState.Mem.SnapshotOps();
+		var memOps = State.Mem.SnapshotOps();
 
 		foreach (int idx in indices)
 		{
@@ -107,11 +108,11 @@ public partial class Combat : Control
 
 		// 設定 Recall 意圖
 		var intent = new RecallIntent(indices, targetId);
-		CombatState.PhaseCtx.SetIntent(intent);
+		State.PhaseCtx.SetIntent(intent);
 
 		// 推進流程
-		var result = PhaseRunner.AdvanceUntilInput(ref CombatState);
-		GD.Print($"[CombatUI] Recall action result: {result}, Current step: {CombatState.PhaseCtx.Step}");
+		var result = PhaseRunner.AdvanceUntilInput(State);
+		GD.Print($"[CombatUI] Recall action result: {result}, Current step: {State.PhaseCtx.Step}");
 
 		// 刷新 UI
 		RefreshAllUI();
@@ -150,16 +151,16 @@ public partial class Combat : Control
 
 	private void BindActorsToUI()
 	{
-		if (PlayerView != null && CombatState.Player != null)
+		if (PlayerView != null && State.Player != null)
 		{
-			PlayerView.BindActor(CombatState.Player);
-			CombatState.Player.DebugName = "Player";
+			PlayerView.BindActor(State.Player);
+			State.Player.DebugName = "Player";
 		}
 
-		if (EnemyView != null && CombatState.Enemy != null)
+		if (EnemyView != null && State.Enemy != null)
 		{
-			EnemyView.BindActor(CombatState.Enemy);
-			CombatState.Enemy.DebugName = "Enemy";
+			EnemyView.BindActor(State.Enemy);
+			State.Enemy.DebugName = "Enemy";
 		}
 	}
 
@@ -180,9 +181,9 @@ public partial class Combat : Control
 	{
 		if (RecallPanel == null) return;
 
-		var ops = CombatState.Mem.SnapshotOps();
-		var turns = CombatState.Mem.SnapshotTurns();
-		var currentTurn = CombatState.PhaseCtx.TurnNum;
+		var ops = State.Mem.SnapshotOps();
+		var turns = State.Mem.SnapshotTurns();
+		var currentTurn = State.PhaseCtx.TurnNum;
 		
 		RecallPanel.RefreshSnapshot(ops, turns, currentTurn);
 	}
@@ -191,7 +192,7 @@ public partial class Combat : Control
 	{
 		if (RecallPanel == null) return;
 
-		var currentStep = CombatState.PhaseCtx.Step;
+		var currentStep = State.PhaseCtx.Step;
 		
 		// 根據當前 Phase 設定 RecallPanel 狀態
 		switch (currentStep)
@@ -229,7 +230,7 @@ public partial class Combat : Control
 		GD.Print("[Combat] Player draw complete");
 		
 		// 檢查是否有記憶可以使用 Recall
-		var memOps = CombatState.Mem.SnapshotOps();
+		var memOps = State.Mem.SnapshotOps();
 		if (memOps.Count > 0)
 		{
 			RecallPanel?.EnterPlayerPhase();

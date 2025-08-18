@@ -15,7 +15,7 @@ public static class PhaseRunner
 	/// 嘗試執行玩家動作（帶完整保護）
 	/// 這是 Combat UI 應該使用的唯一入口
 
-	public static PhaseResult TryExecutePlayerAction(ref CombatState state, HLAIntent intent)
+	public static PhaseResult TryExecutePlayerAction(CombatState state, HLAIntent intent)
 	{
 		// 🔒 階段保護：只有在正確階段才能執行
 		if (!CanPlayerAct(state.PhaseCtx))
@@ -47,12 +47,12 @@ public static class PhaseRunner
 
 		// ✅ 保護檢查通過，設定 Intent 並推進流程
 		state.PhaseCtx.SetIntent(intent);
-		return AdvanceUntilInput(ref state);
+		return AdvanceUntilInput(state);
 	}
 
 
 	/// 嘗試結束玩家回合（帶完整保護）
-	public static PhaseResult TryEndPlayerTurn(ref CombatState state)
+	public static PhaseResult TryEndPlayerTurn(CombatState state)
 	{
 		// 🔒 階段保護：只有在玩家輸入階段才能結束回合
 		if (!CanPlayerAct(state.PhaseCtx))
@@ -78,22 +78,22 @@ public static class PhaseRunner
 
 		// ✅ 直接跳到敵人延遲執行階段
 		state.PhaseCtx.Step = PhaseStep.EnemyExecDelayed;
-		return AdvanceUntilInput(ref state);
+		return AdvanceUntilInput(state);
 	}
 
 
 	/// 初始化戰鬥流程（遊戲開始時調用）
-	public static PhaseResult InitializeCombat(ref CombatState state)
+	public static PhaseResult InitializeCombat(CombatState state)
 	{
 #if DEBUG
 		GD.Print($"[PhaseRunner] Initializing combat, starting phase: {state.PhaseCtx.Step}");
 #endif
 
-		return AdvanceUntilInput(ref state);
+		return AdvanceUntilInput(state);
 	}
 
 	/// 檢查當前是否為玩家階段
-	public static bool IsPlayerPhase(ref CombatState state)
+	public static bool IsPlayerPhase(CombatState state)
 	{
 		return ((byte)state.PhaseCtx.Step & 0xF0) == 0x00;
 	}
@@ -103,13 +103,13 @@ public static class PhaseRunner
 
 	/// 執行單個 Phase 步驟（簡化版本）
 	/// 直接使用 PhaseMap.StepMaps，不再需要複雜的服務調度
-	public static PhaseResult Run(ref CombatState state)
+	public static PhaseResult Run(CombatState state)
 	{
 		var step = state.PhaseCtx.Step;
 
 		if (PhaseMap.StepMaps.TryGetValue(step, out var StepMap))
 		{
-			return StepMap(ref state);
+			return StepMap(state);
 		}
 
 #if DEBUG
@@ -120,7 +120,7 @@ public static class PhaseRunner
 	}
 
 	/// 推進直到需要輸入（簡化版本）
-	public static PhaseResult AdvanceUntilInput(ref CombatState state)
+	public static PhaseResult AdvanceUntilInput(CombatState state)
 	{
 		PhaseResult result = PhaseResult.Continue;
 		int maxIterations = 100; // 安全保護
@@ -134,7 +134,7 @@ public static class PhaseRunner
 			GD.Print($"[PhaseRunner] Iteration {iterations}: Step={state.PhaseCtx.Step}");
 #endif
 
-			result = Run(ref state);
+			result = Run(state);
 
 			if (IsStoppingResult(result))
 				break;

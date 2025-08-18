@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CombatCore;
 using CombatCore.InterOp;
-using CombatCore.Abstractions;
 using CombatCore.Command;
 using CombatCore.Memory;
 using static CombatCore.GameConst;
@@ -12,6 +11,7 @@ using static CombatCore.GameConst;
 public abstract record HLAIntent(int? TargetId);
 public sealed record BasicIntent(ActionType Act, int? TargetId) : HLAIntent(TargetId);
 public sealed record RecallIntent(int[] RecallIndices, int? TargetId) : HLAIntent(TargetId);
+public delegate bool TryGetActorById(int id, out Actor actor);
 
 public readonly struct RecallView
 {
@@ -40,7 +40,7 @@ public sealed class HLATranslator
 		HLAIntent intent,
 		PhaseContext phase,
 		RecallView memory,
-		IActorLookup actors,
+		TryGetActorById tryGetActor,   // ← 取代 IActorLookup,
 		Actor self,
 		out BasicPlan basicPlan,
 		out RecallPlan recallPlan)
@@ -52,20 +52,20 @@ public sealed class HLATranslator
 
 		return intent switch
 		{
-			BasicIntent bi  => TryBasic(bi, phase, self, actors, out basicPlan),
-			RecallIntent ri => TryRecall(ri, phase, memory, self, actors, out recallPlan),
+			BasicIntent bi  => TryBasic(bi, phase, self, tryGetActor, out basicPlan),
+			RecallIntent ri => TryRecall(ri, phase, memory, self, tryGetActor, out recallPlan),
 			_ =>FailCode.UnknownIntent
 		};
 	}
 
 	private static FailCode TryBasic(
-		BasicIntent bi, PhaseContext phase, Actor self, IActorLookup actors,
+		BasicIntent bi, PhaseContext phase, Actor self, TryGetActorById tryGetActor,
 		out BasicPlan plan)
 	{
 		plan = default;
 
 		// 嚴格目標驗證
-		var tgt = ResolveTarget(bi.TargetId, actors);
+		var tgt = ResolveTarget(bi.TargetId, tryGetActor);
 		if (bi.Act == ActionType.A)
 		{
 			// A 必須有有效且非 self 的目標
@@ -100,7 +100,7 @@ public sealed class HLATranslator
 	}
 
 	private static FailCode TryRecall(
-		RecallIntent ri, PhaseContext phase, RecallView memory, Actor self, IActorLookup actors,
+		RecallIntent ri, PhaseContext phase, RecallView memory, Actor self, TryGetActorById tryGetActor,
 		out RecallPlan plan)
 	{
 		plan = default;
@@ -120,7 +120,7 @@ public sealed class HLATranslator
 		Actor tgt;
 		if (hasAttackAction)
 		{
-			tgt = ResolveTarget(ri.TargetId, actors);
+			tgt = ResolveTarget(ri.TargetId, tryGetActor);
 			if (tgt is null || ReferenceEquals(tgt, self))
 				return FailCode.BadTarget;
 		}
@@ -188,14 +188,10 @@ public sealed class HLATranslator
 	}
 
 	// 輔助方法
-	private static Actor? ResolveTarget(int? id, IActorLookup actors) =>
-		id.HasValue ? actors.GetById(id.Value) : null;
+	private static Actor? ResolveTarget(int? id, TryGetActorById tryGetActor) =>
+		id.HasValue && tryGetActor(id.Value, out var a) ? a : null;
 
 	private static bool Fail(string msg, out string fail) { fail = msg; return false; }
 
-	private static bool RecallUsedThisTurn(PhaseContext phase)
-	{
-		// 檢查本回合是否已使用 Recall
-		return phase.RecallUsedThisTurn;
-	}
+	private static bool RecallUsedThisTurn(PhaseContext phase) => phase.RecallUsedThisTurn;
 }

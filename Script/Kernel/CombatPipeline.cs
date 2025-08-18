@@ -1,6 +1,5 @@
 using System;
 using CombatCore;
-using CombatCore.Abstractions;
 using CombatCore.Command;
 using CombatCore.InterOp;
 using CombatCore.Memory;
@@ -36,7 +35,7 @@ namespace CombatCore
 				intent, 
 				state.PhaseCtx, 
 				state.GetRecallView(), 
-				state, 
+				state.TryGetActor, 
 				actor, 
 				out var basicPlan, 
 				out var recallPlan
