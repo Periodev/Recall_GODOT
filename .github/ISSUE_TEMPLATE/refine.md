@@ -1,8 +1,8 @@
 ---
-name: "Polish / Refine"
+name: "Refine"
 about: "優化/拋光（UX、平衡、文案、可觀測性）"
 title: "refine: "
-labels: ["type: refine", "status: todo"]
+labels: ["type: refine"]
 assignees: []
 ---
 

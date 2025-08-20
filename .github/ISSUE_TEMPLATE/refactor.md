@@ -2,7 +2,7 @@
 name: "Refactor"
 about: "重構（不改變對外行為）"
 title: "refactor: "
-labels: ["type: refactor", "status: todo"]
+labels: ["type: refactor"]
 assignees: []
 ---
 

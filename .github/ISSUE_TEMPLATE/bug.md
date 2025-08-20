@@ -2,7 +2,7 @@
 name: "Bug"
 about: "錯誤回報與修復"
 title: "bug: "
-labels: ["type: bug", "priority: P0", "status: todo"]
+labels: ["type: bug"]
 assignees: []
 ---
 

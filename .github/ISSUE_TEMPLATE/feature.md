@@ -2,7 +2,7 @@
 name: "Feature"
 about: "新增或調整功能"
 title: "feat: "
-labels: ["type: feat", "status: todo"]
+labels: ["type: feat"]
 assignees: []
 ---
 
