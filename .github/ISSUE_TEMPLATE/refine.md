@@ -1,24 +1,5 @@
 ---
-name: "Refine"
-about: "優化/拋光（UX、平衡、文案、可觀測性）"
-title: "refine: "
-labels: ["type: refine", "status: todo"]
-assignees: []
----
-
-## 目的
-...
-
-## 目的
-<!-- 可維護性、可讀性、效能等 -->
-
-## 變更範圍
-<!-- 受影響檔案/模組、公共介面是否不變 -->
-
-## 驗收標準
-- [ ] <!-- 功能行為無變動 -->
-- [ ] <!-- 測試全部通過 -->---
-name: "Refine"
+name: "Polish / Refine"
 about: "優化/拋光（UX、平衡、文案、可觀測性）"
 title: "refine: "
 labels: ["type: refine", "status: todo"]
