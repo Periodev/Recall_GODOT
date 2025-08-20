@@ -21,11 +21,19 @@ namespace CombatCore.Command
 			return ExecResult.Pass(log);
 		}
 
-		// 玩家用：AP 不足整批丟棄
 		public ExecResult ExecuteOrDiscard(IEnumerable<AtomicCmd> cmds)
 		{
 			if (cmds is null) throw new ArgumentNullException(nameof(cmds));
 			var batch = new List<AtomicCmd>(cmds);
+
+			// check if cmd actor is dead
+			foreach (var c in batch)
+			{
+				if (c.Source != null && !c.Source.IsAlive)
+				{
+					return ExecResult.Fail(FailCode.SelfDead);
+				}
+			}
 
 			// 聚合 AP 需求，避免逐條通過但總量不足
 			var apNeed = new Dictionary<Actor, int>();
