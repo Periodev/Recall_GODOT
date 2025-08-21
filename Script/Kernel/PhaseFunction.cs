@@ -7,6 +7,7 @@ using System;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
+using CombatCore.ActorOp;
 
 /// Phase 業務邏輯函數庫 - 處理各階段的具體業務邏輯
 public static class PhaseFunction
@@ -27,6 +28,9 @@ public static class PhaseFunction
 #if DEBUG
 		GD.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
 #endif
+
+		// [optional] clear charge on turn start
+		SelfOp.ClearCharge(state.Player);
 
 		// 🎯 推進到下一階段
 		state.PhaseCtx.Step = PhaseStep.PlayerDraw;
