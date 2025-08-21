@@ -9,7 +9,7 @@ namespace CombatCore
 		public const int AP_COST_BASIC = 1;
 		public const int AP_COST_RECALL = 1;
 
-		public const int CHARGE_MAX_PER_ACTION = 1;
+		public const int CHARGE_MAX_PER_ACTION = 2;
 		public const int A_BONUS_PER_CHARGE = 3;
 		public const int B_BONUS_PER_CHARGE = 3;
 

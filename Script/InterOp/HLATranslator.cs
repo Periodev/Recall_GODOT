@@ -92,9 +92,13 @@ public sealed class HLATranslator
 
 		int dmg = numbers.Damage + (bi.Act == ActionType.A ? A_BONUS_PER_CHARGE * use : 0);
 		int blk = numbers.Block  + (bi.Act == ActionType.B ? B_BONUS_PER_CHARGE * use : 0);
+		
+		int finalDmg = dmg;   
+		int finalBlk = blk;   
+		int chargeCostThisAction = use;
 
 		plan = new BasicPlan(bi.Act, self, tgt, 
-			numbers.Damage, numbers.Block, numbers.ChargeCost, numbers.GainAmount, numbers.APCost);
+			damage: finalDmg, block: finalBlk, chargeCost: chargeCostThisAction, numbers.GainAmount, numbers.APCost);
 
 		return FailCode.None;
 	}
