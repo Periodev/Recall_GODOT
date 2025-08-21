@@ -29,8 +29,10 @@ public static class PhaseFunction
 		GD.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
 #endif
 
-		// [optional] clear charge on turn start
+		//  clear charge and shield on turn start
+		SelfOp.ClearShield(state.Player);
 		SelfOp.ClearCharge(state.Player);
+
 
 		// 🎯 推進到下一階段
 		state.PhaseCtx.Step = PhaseStep.PlayerDraw;

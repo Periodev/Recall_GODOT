@@ -29,8 +29,8 @@ script = ExtResource("2_e5xpt")
 
 [node name="UI" type="Node2D" parent="."]
 
-[node name="PlayerView" parent="UI" node_paths=PackedStringArray("Control") instance=ExtResource("3_vvyul")]
-Control = NodePath("../../Control")
+[node name="PlayerView" parent="UI" instance=ExtResource("3_vvyul")]
+position = Vector2(130, 251)
 
 [node name="BasicMove" parent="UI" node_paths=PackedStringArray("CombatCtrl") instance=ExtResource("4_tppsp")]
 offset_left = 48.0
@@ -54,4 +54,4 @@ offset_right = 530.0
 offset_bottom = 518.0
 
 [node name="EnemyView" parent="UI" instance=ExtResource("6_brs8u")]
-position = Vector2(825, 242)
+position = Vector2(743, 258)

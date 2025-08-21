@@ -2,10 +2,16 @@
 
 [ext_resource type="Script" uid="uid://2xyuqvic1knc" path="res://Script/UI/EnemyView.cs" id="1_4snxo"]
 
-[node name="EnemyView" type="Node2D" node_paths=PackedStringArray("HpLabel")]
+[node name="EnemyView" type="Node2D" node_paths=PackedStringArray("HpLabel", "ShieldLabel")]
 script = ExtResource("1_4snxo")
 HpLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
 
 [node name="HPLabel" type="Label" parent="."]
-offset_right = 146.0
+offset_left = 104.0
+offset_right = 250.0
+offset_bottom = 83.0
+
+[node name="ShieldLabel" type="Label" parent="."]
+offset_right = 94.0
 offset_bottom = 83.0
