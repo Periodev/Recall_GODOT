@@ -45,21 +45,17 @@ public static class PhaseMap
 			
 			if (state.PhaseCtx.HasPendingIntent) {
 
-				state.PhaseCtx.Step = PhaseStep.PlayerPlanning;
+				state.PhaseCtx.Step = PhaseStep.PlayerExecute;
 				return PhaseResult.Continue;
 			}
 			return PhaseResult.WaitInput;
 		}},
 		
-		// 直接調用 PhaseFunction
-		{ PhaseStep.PlayerPlanning, (CombatState state) =>
-			PhaseFunction.HandlePlayerPlanning(state) },
-		
-		// 需要 Phase 觸發的
+		// 直接調用合併的 PhaseFunction
 		{ PhaseStep.PlayerExecute, (CombatState state) => {
 			
-			// 然後調用 PhaseFunction
-			return PhaseFunction.HandlePlayerExecution(state);
+			// 調用合併的 PhaseFunction
+			return PhaseFunction.HandlePlayerPlanningAndExecution(state);
 		}},
 
 		// === Enemy Phase ===
@@ -72,11 +68,8 @@ public static class PhaseMap
 		{ PhaseStep.EnemyIntent, (CombatState state) => 
 			PhaseFunction.HandleEnemyAI(state) },
 		
-		{ PhaseStep.EnemyPlanning, (CombatState state) =>
-			PhaseFunction.HandleEnemyPipelineProcessing(state) },
-		
 		{ PhaseStep.EnemyExecInstant, (CombatState state) => 
-			PhaseFunction.HandleEnemyExecution(state) },
+			PhaseFunction.HandleEnemyPlanningAndExecution(state) },
 		
 		{ PhaseStep.EnemyExecDelayed, (CombatState state) => {
 			state.PhaseCtx.Step = PhaseStep.TurnEnd;

@@ -39,8 +39,8 @@ public static class PhaseFunction
 		return PhaseResult.Continue;
 	}
 
-	/// 處理玩家計劃階段：Intent 轉換
-	public static PhaseResult HandlePlayerPlanning(CombatState state)
+	/// 處理玩家計劃和執行階段：Intent 轉換 + 命令執行與狀態提交
+	public static PhaseResult HandlePlayerPlanningAndExecution(CombatState state)
 	{
 		// 檢查是否有待處理的 Intent
 		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
@@ -68,26 +68,12 @@ public static class PhaseFunction
 			return PhaseResult.WaitInput;
 		}
 
-		// 保存轉換結果並推進
-		state.PhaseCtx.SetTranslation(translationResult);
-		state.PhaseCtx.Step = PhaseStep.PlayerExecute;
-		return PhaseResult.Continue;
-	}
-
-	/// 處理玩家執行階段：命令執行與狀態提交
-	public static PhaseResult HandlePlayerExecution(CombatState state)
-	{
-		if (!state.PhaseCtx.TryConsumeTranslation(out var translation))
-		{
-			state.PhaseCtx.Step = PhaseStep.PlayerInput;
-			return PhaseResult.WaitInput;
-		}
-
-		var execResult = CombatPipeline.ExecuteCommands(state, translation.Commands, translation.OriginalIntent);
+		// 立即執行命令，不保存中間結果
+		var execResult = CombatPipeline.ExecuteCommands(state, translationResult.Commands, translationResult.OriginalIntent);
 
 		if (execResult.Success)
         {
-			CommitPlayerAction(state, translation.OriginalIntent, execResult);
+			CommitPlayerAction(state, translationResult.OriginalIntent, execResult);
 		}
 
 		if (true == CheckCombatEnd(state))
@@ -105,21 +91,21 @@ public static class PhaseFunction
 		// 檢查是否已有 Intent
 		if (state.PhaseCtx.HasPendingIntent)
 		{
-			state.PhaseCtx.Step = PhaseStep.EnemyPlanning;
+			state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
 			return PhaseResult.Continue;
 		}
 
 		// 查詢 AI 策略表，生成敵人意圖
 		var intent = CombatPipeline.GenerateEnemyIntent(state);
 
-		// 設定 Intent 並推進到計劃階段
+		// 設定 Intent 並推進到執行階段
 		state.PhaseCtx.SetIntent(intent);
-		state.PhaseCtx.Step = PhaseStep.EnemyPlanning;
+		state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
 		return PhaseResult.Continue;
 	}
 
-	/// 處理敵人管線處理：將意圖轉換為執行計劃
-	public static PhaseResult HandleEnemyPipelineProcessing(CombatState state)
+	/// 處理敵人計劃和執行階段：意圖轉換 + 命令執行
+	public static PhaseResult HandleEnemyPlanningAndExecution(CombatState state)
 	{
 		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
 		{
@@ -141,22 +127,8 @@ public static class PhaseFunction
 			return PhaseResult.Continue;
 		}
 
-		// 保存轉換結果並推進到執行階段
-		state.PhaseCtx.SetTranslation(translationResult);
-		state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
-		return PhaseResult.Continue;
-	}
-
-	/// 處理敵人執行階段：命令執行
-	public static PhaseResult HandleEnemyExecution(CombatState state)
-	{
-		if (!state.PhaseCtx.TryConsumeTranslation(out var translation))
-		{
-			state.PhaseCtx.Step = PhaseStep.PlayerInit;
-			return PhaseResult.Continue;
-		}
-
-		var execResult = CombatPipeline.ExecuteCommands(state, translation.Commands, translation.OriginalIntent);
+		// 立即執行命令，不保存中間結果
+		var execResult = CombatPipeline.ExecuteCommands(state, translationResult.Commands, translationResult.OriginalIntent);
 
 		if (true == CheckCombatEnd(state))
         	return PhaseResult.CombatEnd;

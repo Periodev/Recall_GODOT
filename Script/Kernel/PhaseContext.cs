@@ -66,7 +66,6 @@ namespace CombatCore
 		public int TurnNum;
 		public bool RecallUsedThisTurn;
 		public HLAIntent PendingIntent;
-		public TranslationResult? PendingTranslation;
 
 
 		public void Init()
@@ -75,7 +74,6 @@ namespace CombatCore
 			TurnNum = 0;
 			RecallUsedThisTurn = false;
 			PendingIntent = null;
-			PendingTranslation = null;
 		}
 
 		// Method to reset turn-specific flags
@@ -84,7 +82,6 @@ namespace CombatCore
 			TurnNum++;
 			RecallUsedThisTurn = false;
 			PendingIntent = null;
-			PendingTranslation = null; // 🆕 清理轉換結果
 		}
 
 		// Method to mark recall as used
@@ -102,25 +99,6 @@ namespace CombatCore
 			intent = PendingIntent; PendingIntent = null; return true;
 		}
 
-		// 🆕 TranslationResult 管理
-		public void SetTranslation(TranslationResult translation)
-		{
-			PendingTranslation = translation;
-		}
-
-		public bool TryConsumeTranslation(out TranslationResult translation)
-		{
-			if (PendingTranslation is null)
-			{
-				translation = default;
-				return false;
-			}
-			translation = PendingTranslation.Value;
-			PendingTranslation = null;
-			return true;
-		}
-
-		public bool HasPendingTranslation => PendingTranslation.HasValue;
 		public bool HasPendingIntent => PendingIntent is not null;
 	}
 }
