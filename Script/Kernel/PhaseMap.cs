@@ -65,9 +65,7 @@ public static class PhaseMap
 		{ PhaseStep.EnemyExecInstant, (CombatState state) => 
 			PhaseFunction.HandleEnemyPlanningAndExecution(state) },
 		
-		{ PhaseStep.EnemyExecDelayed, (CombatState state) => {
-			state.PhaseCtx.Step = PhaseStep.TurnEnd;
-			return PhaseResult.Continue;
-		}}
+		{ PhaseStep.EnemyExecDelayed, (CombatState state) => 
+			PhaseFunction.HandleEnemyDelayed(state) }
 	};
 }

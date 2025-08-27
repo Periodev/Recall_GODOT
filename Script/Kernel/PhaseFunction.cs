@@ -65,21 +65,31 @@ public static class PhaseFunction
 
 	// === Enemy Phase Functions ===
 
-	/// 處理敵人意圖生成：查詢 AI 策略表，決定敵人行動
+	/// <summary>
+	/// 處理敵人意圖生成：查詢 AI 策略表，決定敵人行動並分派到對應隊列
+	/// </summary>
 	public static PhaseResult HandleEnemyAI(CombatState state)
 	{
-		// 檢查是否已有 Intent
-		if (state.PhaseCtx.HasPendingIntent)
-		{
-			state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
-			return PhaseResult.Continue;
-		}
-
 		// 查詢 AI 策略表，生成敵人意圖
 		var intent = CombatPipeline.GenerateEnemyIntent(state);
 
-		// 設定 Intent 並推進到執行階段
-		state.PhaseCtx.SetIntent(intent);
+		// 決定執行時機
+		var timing = EnemyStrategy.DetermineTiming(intent);
+
+		if (timing == ExecuteTiming.Instant)
+		{
+			// B, C 使用現有的 PendingIntent 機制
+			state.PhaseCtx.SetIntent(intent);
+		}
+		else if (timing == ExecuteTiming.Delayed)
+		{
+			// A 入隊到 DelayedQueue
+			CombatPipeline.EnemyDelayedQueue.Enqueue(state.Enemy, intent, $"Enemy {intent} delayed");
+#if DEBUG
+			GD.Print($"[PhaseFunction] Enemy action queued for delayed execution: {intent}");
+#endif
+		}
+
 		state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
 		return PhaseResult.Continue;
 	}
@@ -117,8 +127,32 @@ public static class PhaseFunction
 		return PhaseResult.Continue;
 	}
 
-
-
+	/// <summary>
+	/// 處理 Enemy DelayedQueue：執行回合末的延遲動作
+	/// </summary>
+	public static PhaseResult HandleEnemyDelayed(CombatState state)
+	{
+		if (CombatPipeline.EnemyDelayedQueue.HasIntents)
+		{
+#if DEBUG
+			GD.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyDelayedQueue.Count} enemy delayed intents");
+#endif
+			var result = CombatPipeline.ProcessEnemyDelayedQueue(state);
+			
+			if (CheckCombatEnd(state))
+				return PhaseResult.CombatEnd;
+		}
+#if DEBUG
+		else
+		{
+			GD.Print($"[PhaseFunction] No enemy delayed intents to process");
+		}
+#endif
+		
+		// 推進到回合結束
+		state.PhaseCtx.Step = PhaseStep.TurnEnd;
+		return PhaseResult.Continue;
+	}
 
 	private static bool CheckCombatEnd(CombatState state)
 	{

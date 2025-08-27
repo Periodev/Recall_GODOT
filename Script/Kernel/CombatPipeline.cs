@@ -20,7 +20,7 @@ namespace CombatCore
 
 		private static readonly IntentQueue EnemyInstantQueue = new();
 		public static IntentQueue PlayerQueue { get; } = new();
-		private static readonly IntentQueue EnemyDelayedQueue = new();
+		public static IntentQueue EnemyDelayedQueue { get; } = new();
 		private static readonly IntentQueue TurnEndQueue = new();
 
 
@@ -125,29 +125,43 @@ namespace CombatCore
 			}
 		}
 
+		/// <summary>
+		/// 處理 Enemy DelayedQueue 中的所有 Intent
+		/// </summary>
+		public static ExecutionResult ProcessEnemyDelayedQueue(CombatState state)
+		{
+			var results = new List<ExecutionResult>();
+			
+			while (EnemyDelayedQueue.TryDequeue(out var queuedIntent))
+			{
+				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				
+				if (!translationResult.Success)
+				{
+#if DEBUG
+					GD.Print($"[Pipeline] Enemy delayed translation failed: {translationResult.ErrorCode}");
+#endif
+					continue;
+				}
+				
+				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				if (execResult.Success)
+				{
+					results.Add(execResult);
+				}
+			}
+			
+			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
+		}
+
 		/// AI 支援：生成敵人行動意圖
 		/// 使用時機：EnemyIntent 階段
 		public static HLAIntent GenerateEnemyIntent(CombatState state)
 		{
 			// 簡單 AI 邏輯：血量低時防禦，否則攻擊
 			var enemy = state.Enemy;
-			var healthRatio = (double)enemy.HP.Value / enemy.HP.Max.Value;
 
-			if (healthRatio < 0.3 && enemy.HasAP(1))
-			{
-				// 血量低於30%時選擇防禦
-				return new BasicIntent(ActionType.B, null);
-			}
-			else if (enemy.HasAP(1))
-			{
-				// 否則攻擊玩家（假設玩家 ID 為 0）
-				return new BasicIntent(ActionType.A, 0);
-			}
-			else
-			{
-				// 沒有 AP 時選擇充能
-				return new BasicIntent(ActionType.C, null);
-			}
+			return new BasicIntent(ActionType.A, 0);
 		}
 	}
 
