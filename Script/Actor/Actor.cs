@@ -13,11 +13,11 @@ public class Actor
 	public string DebugName { get; set; } = "Actor";
 
 
-	public Actor(int maxHP, int apPerTurn = 3, bool withCharge = true)
+	public Actor(int maxHP, bool withAP = true, int apPerTurn = 3, bool withCharge = true)
 	{
 		HP = new HP(maxHP);
 		Shield = new Shield();
-		AP = new AP(apPerTurn);
+		if (withAP) AP = new AP(apPerTurn);
 		if (withCharge) Charge = new Charge();
 	}
 

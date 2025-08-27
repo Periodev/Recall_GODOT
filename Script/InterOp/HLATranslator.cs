@@ -31,6 +31,9 @@ public static class ActorExtensions
 {
 	public static bool HasCharge(this Actor actor, int cost) =>
 		(actor.Charge?.Value ?? 0) >= cost;
+
+	public static bool HasAP(this Actor actor, int cost) =>
+		(actor.AP?.Value ?? 0) >= cost;
 }
 
 public sealed class HLATranslator
@@ -79,7 +82,7 @@ public sealed class HLATranslator
 		}
 		
 		// 計算數值（集中管理）
-		var numbers = ComputeBasicNumbers(bi.Act);
+		var numbers = ComputeBasicNumbers(bi.Act, self);
 		
 		// AP 檢查：只檢查不扣，真正扣除在 AtomicCmd.ConsumeAP
 		if (numbers.APCost > 0 && !self.HasAP(numbers.APCost))
@@ -140,15 +143,16 @@ public sealed class HLATranslator
 		foreach (var idx in ri.RecallIndices)
 		{
 			var op = memory.Ops[idx];
-			var itemNumbers = ComputeBasicNumbers(op);
+			var itemNumbers = ComputeBasicNumbers(op, self);
 			
 			items.Add(new RecallItemPlan(op, 
 				itemNumbers.Damage, itemNumbers.Block, 0, itemNumbers.GainAmount));
 		}
 
 		// AP 檢查
-		const int apCost = 1;
-		if (!self.HasAP(apCost))	return FailCode.NoAP;
+		// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
+		int apCost = (self.AP != null) ? 1 : 0;
+		if (apCost > 0 && !self.HasAP(apCost)) return FailCode.NoAP;
 
 
 		// 使用逐項扣費：batchChargeCost = 0
@@ -157,14 +161,16 @@ public sealed class HLATranslator
 	}
 
 	// 數值計算集中處理
-	private static (int Damage, int Block, int GainAmount, int ChargeCost, int APCost) ComputeBasicNumbers(ActionType act)
+	private static (int Damage, int Block, int GainAmount, int ChargeCost, int APCost) ComputeBasicNumbers(ActionType act, Actor self)
 	{
+		// 如果角色有 AP 系統，則消耗 1，否則為 0
+		int apCost = (self.AP != null) ? 1 : 0;
 		return act switch
 		{
-			ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: 1),
-			ActionType.B => (Damage: 0, Block: 6, GainAmount: 0, ChargeCost: 0, APCost: 1),
-			ActionType.C => (Damage: 0, Block: 0, GainAmount: 1, ChargeCost: 0, APCost: 1),
-			_ => (0, 0, 0, 0, 1)
+			ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost),
+			ActionType.B => (Damage: 0, Block: 3, GainAmount: 0, ChargeCost: 0, APCost: apCost),
+			ActionType.C => (Damage: 0, Block: 0, GainAmount: 1, ChargeCost: 0, APCost: apCost),
+			_ => (0, 0, 0, 0, apCost)
 		};
 	}
 
@@ -194,8 +200,6 @@ public sealed class HLATranslator
 	// 輔助方法
 	private static Actor? ResolveTarget(int? id, TryGetActorById tryGetActor) =>
 		id.HasValue && tryGetActor(id.Value, out var a) ? a : null;
-
-	private static bool Fail(string msg, out string fail) { fail = msg; return false; }
 
 	private static bool RecallUsedThisTurn(PhaseContext phase) => phase.RecallUsedThisTurn;
 }

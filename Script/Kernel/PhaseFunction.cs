@@ -100,7 +100,7 @@ public static class PhaseFunction
 		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
 		{
 			// 異常：沒有 Intent，回退到意圖階段
-			state.PhaseCtx.Step = PhaseStep.EnemyIntent;
+			state.PhaseCtx.Step = PhaseStep.PlayerInit;
 			return PhaseResult.Continue;
 		}
 
