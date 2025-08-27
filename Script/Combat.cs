@@ -108,11 +108,9 @@ public partial class Combat : Control
 
 		// 設定 Recall 意圖
 		var intent = new RecallIntent(indices, targetId);
-		State.PhaseCtx.SetIntent(intent);
-
-		// 推進流程
-		var result = PhaseRunner.AdvanceUntilInput(State);
-		GD.Print($"[CombatUI] Recall action result: {result}, Current step: {State.PhaseCtx.Step}");
+		
+		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
+		GD.Print($"[Combat] Recall result: {result}, Step: {State.PhaseCtx.Step}");
 
 		// 刷新 UI
 		RefreshAllUI();

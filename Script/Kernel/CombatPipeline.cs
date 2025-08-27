@@ -1,8 +1,13 @@
 using System;
+using System.Collections.Generic;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
 using CombatCore.Memory;
+
+#if DEBUG
+using Godot;
+#endif
 
 namespace CombatCore
 {
@@ -14,7 +19,7 @@ namespace CombatCore
 		private static readonly CmdExecutor Executor = new();
 
 		private static readonly IntentQueue EnemyInstantQueue = new();
-		private static readonly IntentQueue PlayerQueue = new();
+		public static IntentQueue PlayerQueue { get; } = new();
 		private static readonly IntentQueue EnemyDelayedQueue = new();
 		private static readonly IntentQueue TurnEndQueue = new();
 
@@ -72,6 +77,52 @@ namespace CombatCore
 				return ExecutionResult.Fail(execResult.Code);
 
 			return ExecutionResult.Pass(execResult.Log);
+		}
+
+		/// Player Queue 管理
+		public static void EnqueuePlayerAction(Actor actor, HLAIntent intent, string reason = "Player action")
+		{
+			PlayerQueue.Enqueue(actor, intent, reason);
+		}
+
+		public static ExecutionResult ProcessPlayerQueue(CombatState state)
+		{
+			var results = new List<ExecutionResult>();
+			
+			while (PlayerQueue.TryDequeue(out var queuedIntent))
+			{
+				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				
+				if (!translationResult.Success)
+				{
+#if DEBUG
+					GD.Print($"[Pipeline] Translation failed: {translationResult.ErrorCode}");
+#endif
+					continue;
+				}
+				
+				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				if (execResult.Success)
+				{
+					CommitPlayerAction(state, queuedIntent.Intent, execResult);
+					results.Add(execResult);
+				}
+			}
+			
+			return results.Count > 0 ? results[0] : ExecutionResult.Fail(FailCode.None);
+		}
+
+		private static void CommitPlayerAction(CombatState state, HLAIntent intent, ExecutionResult execResult)
+		{
+			if (intent is BasicIntent basicIntent)
+			{
+				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
+			}
+			
+			if (intent is RecallIntent)
+			{
+				state.PhaseCtx.MarkRecallUsed();
+			}
 		}
 
 		/// AI 支援：生成敵人行動意圖

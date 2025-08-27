@@ -40,23 +40,17 @@ public static class PhaseMap
 			return PhaseResult.Continue;
 		}},
 		
-		// 需要 Phase 觸發的保留攔截邏輯
 		{ PhaseStep.PlayerInput, (CombatState state) => {
-			
-			if (state.PhaseCtx.HasPendingIntent) {
-
+			if (CombatPipeline.PlayerQueue.HasIntents) 
+			{
 				state.PhaseCtx.Step = PhaseStep.PlayerExecute;
 				return PhaseResult.Continue;
 			}
 			return PhaseResult.WaitInput;
 		}},
 		
-		// 直接調用合併的 PhaseFunction
-		{ PhaseStep.PlayerExecute, (CombatState state) => {
-			
-			// 調用合併的 PhaseFunction
-			return PhaseFunction.HandlePlayerPlanningAndExecution(state);
-		}},
+		{ PhaseStep.PlayerExecute, (CombatState state) => 
+			PhaseFunction.HandlePlayerExecution(state) },
 
 		// === Enemy Phase ===
 		{ PhaseStep.EnemyInit, (CombatState state) => {

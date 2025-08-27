@@ -39,46 +39,26 @@ public static class PhaseFunction
 		return PhaseResult.Continue;
 	}
 
-	/// 處理玩家計劃和執行階段：Intent 轉換 + 命令執行與狀態提交
-	public static PhaseResult HandlePlayerPlanningAndExecution(CombatState state)
+	public static PhaseResult HandlePlayerExecution(CombatState state)
 	{
-		// 檢查是否有待處理的 Intent
-		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
+		if (!CombatPipeline.PlayerQueue.HasIntents)
 		{
 #if DEBUG
-			GD.Print($"[PhaseFunction] No pending Intent.");
+			GD.Print($"[PhaseFunction] No player intents in queue");
 #endif
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
 		}
 
-		// 使用 CombatPipeline 轉換 Intent
-		var translationResult = CombatPipeline.TranslateIntent(state, state.Player, intent);
-
 #if DEBUG
-		GD.Print($"[PhaseFunction] Translating player intent.");
+		GD.Print($"[PhaseFunction] Processing {CombatPipeline.PlayerQueue.Count} player intents");
 #endif
 
-		if (!translationResult.Success)
-		{
-#if DEBUG
-			GD.Print($"[PhaseFunction] Intent translation failed, code: {translationResult.ErrorCode}.");
-#endif
-			state.PhaseCtx.Step = PhaseStep.PlayerInput;
-			return PhaseResult.WaitInput;
-		}
+		var result = CombatPipeline.ProcessPlayerQueue(state);
 
-		// 立即執行命令，不保存中間結果
-		var execResult = CombatPipeline.ExecuteCommands(state, translationResult.Commands, translationResult.OriginalIntent);
-
-		if (execResult.Success)
-        {
-			CommitPlayerAction(state, translationResult.OriginalIntent, execResult);
-		}
-
-		if (true == CheckCombatEnd(state))
-        	return PhaseResult.CombatEnd;
-
+		if (CheckCombatEnd(state))
+			return PhaseResult.CombatEnd;
+			
 		state.PhaseCtx.Step = PhaseStep.PlayerInput;
 		return PhaseResult.WaitInput;
 	}
@@ -137,21 +117,6 @@ public static class PhaseFunction
 		return PhaseResult.Continue;
 	}
 
-	/// 提交玩家行動結果到遊戲狀態（從 CombatPipeline.CommitAction 移入）
-	private static void CommitPlayerAction(CombatState state, HLAIntent intent, ExecutionResult execResult)
-	{
-		// Memory 管理：Basic 動作需要寫入記憶
-		if (intent is BasicIntent basicIntent && PhaseRunner.IsPlayerPhase(state))
-		{
-			state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
-		}
-
-		// Recall 標記：標記本回合已使用 Recall
-		if (intent is RecallIntent)
-		{
-			state.PhaseCtx.MarkRecallUsed();
-		}
-	}
 
 
 

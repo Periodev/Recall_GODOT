@@ -65,8 +65,7 @@ namespace CombatCore
 		public PhaseStep Step;
 		public int TurnNum;
 		public bool RecallUsedThisTurn;
-		public HLAIntent PendingIntent;
-
+		public HLAIntent PendingIntent; // 保留給 Enemy 使用
 
 		public void Init()
 		{
@@ -76,7 +75,6 @@ namespace CombatCore
 			PendingIntent = null;
 		}
 
-		// Method to reset turn-specific flags
 		public void StartNewTurn()
 		{
 			TurnNum++;
@@ -84,13 +82,12 @@ namespace CombatCore
 			PendingIntent = null;
 		}
 
-		// Method to mark recall as used
 		public void MarkRecallUsed()
 		{
 			RecallUsedThisTurn = true;
 		}
 
-		// Intent 管理
+		// Enemy Intent 管理方法（保留給 Enemy 使用）
 		public void SetIntent(HLAIntent intent) => PendingIntent = intent;
 
 		public bool TryConsumeIntent(out HLAIntent intent)

@@ -26,14 +26,6 @@ public static class PhaseRunner
 			return PhaseResult.PhaseLocked;
 		}
 
-		// 🔒 重複動作保護：檢查是否已有未處理的 Intent
-		if (state.PhaseCtx.HasPendingIntent)
-		{
-#if DEBUG
-			GD.Print($"[PhaseRunner] Player action blocked: Previous action still pending");
-#endif
-			return PhaseResult.Pending;
-		}
 
 		// 🔒 戰鬥狀態保護
 		if (state.PhaseCtx.Step == PhaseStep.CombatEnd)
@@ -45,8 +37,8 @@ public static class PhaseRunner
 		GD.Print($"[PhaseRunner] Accepting player action: {intent}");
 #endif
 
-		// ✅ 保護檢查通過，設定 Intent 並推進流程
-		state.PhaseCtx.SetIntent(intent);
+		// ✅ 保護檢查通過，將 Intent 加入 PlayerQueue 並推進流程
+		CombatPipeline.EnqueuePlayerAction(state.Player, intent, "Via PhaseRunner");
 		return AdvanceUntilInput(state);
 	}
 
@@ -63,14 +55,6 @@ public static class PhaseRunner
 			return PhaseResult.PhaseLocked;
 		}
 
-		// 🔒 重複動作保護：檢查是否已有未處理的 Intent
-		if (state.PhaseCtx.HasPendingIntent)
-		{
-#if DEBUG
-			GD.Print($"[PhaseRunner] End turn blocked: Previous action still pending");
-#endif
-			return PhaseResult.Pending;
-		}
 
 #if DEBUG
 		GD.Print($"[PhaseRunner] Player ending turn");
