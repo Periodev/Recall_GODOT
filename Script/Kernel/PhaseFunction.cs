@@ -108,39 +108,6 @@ public static class PhaseFunction
 		return PhaseResult.Continue;
 	}
 
-	/// 處理敵人計劃和執行階段：意圖轉換 + 命令執行
-	public static PhaseResult HandleEnemyPlanningAndExecution(CombatState state)
-	{
-		if (!state.PhaseCtx.TryConsumeIntent(out var intent))
-		{
-			// 異常：沒有 Intent，回退到意圖階段
-			state.PhaseCtx.Step = PhaseStep.PlayerInit;
-			return PhaseResult.Continue;
-		}
-
-		var translationResult = CombatPipeline.TranslateIntent(state, state.Enemy, intent);
-
-		if (!translationResult.Success)
-		{
-			// 轉換失敗，跳過敵人行動
-			state.PhaseCtx.Step = PhaseStep.PlayerInit;
-
-#if DEBUG
-			GD.PrintErr($"[PhaseFunction] Enemy intent translation failed.");
-#endif
-			return PhaseResult.Continue;
-		}
-
-		// 立即執行命令，不保存中間結果
-		var execResult = CombatPipeline.ExecuteCommands(state, translationResult.Commands, translationResult.OriginalIntent);
-
-		if (true == CheckCombatEnd(state))
-        	return PhaseResult.CombatEnd;
-
-		state.PhaseCtx.Step = PhaseStep.PlayerInit;
-		return PhaseResult.Continue;
-	}
-
 	/// <summary>
 	/// 處理 Enemy DelayedQueue：執行回合末的延遲動作
 	/// </summary>
@@ -179,8 +146,7 @@ public static class PhaseFunction
 			return PhaseResult.CombatEnd;
 			
 		// 回合結束後，推進到下一個回合的開始
-		state.PhaseCtx.Step = PhaseStep.PlayerInit;
-		state.PhaseCtx.TurnNum++;
+		state.PhaseCtx.Step = PhaseStep.TurnStart;
 		return PhaseResult.Continue;
 	}
 

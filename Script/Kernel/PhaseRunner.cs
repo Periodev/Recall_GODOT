@@ -115,7 +115,7 @@ public static class PhaseRunner
 			iterations++;
 
 #if DEBUG
-			GD.Print($"[PhaseRunner] Iteration {iterations}: Step={state.PhaseCtx.Step}");
+			//GD.Print($"[PhaseRunner] Iteration {iterations}: Step={state.PhaseCtx.Step}");
 #endif
 
 			result = Run(state);

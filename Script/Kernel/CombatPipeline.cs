@@ -79,26 +79,31 @@ namespace CombatCore
 			return ExecutionResult.Pass(execResult.Log);
 		}
 
-		/// Player Queue 管理
+
+		/// phase queue API 
 		public static void EnqueuePlayerAction(Actor actor, HLAIntent intent, string reason = "Player action")
 		{
 			PlayerQueue.Enqueue(actor, intent, reason);
 		}
 
-		/// Enemy Instant Queue 管理
 		public static void EnqueueEnemyInstantAction(Actor enemy, HLAIntent intent, string reason = "Enemy instant")
 		{
 			EnemyInstantQueue.Enqueue(enemy, intent, reason);
 		}
 
+		public static void EnqueueEnemyDelayedAction(Actor enemy, HLAIntent intent, string reason = "Enemy delayed")
+		{
+			EnemyDelayedQueue.Enqueue(enemy, intent, reason);
+		}
+
 		public static ExecutionResult ProcessPlayerQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
-			
+
 			while (PlayerQueue.TryDequeue(out var queuedIntent))
 			{
 				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
-				
+
 				if (!translationResult.Success)
 				{
 #if DEBUG
@@ -106,7 +111,7 @@ namespace CombatCore
 #endif
 					continue;
 				}
-				
+
 				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
@@ -114,7 +119,7 @@ namespace CombatCore
 					results.Add(execResult);
 				}
 			}
-			
+
 			return results.Count > 0 ? results[0] : ExecutionResult.Fail(FailCode.None);
 		}
 
@@ -205,19 +210,22 @@ namespace CombatCore
 			// 簡單 AI 邏輯：生成多個敵人行為
 			var enemy = state.Enemy;
 
-			// 生成基本攻擊行為 (ActionType.A - 延遲執行)
-			var attackIntent = new BasicIntent(ActionType.A, 0);
-			EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Enemy AI attack");
-
-			// 根據條件可能生成即時行為 (ActionType.B 或 C)
-			if (enemy.HP.Value < enemy.HP.Max / 2)
+			// 偶數回合防禦(instant)，奇數回合攻擊(delay)
+			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
-				var blockIntent = new BasicIntent(ActionType.B, 0);
-				if (IsInstantAction(blockIntent))
-				{
-					EnqueueEnemyInstantAction(enemy, blockIntent, "Enemy AI block");
-				}
+				// B = instant
+				var blockIntent = new BasicIntent(ActionType.B, null);
+				EnemyInstantQueue.Enqueue(enemy, blockIntent, "Block");
 			}
+
+
+			else
+			{
+				// A = delay  
+				var attackIntent = new BasicIntent(ActionType.A, 0);
+				EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Attack");
+			}
+
 		}
 
 		/// <summary>

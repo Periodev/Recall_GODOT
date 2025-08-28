@@ -65,21 +65,18 @@ namespace CombatCore
 		public PhaseStep Step;
 		public int TurnNum;
 		public bool RecallUsedThisTurn;
-		public HLAIntent PendingIntent; // 保留給 Enemy 使用
 
 		public void Init()
 		{
 			Step = PhaseStep.TurnStart;
 			TurnNum = 0;
 			RecallUsedThisTurn = false;
-			PendingIntent = null;
 		}
 
 		public void StartNewTurn()
 		{
 			TurnNum++;
 			RecallUsedThisTurn = false;
-			PendingIntent = null;
 		}
 
 		public void MarkRecallUsed()
@@ -87,15 +84,5 @@ namespace CombatCore
 			RecallUsedThisTurn = true;
 		}
 
-		// Enemy Intent 管理方法（保留給 Enemy 使用）
-		public void SetIntent(HLAIntent intent) => PendingIntent = intent;
-
-		public bool TryConsumeIntent(out HLAIntent intent)
-		{
-			if (PendingIntent is null) { intent = null; return false; }
-			intent = PendingIntent; PendingIntent = null; return true;
-		}
-
-		public bool HasPendingIntent => PendingIntent is not null;
 	}
 }
