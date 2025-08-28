@@ -8,9 +8,9 @@ using CombatCore.Command;
 using CombatCore.Memory;
 using static CombatCore.GameConst;
 
-public abstract record HLAIntent(int? TargetId);
-public sealed record BasicIntent(ActionType Act, int? TargetId) : HLAIntent(TargetId);
-public sealed record RecallIntent(int[] RecallIndices, int? TargetId) : HLAIntent(TargetId);
+public abstract record Intent(int? TargetId);
+public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
+public sealed record RecallIntent(int[] RecallIndices, int? TargetId) : Intent(TargetId);
 public delegate bool TryGetActorById(int id, out Actor actor);
 
 public readonly struct RecallView
@@ -36,11 +36,11 @@ public static class ActorExtensions
 		(actor.AP?.Value ?? 0) >= cost;
 }
 
-public sealed class HLATranslator
+public sealed class Translator
 {
 	// 單一入口：輸入抽象意圖，型別模式分派
 	public FailCode TryTranslate(
-		HLAIntent intent,
+		Intent intent,
 		PhaseContext phase,
 		RecallView memory,
 		TryGetActorById tryGetActor,   // ← 取代 IActorLookup,

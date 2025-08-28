@@ -21,7 +21,7 @@ namespace CombatCore
 
 	/// <summary>
 	/// 帶執行上下文的 Intent 包裝
-	/// 將純意圖 (HLAIntent) 與執行上下文 (Actor, Reason) 分離
+	/// 將純意圖 (Intent) 與執行上下文 (Actor, Reason) 分離
 	/// </summary>
 	public readonly struct QueuedIntent
 	{
@@ -29,12 +29,12 @@ namespace CombatCore
 		public Actor Actor { get; }
 		
 		/// <summary>意圖內容</summary>
-		public HLAIntent Intent { get; }
+		public Intent Intent { get; }
 		
 		/// <summary>執行原因（調試用）</summary>
 		public string Reason { get; }
 
-		public QueuedIntent(Actor actor, HLAIntent intent, string reason = "")
+		public QueuedIntent(Actor actor, Intent intent, string reason = "")
 		{
 			Actor = actor;
 			Intent = intent;
@@ -55,7 +55,7 @@ namespace CombatCore
 		/// <summary>
 		/// 將 Intent 加入隊列
 		/// </summary>
-		public void Enqueue(Actor actor, HLAIntent intent, string reason = "")
+		public void Enqueue(Actor actor, Intent intent, string reason = "")
 		{
 			var queuedIntent = new QueuedIntent(actor, intent, reason);
 			_queue.Enqueue(queuedIntent);

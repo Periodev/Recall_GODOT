@@ -35,9 +35,9 @@
     <Compile Include="..\Script\Command\CmdExecutor.cs" />
 
     <!-- 中介層 -->
-    <Compile Include="..\Script\InterOp\ActionType.cs" />
+    <Compile Include="..\Script\InterOp\Utils.cs" />
     <Compile Include="..\Script\InterOp\InterOps.cs" />
-    <Compile Include="..\Script\InterOp\HLATranslator.cs" />
+    <Compile Include="..\Script\InterOp\Translator.cs" />
   
 
     <!-- 記憶軸 -->
@@ -47,8 +47,6 @@
     <!-- Phase 核心（僅限無 Godot 相依者） -->
     <Compile Include="..\Script\Kernel\PhaseContext.cs" />
 
-    <!-- 抽象方法 -->
-    <Compile Include="..\Script\Abstractions\IActorLookup.cs" />
 
 
   </ItemGroup>

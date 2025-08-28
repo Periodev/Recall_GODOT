@@ -9,7 +9,7 @@ public static class EnemyStrategy
     /// A (攻擊) → Delayed
     /// B (防禦), C (充能) → Instant
     /// </summary>
-    public static ExecuteTiming DetermineTiming(HLAIntent intent)
+    public static ExecuteTiming DetermineTiming(Intent intent)
     {
         return intent switch
         {

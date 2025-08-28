@@ -14,7 +14,7 @@ namespace CombatCore
 	public static class CombatPipeline
 	{
 		// === 靜態實例，避免重複創建無狀態對象 ===
-		private static readonly HLATranslator Translator = new();
+		private static readonly Translator Translator = new();
 		private static readonly InterOps InterOps = new();
 		private static readonly CmdExecutor Executor = new();
 
@@ -33,7 +33,7 @@ namespace CombatCore
 		/// <param name="actor">執行動作的角色</param>
 		/// <param name="intent">高階行動意圖</param>
 		/// <returns>轉換結果，包含命令陣列或錯誤碼</returns>
-		public static TranslationResult TranslateIntent(CombatState state, Actor actor, HLAIntent intent)
+		public static TranslationResult TranslateIntent(CombatState state, Actor actor, Intent intent)
 		{
 			// 驗證階段
 			var failCode = Translator.TryTranslate(
@@ -69,7 +69,7 @@ namespace CombatCore
 		/// <param name="commands">要執行的命令陣列</param>
 		/// <param name="originalIntent">原始意圖（用於提交階段）</param>
 		/// <returns>執行結果，包含實際效果日誌</returns>
-		public static ExecutionResult ExecuteCommands(CombatState state, AtomicCmd[] commands, HLAIntent originalIntent)
+		public static ExecutionResult ExecuteCommands(CombatState state, AtomicCmd[] commands, Intent originalIntent)
 		{
 			// 執行階段
 			var execResult = Executor.ExecuteOrDiscard(commands);
@@ -81,17 +81,17 @@ namespace CombatCore
 
 
 		/// phase queue API 
-		public static void EnqueuePlayerAction(Actor actor, HLAIntent intent, string reason = "Player action")
+		public static void EnqueuePlayerAction(Actor actor, Intent intent, string reason = "Player action")
 		{
 			PlayerQueue.Enqueue(actor, intent, reason);
 		}
 
-		public static void EnqueueEnemyInstantAction(Actor enemy, HLAIntent intent, string reason = "Enemy instant")
+		public static void EnqueueEnemyInstantAction(Actor enemy, Intent intent, string reason = "Enemy instant")
 		{
 			EnemyInstantQueue.Enqueue(enemy, intent, reason);
 		}
 
-		public static void EnqueueEnemyDelayedAction(Actor enemy, HLAIntent intent, string reason = "Enemy delayed")
+		public static void EnqueueEnemyDelayedAction(Actor enemy, Intent intent, string reason = "Enemy delayed")
 		{
 			EnemyDelayedQueue.Enqueue(enemy, intent, reason);
 		}
@@ -149,7 +149,7 @@ namespace CombatCore
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
 
-		private static void CommitPlayerAction(CombatState state, HLAIntent intent, ExecutionResult execResult)
+		private static void CommitPlayerAction(CombatState state, Intent intent, ExecutionResult execResult)
 		{
 			if (intent is BasicIntent basicIntent)
 			{
@@ -194,7 +194,7 @@ namespace CombatCore
 		/// <summary>
 		/// 判斷行為是否為即時執行
 		/// </summary>
-		private static bool IsInstantAction(HLAIntent intent)
+		private static bool IsInstantAction(Intent intent)
 		{
 			if (intent is BasicIntent basicIntent)
 			{
@@ -247,9 +247,9 @@ namespace CombatCore
 		public bool Success { get; }
 		public FailCode ErrorCode { get; }
 		public AtomicCmd[] Commands { get; }
-		public HLAIntent OriginalIntent { get; }
+		public Intent OriginalIntent { get; }
 
-		private TranslationResult(bool success, FailCode errorCode, AtomicCmd[] commands, HLAIntent originalIntent)
+		private TranslationResult(bool success, FailCode errorCode, AtomicCmd[] commands, Intent originalIntent)
 		{
 			Success = success;
 			ErrorCode = errorCode;
@@ -257,7 +257,7 @@ namespace CombatCore
 			OriginalIntent = originalIntent;
 		}
 
-		public static TranslationResult Pass(AtomicCmd[] commands, HLAIntent intent) =>
+		public static TranslationResult Pass(AtomicCmd[] commands, Intent intent) =>
 			new(true, FailCode.None, commands, intent);
 
 		public static TranslationResult Fail(FailCode code) =>

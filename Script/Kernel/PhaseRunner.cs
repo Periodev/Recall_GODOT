@@ -15,7 +15,7 @@ public static class PhaseRunner
 	/// 嘗試執行玩家動作（帶完整保護）
 	/// 這是 Combat UI 應該使用的唯一入口
 
-	public static PhaseResult TryExecutePlayerAction(CombatState state, HLAIntent intent)
+	public static PhaseResult TryExecutePlayerAction(CombatState state, Intent intent)
 	{
 		// 🔒 階段保護：只有在正確階段才能執行
 		if (!CanPlayerAct(state.PhaseCtx))

@@ -4,6 +4,18 @@ using System;
 namespace CombatCore
 {
 	public enum ActionType { A, B, C };		// Attack, Block, GainCharge
+
+	/// <summary>
+	/// 高階意圖操作代號 - 備用的抽象操作代號
+	/// </summary>
+	public enum HLAop : byte
+	{
+		Attack = 0x01,      // 對應 BasicIntent(ActionType.A)
+		Block = 0x02,       // 對應 BasicIntent(ActionType.B)  
+		Charge = 0x03,      // 對應 BasicIntent(ActionType.C)
+		Recall = 0x10,      // 對應 RecallIntent
+		EndTurn = 0xFF      // 結束回合意圖
+	}
 }
 
 namespace Recall.InterOp

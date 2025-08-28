@@ -8,9 +8,9 @@ using CombatCore.Memory;
 using CombatCore.Command;
 
 [TestFixture]
-public class HLATranslatorTests
+public class TranslatorTests
 {
-	private HLATranslator _translator;
+	private Translator _translator;
 	private TestActorLookup _actorLookup;
 	private Actor _player;
 	private Actor _enemy;
@@ -20,7 +20,7 @@ public class HLATranslatorTests
 	[SetUp]
 	public void Setup()
 	{
-		_translator = new HLATranslator();
+		_translator = new Translator();
 		_interOps = new InterOps();
 		_player = new Actor(100, apPerTurn: 3, withCharge: true);
 		_enemy = new Actor(80, apPerTurn: 3, withCharge: false);
