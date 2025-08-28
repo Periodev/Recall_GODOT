@@ -18,11 +18,8 @@ public static class PhaseMap
 			return PhaseResult.Continue;
 		}},
 		
-		{ PhaseStep.TurnEnd, (CombatState state) => {
-
-			state.PhaseCtx.Step = PhaseStep.TurnStart;
-			return PhaseResult.Continue;
-		}},
+		{ PhaseStep.TurnEnd, (CombatState state) => 
+			PhaseFunction.HandleTurnEnd(state) },
 		
 		{ PhaseStep.CombatEnd, (CombatState state) => {
 			state.PhaseCtx.Step = PhaseStep.CombatEnd;
@@ -63,7 +60,7 @@ public static class PhaseMap
 			PhaseFunction.HandleEnemyAI(state) },
 		
 		{ PhaseStep.EnemyExecInstant, (CombatState state) => 
-			PhaseFunction.HandleEnemyPlanningAndExecution(state) },
+			PhaseFunction.HandleEnemyInstantExecution(state) },
 		
 		{ PhaseStep.EnemyExecDelayed, (CombatState state) => 
 			PhaseFunction.HandleEnemyDelayed(state) }

@@ -48,7 +48,7 @@ namespace CombatCore
 	/// 簡單的 FIFO 隊列 - 不需要複雜優先級
 	/// 每個執行時機使用一個獨立隊列
 	/// </summary>
-	public class IntentQueue
+	public class PhaseQueue
 	{
 		private readonly Queue<QueuedIntent> _queue = new();
 

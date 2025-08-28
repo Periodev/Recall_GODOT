@@ -18,10 +18,10 @@ namespace CombatCore
 		private static readonly InterOps InterOps = new();
 		private static readonly CmdExecutor Executor = new();
 
-		private static readonly IntentQueue EnemyInstantQueue = new();
-		public static IntentQueue PlayerQueue { get; } = new();
-		public static IntentQueue EnemyDelayedQueue { get; } = new();
-		private static readonly IntentQueue TurnEndQueue = new();
+		public static PhaseQueue EnemyInstantQueue { get; } = new();
+		public static PhaseQueue PlayerQueue { get; } = new();
+		public static PhaseQueue EnemyDelayedQueue { get; } = new();
+		public static PhaseQueue TurnEndQueue { get; } = new();
 
 
 
@@ -85,6 +85,12 @@ namespace CombatCore
 			PlayerQueue.Enqueue(actor, intent, reason);
 		}
 
+		/// Enemy Instant Queue 管理
+		public static void EnqueueEnemyInstantAction(Actor enemy, HLAIntent intent, string reason = "Enemy instant")
+		{
+			EnemyInstantQueue.Enqueue(enemy, intent, reason);
+		}
+
 		public static ExecutionResult ProcessPlayerQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
@@ -110,6 +116,32 @@ namespace CombatCore
 			}
 			
 			return results.Count > 0 ? results[0] : ExecutionResult.Fail(FailCode.None);
+		}
+
+		public static ExecutionResult ProcessEnemyInstantQueue(CombatState state)
+		{
+			var results = new List<ExecutionResult>();
+			
+			while (EnemyInstantQueue.TryDequeue(out var queuedIntent))
+			{
+				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				
+				if (!translationResult.Success)
+				{
+#if DEBUG
+					GD.Print($"[Pipeline] Enemy instant translation failed: {translationResult.ErrorCode}");
+#endif
+					continue;
+				}
+				
+				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				if (execResult.Success)
+				{
+					results.Add(execResult);
+				}
+			}
+			
+			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
 
 		private static void CommitPlayerAction(CombatState state, HLAIntent intent, ExecutionResult execResult)
@@ -154,14 +186,48 @@ namespace CombatCore
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
 
-		/// AI 支援：生成敵人行動意圖
-		/// 使用時機：EnemyIntent 階段
-		public static HLAIntent GenerateEnemyIntent(CombatState state)
+		/// <summary>
+		/// 判斷行為是否為即時執行
+		/// </summary>
+		private static bool IsInstantAction(HLAIntent intent)
 		{
-			// 簡單 AI 邏輯：血量低時防禦，否則攻擊
+			if (intent is BasicIntent basicIntent)
+			{
+				return basicIntent.Act == ActionType.B || basicIntent.Act == ActionType.C;
+			}
+			return false;
+		}
+
+		/// AI 支援：生成敵人行動意圖並分類到對應隊列
+		/// 使用時機：EnemyIntent 階段
+		public static void GenerateAndEnqueueEnemyActions(CombatState state)
+		{
+			// 簡單 AI 邏輯：生成多個敵人行為
 			var enemy = state.Enemy;
 
-			return new BasicIntent(ActionType.A, 0);
+			// 生成基本攻擊行為 (ActionType.A - 延遲執行)
+			var attackIntent = new BasicIntent(ActionType.A, 0);
+			EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Enemy AI attack");
+
+			// 根據條件可能生成即時行為 (ActionType.B 或 C)
+			if (enemy.HP.Value < enemy.HP.Max / 2)
+			{
+				var blockIntent = new BasicIntent(ActionType.B, 0);
+				if (IsInstantAction(blockIntent))
+				{
+					EnqueueEnemyInstantAction(enemy, blockIntent, "Enemy AI block");
+				}
+			}
+		}
+
+		/// <summary>
+		/// 處理 Turn End Queue 中的所有 Intent
+		/// </summary>
+		public static ExecutionResult ProcessTurnEndQueue(CombatState state)
+		{
+			// 目前只清空隊列並返回成功結果
+			TurnEndQueue.Clear();
+			return ExecutionResult.Pass(new CmdLog());
 		}
 	}
 

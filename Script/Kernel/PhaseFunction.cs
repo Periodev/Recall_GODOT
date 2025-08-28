@@ -70,27 +70,41 @@ public static class PhaseFunction
 	/// </summary>
 	public static PhaseResult HandleEnemyAI(CombatState state)
 	{
-		// 查詢 AI 策略表，生成敵人意圖
-		var intent = CombatPipeline.GenerateEnemyIntent(state);
+		// 生成敵人行動意圖並自動分配到對應隊列
+		CombatPipeline.GenerateAndEnqueueEnemyActions(state);
 
-		// 決定執行時機
-		var timing = EnemyStrategy.DetermineTiming(intent);
-
-		if (timing == ExecuteTiming.Instant)
-		{
-			// B, C 使用現有的 PendingIntent 機制
-			state.PhaseCtx.SetIntent(intent);
-		}
-		else if (timing == ExecuteTiming.Delayed)
-		{
-			// A 入隊到 DelayedQueue
-			CombatPipeline.EnemyDelayedQueue.Enqueue(state.Enemy, intent, $"Enemy {intent} delayed");
 #if DEBUG
-			GD.Print($"[PhaseFunction] Enemy action queued for delayed execution: {intent}");
+		GD.Print($"[PhaseFunction] Enemy actions generated and queued");
 #endif
-		}
 
 		state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
+		return PhaseResult.Continue;
+	}
+
+	/// <summary>
+	/// 處理敵人即時執行隊列
+	/// </summary>
+	public static PhaseResult HandleEnemyInstantExecution(CombatState state)
+	{
+		if (CombatPipeline.EnemyInstantQueue.HasIntents)
+		{
+#if DEBUG
+			GD.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyInstantQueue.Count} enemy instant intents");
+#endif
+			var result = CombatPipeline.ProcessEnemyInstantQueue(state);
+			
+			if (CheckCombatEnd(state))
+				return PhaseResult.CombatEnd;
+		}
+#if DEBUG
+		else
+		{
+			GD.Print($"[PhaseFunction] No enemy instant intents to process");
+		}
+#endif
+		
+		// 推進到 PlayerInit 階段
+		state.PhaseCtx.Step = PhaseStep.PlayerInit;
 		return PhaseResult.Continue;
 	}
 
@@ -151,6 +165,22 @@ public static class PhaseFunction
 		
 		// 推進到回合結束
 		state.PhaseCtx.Step = PhaseStep.TurnEnd;
+		return PhaseResult.Continue;
+	}
+
+	/// <summary>
+	/// 處理回合結束隊列
+	/// </summary>
+	public static PhaseResult HandleTurnEnd(CombatState state)
+	{
+		var result = CombatPipeline.ProcessTurnEndQueue(state);
+		
+		if (CheckCombatEnd(state))
+			return PhaseResult.CombatEnd;
+			
+		// 回合結束後，推進到下一個回合的開始
+		state.PhaseCtx.Step = PhaseStep.PlayerInit;
+		state.PhaseCtx.TurnNum++;
 		return PhaseResult.Continue;
 	}
 
