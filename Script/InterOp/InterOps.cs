@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.Memory;
@@ -26,32 +28,13 @@ namespace CombatCore.InterOp
 		public int APCost { get; }       // AP consumption
 	}
 
-	public readonly struct RecallItemPlan
-	{
-		public RecallItemPlan(ActionType op, int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0)
-		{
-			Op = op; Damage = damage; Block = block; 
-			ChargeCost = chargeCost; GainAmount = gainAmount;
-		}
-		public ActionType Op { get; }
-		public int Damage { get; }       // Attack
-		public int Block { get; }        // Block
-		public int ChargeCost { get; }   // Attack/Block charge consumption attempt
-		public int GainAmount { get; }   // GainCharge
-	}
-
 	public readonly struct RecallPlan
 	{
-		public RecallPlan(Actor src, Actor dst, IReadOnlyList<RecallItemPlan> items, int batchChargeCost = 0, int apCost = 1)
-		{
-			Source = src; Target = dst; Items = items ?? Array.Empty<RecallItemPlan>();
-			BatchChargeCost = batchChargeCost;
-			APCost = apCost;
-		}
+		public RecallPlan(Actor src, ActionType[] sequence, int apCost = 1)
+		{ Source = src; ActionSequence = sequence ?? Array.Empty<ActionType>(); APCost = apCost; }
+		
 		public Actor Source { get; }
-		public Actor Target { get; }
-		public IReadOnlyList<RecallItemPlan> Items { get; }
-		public int BatchChargeCost { get; } // If rules require batch deduction only once, Translator sets >0
+		public ActionType[] ActionSequence { get; } // display only
 		public int APCost { get; }          
 	}
 
@@ -89,38 +72,15 @@ namespace CombatCore.InterOp
 
 		public AtomicCmd[] BuildRecall(in RecallPlan plan)
 		{
-			// Estimate: one-time batch cost + N items
-			var list = new List<AtomicCmd>(capacity: (plan.BatchChargeCost > 0 ? 1 : 0) + plan.Items.Count + 2);
-			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // Add even if 0
+			// Minimal behavior for current milestone:
+			// - Only consume AP
+			// - Log the recalled pattern (no commas), e.g., [CA]
+			var list = new List<AtomicCmd>(capacity: 1);
+			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));
 
-			// Batch one-time charge cost (if rules require)
-			if (plan.BatchChargeCost > 0)
-				list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.BatchChargeCost));
-
-			foreach (var item in plan.Items)
-			{
-				switch (item.Op)
-				{
-					case ActionType.A:
-						if (item.ChargeCost > 0)
-							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
-						if (item.Damage > 0)
-							list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, item.Damage));
-						break;
-
-					case ActionType.B:
-						if (item.ChargeCost > 0)
-							list.Add(AtomicCmd.ConsumeCharge(plan.Source, item.ChargeCost));
-						if (item.Block > 0)
-							list.Add(AtomicCmd.AddShield(plan.Source, item.Block)); // Fix: B always adds shield to source
-						break;
-
-					case ActionType.C:
-						if (item.GainAmount > 0)
-							list.Add(AtomicCmd.GainCharge(plan.Source, item.GainAmount));
-						break;
-				}
-			}
+			// diagnostic message (non-invasive)
+			var pattern = string.Join("", plan.ActionSequence.Select(x => x.ToString()));
+			Debug.WriteLine($"Player recalled [{pattern}]");
 
 			return list.ToArray();
 		}

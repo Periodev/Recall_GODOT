@@ -151,6 +151,8 @@ namespace CombatCore
 
 		private static void CommitPlayerAction(CombatState state, Intent intent, ExecutionResult execResult)
 		{
+			if (!execResult.Success) return;
+
 			if (intent is BasicIntent basicIntent)
 			{
 				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);

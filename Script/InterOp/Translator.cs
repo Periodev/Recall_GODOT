@@ -10,7 +10,7 @@ using static CombatCore.GameConst;
 
 public abstract record Intent(int? TargetId);
 public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
-public sealed record RecallIntent(int[] RecallIndices, int? TargetId) : Intent(TargetId);
+public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
 public delegate bool TryGetActorById(int id, out Actor actor);
 
 public readonly struct RecallView
@@ -56,7 +56,7 @@ public sealed class Translator
 		return intent switch
 		{
 			BasicIntent bi  => TryBasic(bi, phase, self, tryGetActor, out basicPlan),
-			RecallIntent ri => TryRecall(ri, phase, memory, self, tryGetActor, out recallPlan),
+			RecallIntent ri => TryRecall(ri, phase, memory, self, out recallPlan),
 			_ =>FailCode.UnknownIntent
 		};
 	}
@@ -107,7 +107,7 @@ public sealed class Translator
 	}
 
 	private static FailCode TryRecall(
-		RecallIntent ri, PhaseContext phase, RecallView memory, Actor self, TryGetActorById tryGetActor,
+		RecallIntent ri, PhaseContext phase, RecallView memory, Actor self,
 		out RecallPlan plan)
 	{
 		plan = default;
@@ -120,43 +120,15 @@ public sealed class Translator
 		FailCode fail = ValidateIndices(ri.RecallIndices, memory, phase.TurnNum);
 		if (fail != FailCode.None) return fail;
 
-		// 檢查是否含有 A 動作
-		bool hasAttackAction = ri.RecallIndices.Any(idx => memory.Ops[idx] == ActionType.A);
-		
-		// 目標驗證：若含 A 動作，必須有有效且非 self 的目標
-		Actor tgt;
-		if (hasAttackAction)
-		{
-			tgt = ResolveTarget(ri.TargetId, tryGetActor);
-			if (tgt is null || ReferenceEquals(tgt, self))
-				return FailCode.BadTarget;
-		}
-		else
-		{
-			// 全為 B/C，設定目標為自己
-			tgt = self;
-		}
-
-		// 映射記憶項目到計畫
-		var items = new List<RecallItemPlan>();
-		
-		foreach (var idx in ri.RecallIndices)
-		{
-			var op = memory.Ops[idx];
-			var itemNumbers = ComputeBasicNumbers(op, self);
-			
-			items.Add(new RecallItemPlan(op, 
-				itemNumbers.Damage, itemNumbers.Block, 0, itemNumbers.GainAmount));
-		}
 
 		// AP 檢查
 		// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
 		int apCost = (self.AP != null) ? 1 : 0;
 		if (apCost > 0 && !self.HasAP(apCost)) return FailCode.NoAP;
 
+		var sequence = ri.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
+		plan = new RecallPlan(self, sequence, apCost);
 
-		// 使用逐項扣費：batchChargeCost = 0
-		plan = new RecallPlan(self, tgt, items, batchChargeCost: 0, apCost);
 		return FailCode.None;
 	}
 

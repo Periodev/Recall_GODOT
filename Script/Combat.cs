@@ -91,23 +91,8 @@ public partial class Combat : Control
 	{
 		GD.Print($"[Combat] OnRecallConfirm: [{string.Join(", ", indices)}]");
 
-		// 檢查是否包含攻擊動作以決定目標
-		bool hasAttack = false;
-		var memOps = State.Mem.SnapshotOps();
-
-		foreach (int idx in indices)
-		{
-			if (idx < memOps.Count && memOps[idx] == ActionType.A)
-			{
-				hasAttack = true;
-				break;
-			}
-		}
-
-		int? targetId = hasAttack ? 1 : null; // 1 = enemy, null = self
-
 		// 設定 Recall 意圖
-		var intent = new RecallIntent(indices, targetId);
+		var intent = new RecallIntent(indices);
 		
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
 		GD.Print($"[Combat] Recall result: {result}, Step: {State.PhaseCtx.Step}");
