@@ -6,5 +6,5 @@
 *.exe
 *.json
 *.cache
-Tests/bin/
-Tests/obj/
+Test/bin/
+Test/obj/
