@@ -1,9 +1,5 @@
-
-#if DEBUG
-using Godot;
-#endif
-
 using System;
+using System.Diagnostics;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
@@ -17,17 +13,14 @@ public static class PhaseFunction
 	/// 處理玩家初始化：AP 恢復等系統操作
 	public static PhaseResult HandlePlayerInit(CombatState state)
 	{
-#if DEBUG
-		GD.Print($"[PhaseFunction] Executing player init system services");
-		GD.Print($"[PhaseFunction] Player AP before refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
-#endif
+		Debug.Print($"[PhaseFunction] Executing player init system services");
+		Debug.Print($"[PhaseFunction] Player AP before refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
 
 		// 🎯 恢復玩家 AP 到每回合最大值
 		state.Player.AP.Refill();
 		UISignalHub.NotifyAPChanged(state.Player.AP.Value);
-#if DEBUG
-		GD.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
-#endif
+
+		Debug.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
 
 		//  clear charge and shield on turn start
 		SelfOp.ClearShield(state.Player);
@@ -43,16 +36,13 @@ public static class PhaseFunction
 	{
 		if (!CombatPipeline.PlayerQueue.HasIntents)
 		{
-#if DEBUG
-			GD.Print($"[PhaseFunction] No player intents in queue");
-#endif
+			Debug.Print($"[PhaseFunction] No player intents in queue");
+
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
 		}
 
-#if DEBUG
-		GD.Print($"[PhaseFunction] Processing {CombatPipeline.PlayerQueue.Count} player intents");
-#endif
+		Debug.Print($"[PhaseFunction] Processing {CombatPipeline.PlayerQueue.Count} player intents");
 
 		var result = CombatPipeline.ProcessPlayerQueue(state);
 
@@ -73,9 +63,7 @@ public static class PhaseFunction
 		// 生成敵人行動意圖並自動分配到對應隊列
 		CombatPipeline.GenerateAndEnqueueEnemyActions(state);
 
-#if DEBUG
-		GD.Print($"[PhaseFunction] Enemy actions generated and queued");
-#endif
+		Debug.Print($"[PhaseFunction] Enemy actions generated and queued");
 
 		state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
 		return PhaseResult.Continue;
@@ -88,9 +76,8 @@ public static class PhaseFunction
 	{
 		if (CombatPipeline.EnemyInstantQueue.HasIntents)
 		{
-#if DEBUG
-			GD.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyInstantQueue.Count} enemy instant intents");
-#endif
+			Debug.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyInstantQueue.Count} enemy instant intents");
+
 			var result = CombatPipeline.ProcessEnemyInstantQueue(state);
 			
 			if (CheckCombatEnd(state))
@@ -99,7 +86,7 @@ public static class PhaseFunction
 #if DEBUG
 		else
 		{
-			GD.Print($"[PhaseFunction] No enemy instant intents to process");
+			Debug.Print($"[PhaseFunction] No enemy instant intents to process");
 		}
 #endif
 		
@@ -115,9 +102,8 @@ public static class PhaseFunction
 	{
 		if (CombatPipeline.EnemyDelayedQueue.HasIntents)
 		{
-#if DEBUG
-			GD.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyDelayedQueue.Count} enemy delayed intents");
-#endif
+			Debug.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyDelayedQueue.Count} enemy delayed intents");
+
 			var result = CombatPipeline.ProcessEnemyDelayedQueue(state);
 			
 			if (CheckCombatEnd(state))
@@ -126,7 +112,7 @@ public static class PhaseFunction
 #if DEBUG
 		else
 		{
-			GD.Print($"[PhaseFunction] No enemy delayed intents to process");
+			Debug.Print($"[PhaseFunction] No enemy delayed intents to process");
 		}
 #endif
 		

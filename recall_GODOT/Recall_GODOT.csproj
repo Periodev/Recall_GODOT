@@ -7,9 +7,9 @@
 
 
   <ItemGroup>
-    <!-- 不讓 Godot 專案編譯 tests 內的 .cs -->
-    <Compile Remove="tests\**\*.cs" />
-    <!-- 仍把測試檔當作一般檔案保留在解決方案中 -->
-    <None Include="tests\**\*.cs" />
+    <ProjectReference Include="core/Recall.Core.csproj" />
+    <!-- 避免把 core/*.cs 再編一次（型別會重複） -->
+    <Compile Remove="core\**\*.cs" />
   </ItemGroup>
+
 </Project>

@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
 using CombatCore.Memory;
-
-#if DEBUG
-using Godot;
-#endif
 
 namespace CombatCore
 {
@@ -92,7 +89,7 @@ namespace CombatCore
 				if (!translationResult.Success)
 				{
 #if DEBUG
-					GD.Print($"[Pipeline] Translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Translation failed: {translationResult.ErrorCode}");
 #endif
 					continue;
 				}
@@ -118,9 +115,7 @@ namespace CombatCore
 				
 				if (!translationResult.Success)
 				{
-#if DEBUG
-					GD.Print($"[Pipeline] Enemy instant translation failed: {translationResult.ErrorCode}");
-#endif
+					Debug.Print($"[Pipeline] Enemy instant translation failed: {translationResult.ErrorCode}");
 					continue;
 				}
 				
@@ -162,9 +157,7 @@ namespace CombatCore
 				
 				if (!translationResult.Success)
 				{
-#if DEBUG
-					GD.Print($"[Pipeline] Enemy delayed translation failed: {translationResult.ErrorCode}");
-#endif
+					Debug.Print($"[Pipeline] Enemy delayed translation failed: {translationResult.ErrorCode}");
 					continue;
 				}
 				

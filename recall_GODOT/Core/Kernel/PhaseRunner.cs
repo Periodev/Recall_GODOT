@@ -1,8 +1,5 @@
-#if DEBUG
-using Godot;
-#endif
-
 using System;
+using System.Diagnostics;
 using CombatCore;
 
 
@@ -20,9 +17,8 @@ public static class PhaseRunner
 		// 🔒 階段保護：只有在正確階段才能執行
 		if (!CanPlayerAct(state.PhaseCtx))
 		{
-#if DEBUG
-			GD.Print($"[PhaseRunner] Player action blocked: Wrong phase ({state.PhaseCtx.Step})");
-#endif
+			Debug.Print($"[PhaseRunner] Player action blocked: Wrong phase ({state.PhaseCtx.Step})");
+
 			return PhaseResult.PhaseLocked;
 		}
 
@@ -33,9 +29,7 @@ public static class PhaseRunner
 			return PhaseResult.CombatEnd;
 		}
 
-#if DEBUG
-		GD.Print($"[PhaseRunner] Accepting player action: {intent}");
-#endif
+		Debug.Print($"[PhaseRunner] Accepting player action: {intent}");
 
 		// ✅ 保護檢查通過，將 Intent 加入 PlayerQueue 並推進流程
 		CombatPipeline.EnqueuePlayerAction(state.Player, intent, "Via PhaseRunner");
@@ -49,16 +43,13 @@ public static class PhaseRunner
 		// 🔒 階段保護：只有在玩家輸入階段才能結束回合
 		if (!CanPlayerAct(state.PhaseCtx))
 		{
-#if DEBUG
-			GD.Print($"[PhaseRunner] End turn blocked: Wrong phase ({state.PhaseCtx.Step})");
-#endif
+			Debug.Print($"[PhaseRunner] End turn blocked: Wrong phase ({state.PhaseCtx.Step})");
+
 			return PhaseResult.PhaseLocked;
 		}
 
 
-#if DEBUG
-		GD.Print($"[PhaseRunner] Player ending turn");
-#endif
+		Debug.Print($"[PhaseRunner] Player ending turn");
 
 		// ✅ 直接跳到敵人延遲執行階段
 		state.PhaseCtx.Step = PhaseStep.EnemyExecDelayed;
@@ -69,9 +60,7 @@ public static class PhaseRunner
 	/// 初始化戰鬥流程（遊戲開始時調用）
 	public static PhaseResult InitializeCombat(CombatState state)
 	{
-#if DEBUG
-		GD.Print($"[PhaseRunner] Initializing combat, starting phase: {state.PhaseCtx.Step}");
-#endif
+		Debug.Print($"[PhaseRunner] Initializing combat, starting phase: {state.PhaseCtx.Step}");
 
 		return AdvanceUntilInput(state);
 	}
@@ -96,9 +85,8 @@ public static class PhaseRunner
 			return StepMap(state);
 		}
 
-#if DEBUG
-		GD.PrintErr($"[PhaseRunner] Unknown phase step: {step}. Halting execution to prevent infinite loop.");
-#endif
+		Debug.Print($"[PhaseRunner] Unknown phase step: {step}. Halting execution to prevent infinite loop.");
+
 		// 未知的 Phase Step，返回 Interrupt 防止無窮迴圈
 		return PhaseResult.Interrupt;
 	}
@@ -114,9 +102,7 @@ public static class PhaseRunner
 		{
 			iterations++;
 
-#if DEBUG
-			//GD.Print($"[PhaseRunner] Iteration {iterations}: Step={state.PhaseCtx.Step}");
-#endif
+			//Debug.Print($"[PhaseRunner] Iteration {iterations}: Step={state.PhaseCtx.Step}");
 
 			result = Run(state);
 
@@ -124,13 +110,11 @@ public static class PhaseRunner
 				break;
 		}
 
-#if DEBUG
 		if (iterations >= maxIterations)
 		{
-			GD.PrintErr($"[PhaseRunner] Max iterations reached! Current step: {state.PhaseCtx.Step}");
+			Debug.Print($"[PhaseRunner] Max iterations reached! Current step: {state.PhaseCtx.Step}");
 			return PhaseResult.Interrupt;
 		}
-#endif
 
 		return result;
 	}

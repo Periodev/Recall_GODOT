@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://brmojt2s5oqgf"]
 
-[ext_resource type="Script" uid="uid://b2pmv3u3xiq1e" path="res://Core/UI/BasicMoveUI.cs" id="1_a7nm2"]
+[ext_resource type="Script" uid="uid://b2pmv3u3xiq1e" path="res://UIScript/BasicMoveUI.cs" id="1_a7nm2"]
 
 
 [node name="Control" type="Control" node_paths=PackedStringArray("BtnA", "BtnB", "BtnC", "BtnEnd")]

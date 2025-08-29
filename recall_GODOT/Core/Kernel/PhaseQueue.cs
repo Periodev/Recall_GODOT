@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using CombatCore;
-
-#if DEBUG
-using Godot;
-#endif
 
 namespace CombatCore
 {
@@ -60,9 +57,7 @@ namespace CombatCore
 			var queuedIntent = new QueuedIntent(actor, intent, reason);
 			_queue.Enqueue(queuedIntent);
 
-#if DEBUG
-			GD.Print($"[Queue] Enqueued: {queuedIntent}");
-#endif
+			Debug.Print($"[Enqueued]: {queuedIntent}");
 		}
 
 		/// <summary>
@@ -75,9 +70,7 @@ namespace CombatCore
 
 			intent = _queue.Dequeue();
 
-#if DEBUG
-			GD.Print($"[Queue] Dequeued: {intent}");
-#endif
+			Debug.Print($"[Dequeued]: {intent}");
 			return true;
 		}
 
@@ -107,18 +100,18 @@ namespace CombatCore
 #if DEBUG
 			if (_queue.Count == 0)
 			{
-				GD.Print($"[{queueName}] Empty");
+				Debug.Print($"[{queueName}] Empty");
 				return;
 			}
 
-			GD.Print($"[{queueName}] {_queue.Count} intents:");
+			Debug.Print($"[{queueName}] {_queue.Count} intents:");
 			var temp = new List<QueuedIntent>();
 			
 			while (_queue.Count > 0)
 			{
 				var intent = _queue.Dequeue();
 				temp.Add(intent);
-				GD.Print($"  - {intent}");
+				Debug.Print($"  - {intent}");
 			}
 			
 			foreach (var intent in temp)
