@@ -15,24 +15,24 @@ public delegate bool TryGetActorById(int id, out Actor actor);
 
 public readonly struct TranslationResult
 {
-    public bool Success { get; }
-    public FailCode ErrorCode { get; }  
-    public Plan Plan { get; }
-    public Intent OriginalIntent { get; }
-    
-    private TranslationResult(bool success, FailCode errorCode, Plan plan, Intent originalIntent)
-    {
-        Success = success;
-        ErrorCode = errorCode;
-        Plan = plan;
-        OriginalIntent = originalIntent;
-    }
-    
-    public static TranslationResult Pass(Plan plan, Intent intent) =>
-        new(true, FailCode.None, plan, intent);
-        
-    public static TranslationResult Fail(FailCode code) =>
-        new(false, code, null!, null!);
+	public bool Success { get; }
+	public FailCode ErrorCode { get; }  
+	public Plan Plan { get; }
+	public Intent OriginalIntent { get; }
+	
+	private TranslationResult(bool success, FailCode errorCode, Plan plan, Intent originalIntent)
+	{
+		Success = success;
+		ErrorCode = errorCode;
+		Plan = plan;
+		OriginalIntent = originalIntent;
+	}
+	
+	public static TranslationResult Pass(Plan plan, Intent intent) =>
+		new(true, FailCode.None, plan, intent);
+		
+	public static TranslationResult Fail(FailCode code) =>
+		new(false, code, null!, null!);
 }
 
 public readonly struct RecallView
@@ -77,30 +77,6 @@ public sealed class Translator
 			BasicIntent bi => TranslateBasicIntentInternal(bi, phase, tryGetActor, self),
 			RecallIntent ri => TranslateRecallIntentInternal(ri, phase, memory, tryGetActor, self),
 			_ => TranslationResult.Fail(FailCode.UnknownIntent)
-		};
-	}
-
-	// Legacy method - will be removed in future versions
-	[System.Obsolete("Use TryTranslate(Intent, PhaseContext, RecallView, TryGetActorById, Actor) returning TranslationResult instead", false)]
-	public FailCode TryTranslateLegacy(
-		Intent intent,
-		PhaseContext phase,
-		RecallView memory,
-		TryGetActorById tryGetActor,   // ← 取代 IActorLookup,
-		Actor self,
-		out BasicPlan basicPlan,
-		out RecallPlan recallPlan)
-	{
-		basicPlan = default; recallPlan = default;
-
-		// 通用前置檢查
-		if (!self.IsAlive) { return FailCode.SelfDead; }
-
-		return intent switch
-		{
-			BasicIntent bi  => TryBasic(bi, phase, self, tryGetActor, out basicPlan),
-			RecallIntent ri => TryRecall(ri, phase, memory, self, out recallPlan),
-			_ =>FailCode.UnknownIntent
 		};
 	}
 
