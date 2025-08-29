@@ -29,7 +29,17 @@ namespace CombatCore.InterOp
 
 	public sealed class InterOps
 	{
-		public AtomicCmd[] BuildBasic(BasicPlan plan)
+		public static AtomicCmd[] Build(Plan plan)
+		{
+			return plan switch
+			{
+				BasicPlan bp => BuildBasic(bp),
+				RecallPlan rp => BuildRecall(rp), 
+				_ => Array.Empty<AtomicCmd>()
+			};
+		}
+
+		public static AtomicCmd[] BuildBasic(BasicPlan plan)
 		{
 			var list = new List<AtomicCmd>(capacity: 4);
 			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // Add even if 0
@@ -59,7 +69,7 @@ namespace CombatCore.InterOp
 			return list.ToArray();
 		}
 
-		public AtomicCmd[] BuildRecall(RecallPlan plan)
+		public static AtomicCmd[] BuildRecall(RecallPlan plan)
 		{
 			// Minimal behavior for current milestone:
 			// - Only consume AP
