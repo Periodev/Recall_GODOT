@@ -1,7 +1,8 @@
 [gd_scene load_steps=3 format=3 uid="uid://dqbfm5aptvpyf"]
 
 [ext_resource type="PackedScene" uid="uid://bpc2p5fd8gggf" path="res://TimelineSelector.tscn" id="1_neier"]
-[ext_resource type="Script" uid="uid://dm2aen53gq2t6" path="res://Script/UI/RecallPanel.cs" id="1_ty0qy"]
+[ext_resource type="Script" uid="uid://dm2aen53gq2t6" path="res://Core/UI/RecallPanel.cs" id="1_ty0qy"]
+
 
 [node name="RecallPanel" type="Control" node_paths=PackedStringArray("BtnRecall", "BtnConfirm", "BtnCancel", "Timeline")]
 layout_mode = 3

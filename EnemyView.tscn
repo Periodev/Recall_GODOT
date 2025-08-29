@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ogmhcsudweq1"]
 
-[ext_resource type="Script" uid="uid://2xyuqvic1knc" path="res://Script/UI/EnemyView.cs" id="1_4snxo"]
+[ext_resource type="Script" uid="uid://2xyuqvic1knc" path="res://Core/UI/EnemyView.cs" id="1_4snxo"]
 
 [node name="EnemyView" type="Node2D" node_paths=PackedStringArray("HpLabel", "ShieldLabel")]
 script = ExtResource("1_4snxo")

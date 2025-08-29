@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://c82pb1vuwbgl8"]
 
-[ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Script/Combat.cs" id="1_vj48t"]
+[ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Combat.cs" id="1_vj48t"]
 [ext_resource type="Script" uid="uid://1t356q0hj5nv" path="res://CombatStateNode.cs" id="2_e5xpt"]
 [ext_resource type="PackedScene" uid="uid://d3284mdfjg13m" path="res://PlayerView.tscn" id="3_vvyul"]
 [ext_resource type="PackedScene" uid="uid://brmojt2s5oqgf" path="res://BasicMoveUI.tscn" id="4_tppsp"]
