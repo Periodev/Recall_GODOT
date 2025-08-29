@@ -40,7 +40,7 @@ public class TranslationResultTests
         var memory = new RecallView(new List<ActionType>(), new List<int>());
 
         // Act
-        var result = Translator.TryTranslateUnified(
+        var result = Translator.TryTranslate(
             intent, _phase, memory, TryGetActorById, _player);
 
         // Assert
@@ -65,7 +65,7 @@ public class TranslationResultTests
         var memory = new RecallView(new List<ActionType>(), new List<int>());
 
         // Act
-        var result = Translator.TryTranslateUnified(
+        var result = Translator.TryTranslate(
             intent, _phase, memory, TryGetActorById, _player);
 
         // Assert
@@ -84,7 +84,7 @@ public class TranslationResultTests
         var intent = new RecallIntent(new int[] { 0, 1 });
 
         // Act
-        var result = Translator.TryTranslateUnified(
+        var result = Translator.TryTranslate(
             intent, _phase, memory, TryGetActorById, _player);
 
         // Assert
@@ -107,7 +107,7 @@ public class TranslationResultTests
         var memory = new RecallView(new List<ActionType>(), new List<int>());
 
         // Act
-        var translationResult = Translator.TryTranslateUnified(
+        var translationResult = Translator.TryTranslate(
             intent, _phase, memory, TryGetActorById, _player);
         
         Assert.That(translationResult.Success, Is.True);

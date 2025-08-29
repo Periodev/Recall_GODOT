@@ -60,7 +60,7 @@ public static class ActorExtensions
 
 public sealed class Translator
 {
-	public static TranslationResult TryTranslateUnified(
+	public static TranslationResult TryTranslate(
 		Intent intent,
 		PhaseContext phase,
 		RecallView memory,
@@ -80,8 +80,9 @@ public sealed class Translator
 		};
 	}
 
-	// 單一入口：輸入抽象意圖，型別模式分派
-	public FailCode TryTranslate(
+	// Legacy method - will be removed in future versions
+	[System.Obsolete("Use TryTranslate(Intent, PhaseContext, RecallView, TryGetActorById, Actor) returning TranslationResult instead", false)]
+	public FailCode TryTranslateLegacy(
 		Intent intent,
 		PhaseContext phase,
 		RecallView memory,
