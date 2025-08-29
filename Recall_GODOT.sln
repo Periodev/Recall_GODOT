@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Recall_V0.4", "Recall_V0.4.csproj", "{AC97244B-BE30-478E-940E-1FAC52CE20AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Recall_GODOT", "Recall_GODOT.csproj", "{AC97244B-BE30-478E-940E-1FAC52CE20AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
