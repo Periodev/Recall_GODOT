@@ -8,39 +8,38 @@ using CombatCore.Memory;
 
 namespace CombatCore.InterOp
 {
-	public readonly struct BasicPlan
-	{
-		public BasicPlan(ActionType act, Actor src, Actor dst,
-			int damage = 0, int block = 0, int chargeCost = 0, int gainAmount = 0, int apCost = 1)
-		{
-			Act = act; Source = src; Target = dst;
-			Damage = damage; Block = block; 
-			ChargeCost = chargeCost; GainAmount = gainAmount;
-			APCost = apCost;
-		}
-		public ActionType Act { get; }
-		public Actor Source { get; }
-		public Actor Target { get; }
-		public int Damage { get; }       // A
-		public int Block { get; }        // B
-		public int ChargeCost { get; }   // A/B charge consumption attempt
-		public int GainAmount { get; }   // C gain amount
-		public int APCost { get; }       // AP consumption
-	}
+	public abstract record Plan(Actor Source, int APCost);
 
-	public readonly struct RecallPlan
-	{
-		public RecallPlan(Actor src, ActionType[] sequence, int apCost = 1)
-		{ Source = src; ActionSequence = sequence ?? Array.Empty<ActionType>(); APCost = apCost; }
-		
-		public Actor Source { get; }
-		public ActionType[] ActionSequence { get; } // display only
-		public int APCost { get; }          
-	}
+	public sealed record BasicPlan(
+		ActionType Act,
+		Actor Source,
+		Actor Target,
+		int Damage,       // A
+		int Block,        // B
+		int ChargeCost,   // A/B charge consumption attempt
+		int GainAmount,   // C gain amount
+		int APCost        // AP consumption
+	) : Plan(Source, APCost);
+
+	public sealed record RecallPlan(
+		Actor Source,
+		ActionType[] ActionSequence, // display only
+		int APCost
+	) : Plan(Source, APCost);
 
 	public sealed class InterOps
 	{
-		public AtomicCmd[] BuildBasic(in BasicPlan plan)
+		public static AtomicCmd[] Build(Plan plan)
+		{
+			return plan switch
+			{
+				BasicPlan bp => BuildBasic(bp),
+				RecallPlan rp => BuildRecall(rp), 
+				_ => Array.Empty<AtomicCmd>()
+			};
+		}
+
+		public static AtomicCmd[] BuildBasic(BasicPlan plan)
 		{
 			var list = new List<AtomicCmd>(capacity: 4);
 			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // Add even if 0
@@ -70,7 +69,7 @@ namespace CombatCore.InterOp
 			return list.ToArray();
 		}
 
-		public AtomicCmd[] BuildRecall(in RecallPlan plan)
+		public static AtomicCmd[] BuildRecall(RecallPlan plan)
 		{
 			// Minimal behavior for current milestone:
 			// - Only consume AP

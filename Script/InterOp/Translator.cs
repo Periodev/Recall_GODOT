@@ -13,6 +13,28 @@ public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetI
 public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
 public delegate bool TryGetActorById(int id, out Actor actor);
 
+public readonly struct TranslationResult
+{
+	public bool Success { get; }
+	public FailCode ErrorCode { get; }  
+	public Plan Plan { get; }
+	public Intent OriginalIntent { get; }
+	
+	private TranslationResult(bool success, FailCode errorCode, Plan plan, Intent originalIntent)
+	{
+		Success = success;
+		ErrorCode = errorCode;
+		Plan = plan;
+		OriginalIntent = originalIntent;
+	}
+	
+	public static TranslationResult Pass(Plan plan, Intent intent) =>
+		new(true, FailCode.None, plan, intent);
+		
+	public static TranslationResult Fail(FailCode code) =>
+		new(false, code, null!, null!);
+}
+
 public readonly struct RecallView
 {
 	public RecallView(IReadOnlyList<ActionType> ops, IReadOnlyList<int> turns)
@@ -38,26 +60,23 @@ public static class ActorExtensions
 
 public sealed class Translator
 {
-	// 單一入口：輸入抽象意圖，型別模式分派
-	public FailCode TryTranslate(
+	public static TranslationResult TryTranslate(
 		Intent intent,
 		PhaseContext phase,
 		RecallView memory,
-		TryGetActorById tryGetActor,   // ← 取代 IActorLookup,
-		Actor self,
-		out BasicPlan basicPlan,
-		out RecallPlan recallPlan)
+		TryGetActorById tryGetActor,
+		Actor self)
 	{
-		basicPlan = default; recallPlan = default;
-
 		// 通用前置檢查
-		if (!self.IsAlive) { return FailCode.SelfDead; }
-
+		if (!self.IsAlive) 
+			return TranslationResult.Fail(FailCode.SelfDead);
+		
+		// 分派到對應處理方法
 		return intent switch
 		{
-			BasicIntent bi  => TryBasic(bi, phase, self, tryGetActor, out basicPlan),
-			RecallIntent ri => TryRecall(ri, phase, memory, self, out recallPlan),
-			_ =>FailCode.UnknownIntent
+			BasicIntent bi => TranslateBasicIntentInternal(bi, phase, tryGetActor, self),
+			RecallIntent ri => TranslateRecallIntentInternal(ri, phase, memory, tryGetActor, self),
+			_ => TranslationResult.Fail(FailCode.UnknownIntent)
 		};
 	}
 
@@ -100,8 +119,7 @@ public sealed class Translator
 		int finalBlk = blk;   
 		int chargeCostThisAction = use;
 
-		plan = new BasicPlan(bi.Act, self, tgt, 
-			damage: finalDmg, block: finalBlk, chargeCost: chargeCostThisAction, numbers.GainAmount, numbers.APCost);
+		plan = new BasicPlan(bi.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, numbers.GainAmount, numbers.APCost);
 
 		return FailCode.None;
 	}
@@ -174,4 +192,65 @@ public sealed class Translator
 		id.HasValue && tryGetActor(id.Value, out var a) ? a : null;
 
 	private static bool RecallUsedThisTurn(PhaseContext phase) => phase.RecallUsedThisTurn;
+
+	private static TranslationResult TranslateBasicIntentInternal(
+		BasicIntent intent, PhaseContext phase, TryGetActorById tryGetActor, Actor self)
+	{
+		// 嚴格目標驗證
+		var tgt = ResolveTarget(intent.TargetId, tryGetActor);
+		if (intent.Act == ActionType.A)
+		{
+			// A 必須有有效且非 self 的目標
+			if (tgt is null || ReferenceEquals(tgt, self))
+				return TranslationResult.Fail(FailCode.BadTarget);
+		}
+		else
+		{
+			// B/C 一律自我，忽略傳入 TargetId
+			tgt = self;
+		}
+		
+		// 計算數值（集中管理）
+		var numbers = ComputeBasicNumbers(intent.Act, self);
+		
+		// AP 檢查：只檢查不扣，真正扣除在 AtomicCmd.ConsumeAP
+		if (numbers.APCost > 0 && !self.HasAP(numbers.APCost))
+			return TranslationResult.Fail(FailCode.NoAP);
+		
+		// 動態決定此次可用的 Charge 數量與加成
+		int use = 0;
+		if (intent.Act == ActionType.A || intent.Act == ActionType.B)
+			use = Math.Min(self.Charge?.Value ?? 0, CHARGE_MAX_PER_ACTION);
+
+		int dmg = numbers.Damage + (intent.Act == ActionType.A ? A_BONUS_PER_CHARGE * use : 0);
+		int blk = numbers.Block  + (intent.Act == ActionType.B ? B_BONUS_PER_CHARGE * use : 0);
+		
+		int finalDmg = dmg;   
+		int finalBlk = blk;   
+		int chargeCostThisAction = use;
+
+		var plan = new BasicPlan(intent.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, numbers.GainAmount, numbers.APCost);
+		return TranslationResult.Pass(plan, intent);
+	}
+
+	private static TranslationResult TranslateRecallIntentInternal(
+		RecallIntent intent, PhaseContext phase, RecallView memory, 
+		TryGetActorById tryGetActor, Actor self)
+	{
+		// 一次/回合檢查
+		if (RecallUsedThisTurn(phase)) return TranslationResult.Fail(FailCode.RecallUsed);
+
+		// 索引合法性檢查（包含空集合檢查）
+		FailCode fail = ValidateIndices(intent.RecallIndices, memory, phase.TurnNum);
+		if (fail != FailCode.None) return TranslationResult.Fail(fail);
+
+		// AP 檢查
+		// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
+		int apCost = (self.AP != null) ? 1 : 0;
+		if (apCost > 0 && !self.HasAP(apCost)) return TranslationResult.Fail(FailCode.NoAP);
+
+		var sequence = intent.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
+		var plan = new RecallPlan(self, sequence, apCost);
+		return TranslationResult.Pass(plan, intent);
+	}
 }

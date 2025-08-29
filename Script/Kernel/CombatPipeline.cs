@@ -35,29 +35,14 @@ namespace CombatCore
 		/// <returns>轉換結果，包含命令陣列或錯誤碼</returns>
 		public static TranslationResult TranslateIntent(CombatState state, Actor actor, Intent intent)
 		{
-			// 驗證階段
-			var failCode = Translator.TryTranslate(
-				intent, 
-				state.PhaseCtx, 
-				state.GetRecallView(), 
-				state.TryGetActor, 
-				actor, 
-				out var basicPlan, 
-				out var recallPlan
-			);
+			var translationResult = Translator.TryTranslate(intent, 
+				state.PhaseCtx, state.GetRecallView(), state.TryGetActor, actor);
+				
+			if (!translationResult.Success)
+				return TranslationResult.Fail(translationResult.ErrorCode);
 
-			if (failCode != FailCode.None)
-				return TranslationResult.Fail(failCode);
-
-			// 轉換階段：根據 Intent 類型建構命令
-			var commands = intent switch
-			{
-				BasicIntent => InterOps.BuildBasic(basicPlan),
-				RecallIntent => InterOps.BuildRecall(recallPlan),
-				_ => Array.Empty<AtomicCmd>()
-			};
-
-			return TranslationResult.Pass(commands, intent);
+			var commands = InterOps.Build(translationResult.Plan);
+			return TranslationResult.Pass(commands, translationResult.OriginalIntent);
 		}
 
 
