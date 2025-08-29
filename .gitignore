@@ -8,3 +8,21 @@
 *.cache
 Test/bin/
 Test/obj/
+
+# .NET / C#
+[Bb]in/
+[Oo]bj/
+*.pdb
+*.user
+*.suo
+.vs/
+
+# 測試/覆蓋率
+TestResults/
+*.trx
+coveragereport/
+
+# Godot 4（C# 專案常用）
+.godot/
+.import/
+.mono/
