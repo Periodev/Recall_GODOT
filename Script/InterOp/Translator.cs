@@ -13,6 +13,28 @@ public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetI
 public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
 public delegate bool TryGetActorById(int id, out Actor actor);
 
+public readonly struct TranslationResult
+{
+    public bool Success { get; }
+    public FailCode ErrorCode { get; }  
+    public Plan Plan { get; }
+    public Intent OriginalIntent { get; }
+    
+    private TranslationResult(bool success, FailCode errorCode, Plan plan, Intent originalIntent)
+    {
+        Success = success;
+        ErrorCode = errorCode;
+        Plan = plan;
+        OriginalIntent = originalIntent;
+    }
+    
+    public static TranslationResult Pass(Plan plan, Intent intent) =>
+        new(true, FailCode.None, plan, intent);
+        
+    public static TranslationResult Fail(FailCode code) =>
+        new(false, code, null!, null!);
+}
+
 public readonly struct RecallView
 {
 	public RecallView(IReadOnlyList<ActionType> ops, IReadOnlyList<int> turns)
@@ -100,8 +122,7 @@ public sealed class Translator
 		int finalBlk = blk;   
 		int chargeCostThisAction = use;
 
-		plan = new BasicPlan(bi.Act, self, tgt, 
-			damage: finalDmg, block: finalBlk, chargeCost: chargeCostThisAction, numbers.GainAmount, numbers.APCost);
+		plan = new BasicPlan(bi.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, numbers.GainAmount, numbers.APCost);
 
 		return FailCode.None;
 	}
