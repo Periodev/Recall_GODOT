@@ -6,12 +6,14 @@ using CombatCore;
 using CombatCore.InterOp;
 using CombatCore.Command;
 using CombatCore.Memory;
+using CombatCore.Echo;
 using static CombatCore.GameConst;
 
+public delegate bool TryGetActorById(int id, out Actor actor);
 public abstract record Intent(int? TargetId);
 public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
 public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
-public delegate bool TryGetActorById(int id, out Actor actor);
+public sealed record EchoIntent(Echo Echo, int? TargetId) : Intent(TargetId);
 
 public readonly struct TranslationResult
 {
