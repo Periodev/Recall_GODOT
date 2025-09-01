@@ -7,7 +7,7 @@ public class Actor
 {
 	public HP HP { get; }
 	public Shield Shield { get; }
-	public AP AP { get; } = null!;
+	public AP AP { get; }
 	public Charge? Charge { get; }
 	
 	public string DebugName { get; set; } = "Actor";
@@ -17,7 +17,7 @@ public class Actor
 	{
 		HP = new HP(maxHP);
 		Shield = new Shield();
-		AP = withAP ? new AP(apPerTurn) : new AP(0);
+		if (withAP) AP = new AP(apPerTurn);
 		if (withCharge) Charge = new Charge();
 	}
 
