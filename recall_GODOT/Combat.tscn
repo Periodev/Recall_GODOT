@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://c82pb1vuwbgl8"]
+[gd_scene load_steps=8 format=3 uid="uid://c82pb1vuwbgl8"]
 
 [ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Combat.cs" id="1_vj48t"]
 [ext_resource type="Script" uid="uid://1t356q0hj5nv" path="res://CombatStateNode.cs" id="2_e5xpt"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://brmojt2s5oqgf" path="res://BasicMoveUI.tscn" id="4_tppsp"]
 [ext_resource type="PackedScene" uid="uid://dqbfm5aptvpyf" path="res://RecallPanel.tscn" id="5_lnhn1"]
 [ext_resource type="PackedScene" uid="uid://ogmhcsudweq1" path="res://EnemyView.tscn" id="6_brs8u"]
+[ext_resource type="PackedScene" uid="uid://b462cro86qi7w" path="res://EchoPanel.tscn" id="7_e5xpt"]
 
 [node name="Combat" type="Control"]
 layout_mode = 3
@@ -55,3 +56,10 @@ offset_bottom = 518.0
 
 [node name="EnemyView" parent="UI" instance=ExtResource("6_brs8u")]
 position = Vector2(743, 258)
+
+[node name="EchoPanel" parent="UI" node_paths=PackedStringArray("CombatCtrl") instance=ExtResource("7_e5xpt")]
+offset_left = 568.0
+offset_top = 352.0
+offset_right = 608.0
+offset_bottom = 392.0
+CombatCtrl = NodePath("../../Control")

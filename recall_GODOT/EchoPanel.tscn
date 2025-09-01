@@ -1,0 +1,91 @@
+[gd_scene load_steps=2 format=3 uid="uid://b462cro86qi7w"]
+
+[ext_resource type="Script" uid="uid://cj6sbnhtfiif7" path="res://UIScript/EchoPanel.cs" id="1_cis7l"]
+
+[node name="EchoPanel" type="Control" node_paths=PackedStringArray("BtnEchoSlot0", "BtnEchoSlot1", "BtnEchoSlot2", "BtnEchoSlot3", "BtnEchoSlot4", "EchoName", "Recipe", "Summary", "BtnPlay", "BtnCancel", "Reason")]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_cis7l")
+BtnEchoSlot0 = NodePath("Slot/BtnEchoSlot0")
+BtnEchoSlot1 = NodePath("Slot/BtnEchoSlot1")
+BtnEchoSlot2 = NodePath("Slot/BtnEchoSlot2")
+BtnEchoSlot3 = NodePath("Slot/BtnEchoSlot3")
+BtnEchoSlot4 = NodePath("Slot/BtnEchoSlot4")
+EchoName = NodePath("Info/EchoName")
+Recipe = NodePath("Info/Recipe")
+Summary = NodePath("Info/Summary")
+BtnPlay = NodePath("ActionBar/BtnPlay")
+BtnCancel = NodePath("ActionBar/BtnCancel")
+Reason = NodePath("Reason")
+
+[node name="Slot" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = 68.0
+offset_right = 276.0
+offset_bottom = 132.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BtnEchoSlot0" type="Button" parent="Slot"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnEchoSlot1" type="Button" parent="Slot"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnEchoSlot2" type="Button" parent="Slot"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnEchoSlot3" type="Button" parent="Slot"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnEchoSlot4" type="Button" parent="Slot"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Info" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 136.0
+offset_bottom = 72.0
+
+[node name="EchoName" type="Label" parent="Info"]
+layout_mode = 2
+
+[node name="Recipe" type="Label" parent="Info"]
+layout_mode = 2
+
+[node name="Summary" type="RichTextLabel" parent="Info"]
+layout_mode = 2
+
+[node name="ActionBar" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 312.0
+offset_top = 88.0
+offset_right = 376.0
+offset_bottom = 154.0
+
+[node name="BtnPlay" type="Button" parent="ActionBar"]
+layout_mode = 2
+text = "Play"
+
+[node name="BtnCancel" type="Button" parent="ActionBar"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Cancel"
+
+[node name="Reason" type="Label" parent="."]
+layout_mode = 2
+offset_left = 312.0
+offset_right = 376.0
+offset_bottom = 23.0
