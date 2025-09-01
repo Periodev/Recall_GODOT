@@ -21,6 +21,7 @@ Test/obj/
 TestResults/
 *.trx
 coveragereport/
+*.sarif
 
 # Godot 4（C# 專案常用）
 .godot/

@@ -1,8 +1,9 @@
 
 using System;
 using CombatCore;
-using CombatCore.Component;
+
 using CombatCore.Memory;
+using CombatCore.Echo;
 
 public partial class CombatState
 {
@@ -10,6 +11,9 @@ public partial class CombatState
 	public Actor Player { get; private set; }
 	public Actor Enemy { get; private set; }  // default enemy
 	public MemoryQueue Mem { get; private set; } = new MemoryQueue(5);
+
+	public EchoStore echoStore { get; private set; } = new EchoStore();
+	public bool IsEchoStoreFull => echoStore.IsFull;
 
 
 	public CombatState()
@@ -33,7 +37,7 @@ public partial class CombatState
 		switch (id)
 		{
 			case 0: actor = Player; return true;
-			case 1: actor = Enemy;  return true;
+			case 1: actor = Enemy; return true;
 			default: actor = default!; return false;
 		}
 	}

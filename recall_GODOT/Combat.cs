@@ -5,6 +5,7 @@ using CombatCore.Component;
 using CombatCore.InterOp;
 using CombatCore.Memory;
 using CombatCore.Command;
+using CombatCore.Echo;
 
 /// <summary>
 /// Combat 控制器 - 負責 UI 與戰鬥系統的整合
@@ -30,6 +31,9 @@ public partial class Combat : Control
 		}
 
 		GD.Print("Combat system initializing...");
+
+		CreateDebugEchos();
+
 
 		// 設定 UI 事件監聽
 		SetupUIListeners();
@@ -63,7 +67,7 @@ public partial class Combat : Control
 		// 設定玩家意圖
 		var intent = new BasicIntent(act, targetId);
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
-	   
+
 		GD.Print($"[CombatUI] Basic action result: {result}, Current step: {State.PhaseCtx.Step}");
 
 		// 刷新 UI
@@ -76,10 +80,17 @@ public partial class Combat : Control
 
 		// 🎯 直接調用 PhaseRunner 的保護接口
 		var result = PhaseRunner.TryEndPlayerTurn(State);
-		
+
 		GD.Print($"End turn result: {result}, Current step: {State.PhaseCtx.Step}");
 
 		RefreshAllUI();
+
+	}
+
+	public void TryRunEcho(Echo echo, int? targetId)
+	{
+		GD.Print($"[Combat] TryRunEcho: {echo.Name}, target: {targetId}");
+		// TODO: 實際 pipeline 整合
 
 	}
 
@@ -93,7 +104,7 @@ public partial class Combat : Control
 
 		// 設定 Recall 意圖
 		var intent = new RecallIntent(indices);
-		
+
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
 		GD.Print($"[Combat] Recall result: {result}, Step: {State.PhaseCtx.Step}");
 
@@ -125,7 +136,7 @@ public partial class Combat : Control
 		UISignalHub.OnShieldChanged -= OnStatusChanged;
 		UISignalHub.OnAPChanged -= OnStatusChanged;
 		UISignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
-		
+
 		if (RecallPanel != null)
 		{
 			RecallPanel.ConfirmPressed -= OnRecallConfirm;
@@ -167,7 +178,7 @@ public partial class Combat : Control
 		var ops = State.Mem.SnapshotOps();
 		var turns = State.Mem.SnapshotTurns();
 		var currentTurn = State.PhaseCtx.TurnNum;
-		
+
 		RecallPanel.RefreshSnapshot(ops, turns, currentTurn);
 	}
 
@@ -176,7 +187,7 @@ public partial class Combat : Control
 		if (RecallPanel == null) return;
 
 		var currentStep = State.PhaseCtx.Step;
-		
+
 		// 根據當前 Phase 設定 RecallPanel 狀態
 		switch (currentStep)
 		{
@@ -185,7 +196,7 @@ public partial class Combat : Control
 			case PhaseStep.PlayerExecute:
 				RecallPanel.EnterPlayerPhase();
 				break;
-			
+
 			case PhaseStep.EnemyInit:
 			case PhaseStep.EnemyIntent:
 			case PhaseStep.EnemyPlanning:
@@ -193,7 +204,7 @@ public partial class Combat : Control
 			case PhaseStep.EnemyExecDelayed:
 				RecallPanel.EnterEnemyPhase();
 				break;
-				
+
 			default:
 				// 其他階段保持當前狀態
 				break;
@@ -211,7 +222,7 @@ public partial class Combat : Control
 	private void OnPlayerDrawComplete()
 	{
 		GD.Print("[Combat] Player draw complete");
-		
+
 		// 檢查是否有記憶可以使用 Recall
 		var memOps = State.Mem.SnapshotOps();
 		if (memOps.Count > 0)
@@ -219,4 +230,44 @@ public partial class Combat : Control
 			RecallPanel?.EnterPlayerPhase();
 		}
 	}
+
+
+	// debug function
+	private void CreateDebugEchos()
+	{
+		// Echo 1: 攻擊類 (對敵人)
+		var attackEcho = new Echo
+		{
+			Id = 1,
+			RecipeId = 101,
+			Name = "Fire Strike",
+			RecipeLabel = "A+A",
+			Summary = "[Test] A powerful fire attack targeting enemies. Deals significant damage.",
+			CostAP = 1,
+			Op = HLAop.Attack,
+			TargetType = TargetType.Target
+		};
+
+		// Echo 2: 防禦類 (對自己)
+		var shieldEcho = new Echo
+		{
+			Id = 2,
+			RecipeId = 102,
+			Name = "Iron Guard",
+			RecipeLabel = "B+B",
+			Summary = "[Test] A defensive skill that strengthens self protection. Grants shield.",
+			CostAP = 1,
+			Op = HLAop.Block,
+			TargetType = TargetType.Self
+		};
+
+		// 加入到 EchoStore
+		var result1 = State.echoStore.TryAdd(attackEcho);
+		var result2 = State.echoStore.TryAdd(shieldEcho);
+
+		GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
+		GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
+		GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
+	}
+
 }

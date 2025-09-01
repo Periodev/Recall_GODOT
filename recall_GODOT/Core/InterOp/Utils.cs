@@ -3,7 +3,7 @@ using System;
 
 namespace CombatCore
 {
-	public enum ActionType { A, B, C };		// Attack, Block, GainCharge
+	public enum ActionType { A, B, C };     // Attack, Block, GainCharge
 
 	/// <summary>
 	/// 高階意圖操作代號 - 備用的抽象操作代號
@@ -16,6 +16,8 @@ namespace CombatCore
 		Recall = 0x10,      // 對應 RecallIntent
 		EndTurn = 0xFF      // 結束回合意圖
 	}
+	
+	public enum TargetType { None, Self, Target, All };
 }
 
 namespace Recall.InterOp
