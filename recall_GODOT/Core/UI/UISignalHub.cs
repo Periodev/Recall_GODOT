@@ -7,12 +7,13 @@ using CombatCore;
 public static class UISignalHub
 {
 
-	public static Action<int>? OnHPChanged;
-	public static Action<int>? OnChargeChanged;
-	public static Action<int>? OnShieldChanged;
-	public static Action<int>? OnAPChanged;
+	// 改為屬性提供控制存取
+	public static Action<int>? OnHPChanged { get; set; }
+	public static Action<int>? OnChargeChanged { get; set; }
+	public static Action<int>? OnShieldChanged { get; set; }
+	public static Action<int>? OnAPChanged { get; set; }
 
-	public static Action? OnPlayerDrawComplete;
+	public static Action? OnPlayerDrawComplete { get; set; }
 
 	public static void NotifyHPChanged(int value)
 	{
