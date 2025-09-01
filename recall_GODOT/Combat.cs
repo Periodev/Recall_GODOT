@@ -14,8 +14,10 @@ public partial class Combat : Control
 {
 	[Export] public CombatStateNode CombatNode;
 	[Export] public PlayerView PlayerView;
-	[Export] public RecallPanel RecallPanel;
 	[Export] public EnemyView EnemyView;
+	[Export] public RecallPanel RecallPanel;
+	[Export] public EchoPanel EchoPanel;
+
 
 	public CombatState State => CombatNode!.State;
 
@@ -190,6 +192,9 @@ public partial class Combat : Control
 
 		// 根據當前 Phase 更新 RecallPanel 狀態
 		UpdateRecallPanelState();
+
+		EchoPanel.RefreshPanel();
+
 	}
 
 	private void RefreshTimelineSnapshot()
