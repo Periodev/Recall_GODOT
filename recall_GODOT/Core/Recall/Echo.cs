@@ -1,7 +1,7 @@
 using System;
 using CombatCore;
 
-namespace CombatCore.Echo
+namespace CombatCore.Recall
 {
     public partial class Echo
     {

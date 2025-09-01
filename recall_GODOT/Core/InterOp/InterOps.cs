@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using CombatCore;
 using CombatCore.Command;
-using CombatCore.Memory;
+using CombatCore.Recall;
 
 namespace CombatCore.InterOp
 {

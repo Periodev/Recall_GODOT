@@ -3,9 +3,8 @@ using System;
 using CombatCore;
 using CombatCore.Component;
 using CombatCore.InterOp;
-using CombatCore.Memory;
+using CombatCore.Recall;
 using CombatCore.Command;
-using CombatCore.Echo;
 
 /// <summary>
 /// Combat 控制器 - 負責 UI 與戰鬥系統的整合

@@ -2,7 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using CombatCore;
-using CombatCore.Echo;
+using CombatCore.Recall;
 
 public partial class EchoPanel : Control
 {
