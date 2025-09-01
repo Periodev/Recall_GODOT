@@ -143,7 +143,7 @@ namespace CombatCore.Command
 
 		private int ExecuteConsumeAP()
 		{
-			bool ok = SelfOp.ConsumeAP(Source, Value);
+			bool ok = SelfOp.ConsumeAP(Source!, Value);
 			int actualConsumed = ok ? Value : 0;
 
 #if DEBUG
