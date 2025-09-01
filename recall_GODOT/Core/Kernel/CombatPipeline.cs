@@ -241,7 +241,7 @@ namespace CombatCore
 			new(true, FailCode.None, commands, intent);
 
 		public static TranslationResult Fail(FailCode code) =>
-			new(false, code, Array.Empty<AtomicCmd>(), null);
+			new(false, code, Array.Empty<AtomicCmd>(), null!);
 	}
 
 	/// 命令執行結果 - 包含實際發生的效果記錄

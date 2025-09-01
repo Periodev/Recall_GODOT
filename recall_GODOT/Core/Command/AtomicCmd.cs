@@ -21,11 +21,11 @@ namespace CombatCore.Command
 	public readonly struct AtomicCmd
 	{
 		public readonly CmdType Type;
-		public readonly Actor Source;
+		public readonly Actor? Source;
 		public readonly Actor Target;
 		public readonly int Value;
 
-		public AtomicCmd(CmdType type, Actor source, Actor target, int value)
+		public AtomicCmd(CmdType type, Actor? source, Actor target, int value)
 		{
 			Type = type;
 			Source = source;
@@ -143,7 +143,7 @@ namespace CombatCore.Command
 
 		private int ExecuteConsumeAP()
 		{
-			bool ok = SelfOp.ConsumeAP(Source, Value);
+			bool ok = SelfOp.ConsumeAP(Source!, Value);
 			int actualConsumed = ok ? Value : 0;
 
 #if DEBUG

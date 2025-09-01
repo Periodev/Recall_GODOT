@@ -2,6 +2,7 @@ using Godot;
 using System;
 using CombatCore; // 放 CombatState 的命名空間
 
+#nullable enable
 public partial class CombatStateNode : Node
 {
 	public CombatState State { get; private set; } = new CombatState();

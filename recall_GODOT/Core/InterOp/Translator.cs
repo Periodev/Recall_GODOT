@@ -84,7 +84,7 @@ public sealed class Translator
 		BasicIntent bi, PhaseContext phase, Actor self, TryGetActorById tryGetActor,
 		out BasicPlan plan)
 	{
-		plan = default;
+		plan = null!;
 
 		// 嚴格目標驗證
 		var tgt = ResolveTarget(bi.TargetId, tryGetActor);
@@ -128,7 +128,7 @@ public sealed class Translator
 		RecallIntent ri, PhaseContext phase, RecallView memory, Actor self,
 		out RecallPlan plan)
 	{
-		plan = default;
+		plan = null!;
 
 		// 一次/回合檢查
 		if (RecallUsedThisTurn(phase)) return FailCode.RecallUsed;
