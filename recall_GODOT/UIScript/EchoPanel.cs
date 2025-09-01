@@ -153,7 +153,7 @@ public partial class EchoPanel : Control
 	/// 清空 Echo 資訊顯示
 	private void ClearEchoInfo()
 	{
-		if (EchoName != null) EchoName.Text = "No Echo Selected";
+		if (EchoName != null) EchoName.Text = "-";
 		if (Recipe != null) Recipe.Text = "-";
 		if (Summary != null) Summary.Text = "Select an Echo to view details";
 	}
@@ -182,6 +182,13 @@ public partial class EchoPanel : Control
 		if (_selectedEcho == null)
 		{
 			ShowReason("No Echo selected");
+			return;
+		}
+
+		// 檢查是否在玩家階段
+		if (CombatCtrl?.State?.PhaseCtx.Step != PhaseStep.PlayerInput)
+		{
+			ShowReason("Can only use Echo during player input phase");
 			return;
 		}
 

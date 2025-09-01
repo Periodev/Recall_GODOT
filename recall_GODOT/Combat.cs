@@ -32,6 +32,9 @@ public partial class Combat : Control
 
 		GD.Print("Combat system initializing...");
 
+		CreateDebugEchos();
+
+
 		// 設定 UI 事件監聽
 		SetupUIListeners();
 
@@ -227,4 +230,44 @@ public partial class Combat : Control
 			RecallPanel?.EnterPlayerPhase();
 		}
 	}
+
+
+	// debug function
+	private void CreateDebugEchos()
+	{
+		// Echo 1: 攻擊類 (對敵人)
+		var attackEcho = new Echo
+		{
+			Id = 1,
+			RecipeId = 101,
+			Name = "Fire Strike",
+			RecipeLabel = "A+A",
+			Summary = "[Test] A powerful fire attack targeting enemies. Deals significant damage.",
+			CostAP = 1,
+			Op = HLAop.Attack,
+			TargetType = TargetType.Target
+		};
+
+		// Echo 2: 防禦類 (對自己)
+		var shieldEcho = new Echo
+		{
+			Id = 2,
+			RecipeId = 102,
+			Name = "Iron Guard",
+			RecipeLabel = "B+B",
+			Summary = "[Test] A defensive skill that strengthens self protection. Grants shield.",
+			CostAP = 1,
+			Op = HLAop.Block,
+			TargetType = TargetType.Self
+		};
+
+		// 加入到 EchoStore
+		var result1 = State.echoStore.TryAdd(attackEcho);
+		var result2 = State.echoStore.TryAdd(shieldEcho);
+
+		GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
+		GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
+		GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
+	}
+
 }
