@@ -2,8 +2,7 @@
 using System;
 using CombatCore;
 
-using CombatCore.Memory;
-using CombatCore.Echo;
+using CombatCore.Recall;
 
 public partial class CombatState
 {

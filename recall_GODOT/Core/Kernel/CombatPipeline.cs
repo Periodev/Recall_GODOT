@@ -4,7 +4,7 @@ using System.Diagnostics;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
-using CombatCore.Memory;
+using CombatCore.Recall;
 
 namespace CombatCore
 {
@@ -32,9 +32,9 @@ namespace CombatCore
 		/// <returns>轉換結果，包含命令陣列或錯誤碼</returns>
 		public static TranslationResult TranslateIntent(CombatState state, Actor actor, Intent intent)
 		{
-			var translationResult = Translator.TryTranslate(intent, 
+			var translationResult = Translator.TryTranslate(intent,
 				state.PhaseCtx, state.GetRecallView(), state.TryGetActor, actor);
-				
+
 			if (!translationResult.Success)
 				return TranslationResult.Fail(translationResult.ErrorCode);
 
@@ -108,24 +108,24 @@ namespace CombatCore
 		public static ExecutionResult ProcessEnemyInstantQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
-			
+
 			while (EnemyInstantQueue.TryDequeue(out var queuedIntent))
 			{
 				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
-				
+
 				if (!translationResult.Success)
 				{
 					Debug.Print($"[Pipeline] Enemy instant translation failed: {translationResult.ErrorCode}");
 					continue;
 				}
-				
+
 				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					results.Add(execResult);
 				}
 			}
-			
+
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
 
@@ -137,10 +137,21 @@ namespace CombatCore
 			{
 				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
 			}
-			
-			if (intent is RecallIntent)
+
+			if (intent is RecallIntent recallIntent)
 			{
 				state.PhaseCtx.MarkRecallUsed();
+
+				var sequence = RebuildMemSeq(state.GetRecallView(), recallIntent);
+				var echo = Echo.Build(sequence, state.PhaseCtx.TurnNum);
+				state.echoStore.TryAdd(echo);
+			}
+
+			// 新增 Echo 處理
+			if (intent is EchoIntent echoIntent)
+			{
+				state.echoStore.TryRemoveAt(echoIntent.SlotIndex);
+				// Echo 不寫入 Memory
 			}
 		}
 
@@ -150,24 +161,24 @@ namespace CombatCore
 		public static ExecutionResult ProcessEnemyDelayedQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
-			
+
 			while (EnemyDelayedQueue.TryDequeue(out var queuedIntent))
 			{
 				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
-				
+
 				if (!translationResult.Success)
 				{
 					Debug.Print($"[Pipeline] Enemy delayed translation failed: {translationResult.ErrorCode}");
 					continue;
 				}
-				
+
 				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					results.Add(execResult);
 				}
 			}
-			
+
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
 
@@ -217,6 +228,18 @@ namespace CombatCore
 			TurnEndQueue.Clear();
 			return ExecutionResult.Pass(new CmdLog());
 		}
+
+        /// 從 RecallIntent 的索引，在指定的 MemoryView 中重建出行為序列。
+        /// <param name="memory">目前回合的記憶視圖</param>
+        /// <param name="intent">RecallIntent，內含索引</param>
+        /// <returns>對應的 ActionType 序列</returns>
+        public static ActionType[] RebuildMemSeq(RecallView memory, RecallIntent intent)
+        {
+            return intent.RecallIndices
+                         .Select(i => memory.Ops[i])
+                         .ToArray();
+        }
+
 	}
 
 

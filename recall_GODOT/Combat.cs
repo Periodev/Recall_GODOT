@@ -3,9 +3,8 @@ using System;
 using CombatCore;
 using CombatCore.Component;
 using CombatCore.InterOp;
-using CombatCore.Memory;
+using CombatCore.Recall;
 using CombatCore.Command;
-using CombatCore.Echo;
 
 /// <summary>
 /// Combat 控制器 - 負責 UI 與戰鬥系統的整合
@@ -15,8 +14,10 @@ public partial class Combat : Control
 {
 	[Export] public CombatStateNode CombatNode;
 	[Export] public PlayerView PlayerView;
-	[Export] public RecallPanel RecallPanel;
 	[Export] public EnemyView EnemyView;
+	[Export] public RecallPanel RecallPanel;
+	[Export] public EchoPanel EchoPanel;
+
 
 	public CombatState State => CombatNode!.State;
 
@@ -90,8 +91,30 @@ public partial class Combat : Control
 	public void TryRunEcho(Echo echo, int? targetId)
 	{
 		GD.Print($"[Combat] TryRunEcho: {echo.Name}, target: {targetId}");
-		// TODO: 實際 pipeline 整合
-
+		
+		// 找到選中的槽位索引
+		var slots = State.echoStore.ToSlots();
+		int slotIndex = -1;
+		for (int i = 0; i < slots.Length; i++)
+		{
+			if (slots[i]?.Id == echo.Id)
+			{
+				slotIndex = i;
+				break;
+			}
+		}
+		
+		if (slotIndex == -1)
+		{
+			GD.Print("[Combat] Echo not found in store");
+			return;
+		}
+		
+		var intent = new EchoIntent(echo, targetId, slotIndex);
+		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
+		
+		GD.Print($"[Combat] Echo result: {result}");
+		RefreshAllUI();
 	}
 
 
@@ -169,6 +192,9 @@ public partial class Combat : Control
 
 		// 根據當前 Phase 更新 RecallPanel 狀態
 		UpdateRecallPanelState();
+
+		EchoPanel.RefreshPanel();
+
 	}
 
 	private void RefreshTimelineSnapshot()
@@ -239,10 +265,10 @@ public partial class Combat : Control
 		var attackEcho = new Echo
 		{
 			Id = 1,
-			RecipeId = 101,
-			Name = "Fire Strike",
-			RecipeLabel = "A+A",
-			Summary = "[Test] A powerful fire attack targeting enemies. Deals significant damage.",
+			RecipeId = 1,
+			Name = "Basic Attack",
+			RecipeLabel = "A",
+			Summary = "[Test] Basic attack",
 			CostAP = 1,
 			Op = HLAop.Attack,
 			TargetType = TargetType.Target
@@ -253,9 +279,9 @@ public partial class Combat : Control
 		{
 			Id = 2,
 			RecipeId = 102,
-			Name = "Iron Guard",
-			RecipeLabel = "B+B",
-			Summary = "[Test] A defensive skill that strengthens self protection. Grants shield.",
+			Name = "Basic Block",
+			RecipeLabel = "B",
+			Summary = "[Test] Basic Block",
 			CostAP = 1,
 			Op = HLAop.Block,
 			TargetType = TargetType.Self

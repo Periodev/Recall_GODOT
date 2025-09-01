@@ -14,7 +14,7 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatNode", "PlayerView", "RecallPanel", "EnemyView")]
+[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatNode", "PlayerView", "EnemyView", "RecallPanel", "EchoPanel")]
 visible = false
 anchors_preset = 0
 offset_right = 40.0
@@ -22,8 +22,9 @@ offset_bottom = 40.0
 script = ExtResource("1_vj48t")
 CombatNode = NodePath("../CombatStateNode")
 PlayerView = NodePath("../UI/PlayerView")
-RecallPanel = NodePath("../UI/RecallPanel")
 EnemyView = NodePath("../UI/EnemyView")
+RecallPanel = NodePath("../UI/RecallPanel")
+EchoPanel = NodePath("../UI/EchoPanel")
 
 [node name="CombatStateNode" type="Node" parent="."]
 script = ExtResource("2_e5xpt")

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using CombatCore;
 
-namespace CombatCore.Memory
+namespace CombatCore.Recall
 {
 	public sealed class MemoryQueue
 	{

@@ -2,7 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using CombatCore;
-using CombatCore.Echo;
+using CombatCore.Recall;
 
 public partial class EchoPanel : Control
 {
@@ -185,7 +185,7 @@ public partial class EchoPanel : Control
 			return;
 		}
 
-		// 檢查是否在玩家階段
+		// 檢查階段（可選，Translator 會再檢）
 		if (CombatCtrl?.State?.PhaseCtx.Step != PhaseStep.PlayerInput)
 		{
 			ShowReason("Can only use Echo during player input phase");
@@ -194,17 +194,13 @@ public partial class EchoPanel : Control
 
 		GD.Print($"[EchoPanel] Playing Echo: {_selectedEcho.Name}");
 
-		// 根據 TargetType 決定 targetId
 		int? targetId = DetermineTargetId(_selectedEcho.TargetType);
-		GD.Print($"[EchoPanel] TargetType: {_selectedEcho.TargetType} → targetId: {targetId}");
-
-		// 呼叫 Combat 執行 Echo
+		
+		// 呼叫 Combat 執行
 		CombatCtrl?.TryRunEcho(_selectedEcho, targetId);
 
-		// 清空選擇（因為 Echo 會被消耗）
+		// 清空選擇（Echo 使用後會被移除）
 		ClearSelection();
-
-		// 刷新 UI（等待 Core 更新後的被動刷新）
 		CallDeferred(nameof(RefreshEchoSlots));
 	}
 
