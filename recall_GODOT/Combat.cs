@@ -261,10 +261,10 @@ public partial class Combat : Control
 		var attackEcho = new Echo
 		{
 			Id = 1,
-			RecipeId = 101,
-			Name = "Fire Strike",
-			RecipeLabel = "A+A",
-			Summary = "[Test] A powerful fire attack targeting enemies. Deals significant damage.",
+			RecipeId = 1,
+			Name = "Basic Attack",
+			RecipeLabel = "A",
+			Summary = "[Test] Basic attack",
 			CostAP = 1,
 			Op = HLAop.Attack,
 			TargetType = TargetType.Target
@@ -275,9 +275,9 @@ public partial class Combat : Control
 		{
 			Id = 2,
 			RecipeId = 102,
-			Name = "Iron Guard",
-			RecipeLabel = "B+B",
-			Summary = "[Test] A defensive skill that strengthens self protection. Grants shield.",
+			Name = "Basic Block",
+			RecipeLabel = "B",
+			Summary = "[Test] Basic Block",
 			CostAP = 1,
 			Op = HLAop.Block,
 			TargetType = TargetType.Self

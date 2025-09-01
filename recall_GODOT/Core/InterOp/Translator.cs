@@ -247,6 +247,11 @@ public sealed class Translator
 		FailCode fail = ValidateIndices(intent.RecallIndices, memory, phase.TurnNum);
 		if (fail != FailCode.None) return TranslationResult.Fail(fail);
 
+		// 暫時開放 1L Echo
+	    if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)
+        return TranslationResult.Fail(FailCode.IndexLimited); // 僅開放 1L
+
+
 		// AP 檢查
 		// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
 		int apCost = (self.AP != null) ? 1 : 0;
@@ -260,10 +265,7 @@ public sealed class Translator
 	private static TranslationResult TranslateEchoIntentInternal(
 		EchoIntent intent, PhaseContext phase, TryGetActorById tryGetActor, Actor self)
 	{
-		// Phase 檢查
-		if (phase.Step != PhaseStep.PlayerInput)
-			return TranslationResult.Fail(FailCode.PhaseLocked);
-		
+
 		// AP 檢查
 		if (!self.HasAP(intent.Echo.CostAP))
 			return TranslationResult.Fail(FailCode.NoAP);
