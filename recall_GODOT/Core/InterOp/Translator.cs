@@ -13,7 +13,7 @@ public delegate bool TryGetActorById(int id, out Actor actor);
 public abstract record Intent(int? TargetId);
 public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
 public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
-public sealed record EchoIntent(Echo Echo, int? TargetId) : Intent(TargetId);
+public sealed record EchoIntent(Echo Echo, int? TargetId, int SlotIndex) : Intent(TargetId);
 
 public readonly struct TranslationResult
 {
@@ -78,6 +78,7 @@ public sealed class Translator
 		{
 			BasicIntent bi => TranslateBasicIntentInternal(bi, phase, tryGetActor, self),
 			RecallIntent ri => TranslateRecallIntentInternal(ri, phase, memory, tryGetActor, self),
+			EchoIntent ei => TranslateEchoIntentInternal(ei, phase, tryGetActor, self),
 			_ => TranslationResult.Fail(FailCode.UnknownIntent)
 		};
 	}
@@ -254,5 +255,62 @@ public sealed class Translator
 		var sequence = intent.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
 		var plan = new RecallPlan(self, sequence, apCost);
 		return TranslationResult.Pass(plan, intent);
+	}
+	
+	private static TranslationResult TranslateEchoIntentInternal(
+		EchoIntent intent, PhaseContext phase, TryGetActorById tryGetActor, Actor self)
+	{
+		// Phase 檢查
+		if (phase.Step != PhaseStep.PlayerInput)
+			return TranslationResult.Fail(FailCode.PhaseLocked);
+		
+		// AP 檢查
+		if (!self.HasAP(intent.Echo.CostAP))
+			return TranslationResult.Fail(FailCode.NoAP);
+		
+		// 目標驗證
+		var target = ValidateEchoTarget(intent.Echo.TargetType, intent.TargetId, tryGetActor, self);
+		if (target == null)
+			return TranslationResult.Fail(FailCode.BadTarget);
+		
+		// Op 映射 (僅支援 A/B/C)
+		var plan = MapEchoToBasicPlan(intent.Echo, self, target);
+		return plan != null 
+			? TranslationResult.Pass(plan, intent)
+			: TranslationResult.Fail(FailCode.NoRecipe);
+	}
+
+	private static Actor? ValidateEchoTarget(TargetType targetType, int? targetId, TryGetActorById tryGetActor, Actor self)
+	{
+		return targetType switch
+		{
+			TargetType.Self => self,
+			TargetType.Target => targetId.HasValue && tryGetActor(targetId.Value, out var t) ? t : null,
+			TargetType.None => self, // 預設自己
+			TargetType.All => null,  // 暫不支援，返回 null 觸發 BadTarget
+			_ => null
+		};
+	}
+
+	private static BasicPlan? MapEchoToBasicPlan(Echo echo, Actor self, Actor target)
+	{
+		// 使用與 Basic 相同的數值
+		var numbers = ComputeBasicNumbers(echo.Op switch {
+			HLAop.Attack => ActionType.A,
+			HLAop.Block => ActionType.B, 
+			HLAop.Charge => ActionType.C,
+			_ => ActionType.A  // fallback
+		}, self);
+		
+		return echo.Op switch
+		{
+			HLAop.Attack => new BasicPlan(ActionType.A, self, target, 
+				numbers.Damage, 0, 0, 0, echo.CostAP),
+			HLAop.Block => new BasicPlan(ActionType.B, self, self,
+				0, numbers.Block, 0, 0, echo.CostAP),
+			HLAop.Charge => new BasicPlan(ActionType.C, self, self,
+				0, 0, 0, numbers.GainAmount, echo.CostAP),
+			_ => null  // CA 等其他返回 null
+		};
 	}
 }

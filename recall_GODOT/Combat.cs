@@ -90,8 +90,30 @@ public partial class Combat : Control
 	public void TryRunEcho(Echo echo, int? targetId)
 	{
 		GD.Print($"[Combat] TryRunEcho: {echo.Name}, target: {targetId}");
-		// TODO: 實際 pipeline 整合
-
+		
+		// 找到選中的槽位索引
+		var slots = State.echoStore.ToSlots();
+		int slotIndex = -1;
+		for (int i = 0; i < slots.Length; i++)
+		{
+			if (slots[i]?.Id == echo.Id)
+			{
+				slotIndex = i;
+				break;
+			}
+		}
+		
+		if (slotIndex == -1)
+		{
+			GD.Print("[Combat] Echo not found in store");
+			return;
+		}
+		
+		var intent = new EchoIntent(echo, targetId, slotIndex);
+		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
+		
+		GD.Print($"[Combat] Echo result: {result}");
+		RefreshAllUI();
 	}
 
 

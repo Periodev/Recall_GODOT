@@ -142,6 +142,13 @@ namespace CombatCore
 			{
 				state.PhaseCtx.MarkRecallUsed();
 			}
+			
+			// 新增 Echo 處理
+			if (intent is EchoIntent echoIntent)
+			{
+				state.echoStore.TryRemoveAt(echoIntent.SlotIndex);
+				// Echo 不寫入 Memory
+			}
 		}
 
 		/// <summary>
