@@ -246,9 +246,18 @@ public sealed class Translator
 		FailCode fail = ValidateIndices(intent.RecallIndices, memory, phase.TurnNum);
 		if (fail != FailCode.None) return TranslationResult.Fail(fail);
 
+		// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）
+		var span = intent.RecallIndices.Distinct().OrderBy(x => x).ToArray();
+		for (int i = 1; i < span.Length; i++)
+		{
+			if (span[i] != span[i - 1] + 1)
+				return TranslationResult.Fail(FailCode.IndixNotContiguous);
+		}
+
+
 		// 暫時開放 1L Echo
-	    if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)
-        return TranslationResult.Fail(FailCode.IndexLimited); // 僅開放 1L
+		if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)
+			return TranslationResult.Fail(FailCode.IndexLimited); // 僅開放 1L
 
 
 		// AP 檢查

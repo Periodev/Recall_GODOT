@@ -20,7 +20,7 @@ namespace CombatCore
 		BadTarget, SelfDead,
 		RecallUsed,
 		BadIndex, IndexOutOfBound, IndexLimited,
-		NoRecipe, EchoSlotsFull,
+		NoRecipe, IndixNotContiguous, EchoSlotsFull, 
 		PhaseLocked,
 		UnknownIntent,
 	}
