@@ -63,9 +63,7 @@ public sealed class Translator
 {
 	public static TranslationResult TryTranslate(
 		Intent intent,
-		PhaseContext phase,
-		RecallView memory,
-		TryGetActorById tryGetActor,
+		CombatState state,
 		Actor self)
 	{
 		// 通用前置檢查
@@ -75,9 +73,10 @@ public sealed class Translator
 		// 分派到對應處理方法
 		return intent switch
 		{
-			BasicIntent bi => TranslateBasicIntentInternal(bi, phase, tryGetActor, self),
-			RecallIntent ri => TranslateRecallIntentInternal(ri, phase, memory, tryGetActor, self),
-			EchoIntent ei => TranslateEchoIntentInternal(ei, phase, tryGetActor, self),
+
+			BasicIntent bi => TranslateBasicIntentInternal(bi, state.PhaseCtx, state.TryGetActor, self),
+			RecallIntent ri => TranslateRecallIntentInternal(ri, state, self),
+			EchoIntent ei => TranslateEchoIntentInternal(ei, state.PhaseCtx, state.TryGetActor, self),
 			_ => TranslationResult.Fail(FailCode.UnknownIntent)
 		};
 	}
@@ -236,14 +235,18 @@ public sealed class Translator
 	}
 
 	private static TranslationResult TranslateRecallIntentInternal(
-		RecallIntent intent, PhaseContext phase, RecallView memory, 
-		TryGetActorById tryGetActor, Actor self)
+		RecallIntent intent, CombatState state, Actor self)
 	{
 		// 一次/回合檢查
-		if (RecallUsedThisTurn(phase)) return TranslationResult.Fail(FailCode.RecallUsed);
+		if (RecallUsedThisTurn(state.PhaseCtx)) return TranslationResult.Fail(FailCode.RecallUsed);
+
+		// EchoStore full check
+		if (state.IsEchoStoreFull) 
+			return TranslationResult.Fail(FailCode.EchoSlotsFull);
 
 		// 索引合法性檢查（包含空集合檢查）
-		FailCode fail = ValidateIndices(intent.RecallIndices, memory, phase.TurnNum);
+		var memory = state.GetRecallView();
+		FailCode fail = ValidateIndices(intent.RecallIndices, memory, state.PhaseCtx.TurnNum);
 		if (fail != FailCode.None) return TranslationResult.Fail(fail);
 
 		// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）

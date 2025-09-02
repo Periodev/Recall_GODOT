@@ -32,9 +32,8 @@ namespace CombatCore
 		/// <returns>轉換結果，包含命令陣列或錯誤碼</returns>
 		public static TranslationResult TranslateIntent(CombatState state, Actor actor, Intent intent)
 		{
-			var translationResult = Translator.TryTranslate(intent,
-				state.PhaseCtx, state.GetRecallView(), state.TryGetActor, actor);
-
+			var translationResult = Translator.TryTranslate(intent, state, actor);
+				
 			if (!translationResult.Success)
 				return TranslationResult.Fail(translationResult.ErrorCode);
 
