@@ -185,6 +185,14 @@ public sealed class Translator
 			return FailCode.IndexLimited;
 		}
 
+		// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）
+		var span = indices.Distinct().OrderBy(x => x).ToArray();
+		for (int i = 1; i < span.Length; i++)
+		{
+			if (span[i] != span[i - 1] + 1)
+				return FailCode.IndixNotContiguous;
+		}
+
 		return FailCode.None;
 	}
 
@@ -247,16 +255,8 @@ public sealed class Translator
 		// 索引合法性檢查（包含空集合檢查）
 		var memory = state.GetRecallView();
 		FailCode fail = ValidateIndices(intent.RecallIndices, memory, state.PhaseCtx.TurnNum);
+
 		if (fail != FailCode.None) return TranslationResult.Fail(fail);
-
-		// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）
-		var span = intent.RecallIndices.Distinct().OrderBy(x => x).ToArray();
-		for (int i = 1; i < span.Length; i++)
-		{
-			if (span[i] != span[i - 1] + 1)
-				return TranslationResult.Fail(FailCode.IndixNotContiguous);
-		}
-
 
 		// 暫時開放 1L Echo
 		if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)

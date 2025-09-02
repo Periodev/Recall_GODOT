@@ -228,16 +228,16 @@ namespace CombatCore
 			return ExecutionResult.Pass(new CmdLog());
 		}
 
-        /// 從 RecallIntent 的索引，在指定的 MemoryView 中重建出行為序列。
-        /// <param name="memory">目前回合的記憶視圖</param>
-        /// <param name="intent">RecallIntent，內含索引</param>
-        /// <returns>對應的 ActionType 序列</returns>
-        public static ActionType[] RebuildMemSeq(RecallView memory, RecallIntent intent)
-        {
-            return intent.RecallIndices
-                         .Select(i => memory.Ops[i])
-                         .ToArray();
-        }
+		/// 從 RecallIntent 的索引，在指定的 MemoryView 中重建出行為序列。
+		/// <param name="memory">目前回合的記憶視圖</param>
+		/// <param name="intent">RecallIntent，內含索引</param>
+		/// <returns>對應的 ActionType 序列</returns>
+		public static ActionType[] RebuildMemSeq(RecallView memory, RecallIntent intent)
+		{
+			return intent.RecallIndices
+						 .Select(i => memory.Ops[i])
+						 .ToArray();
+		}
 
 	}
 

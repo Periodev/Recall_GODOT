@@ -29,7 +29,7 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -20.0
 offset_top = 172.0
-offset_right = 276.0
+offset_right = 324.0
 offset_bottom = 236.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -71,10 +71,10 @@ size_flags_vertical = 3
 
 [node name="ActionBar" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 320.0
-offset_top = 192.0
-offset_right = 384.0
-offset_bottom = 258.0
+offset_left = 384.0
+offset_top = 88.0
+offset_right = 448.0
+offset_bottom = 154.0
 
 [node name="BtnPlay" type="Button" parent="ActionBar"]
 layout_mode = 2
@@ -87,7 +87,7 @@ text = "Cancel"
 
 [node name="Reason" type="Label" parent="."]
 layout_mode = 2
-offset_left = 320.0
-offset_top = 144.0
-offset_right = 384.0
-offset_bottom = 167.0
+offset_left = 384.0
+offset_top = 168.0
+offset_right = 448.0
+offset_bottom = 191.0

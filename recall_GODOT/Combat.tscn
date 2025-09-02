@@ -35,10 +35,10 @@ script = ExtResource("2_e5xpt")
 position = Vector2(130, 251)
 
 [node name="BasicMove" parent="UI" node_paths=PackedStringArray("CombatCtrl") instance=ExtResource("4_tppsp")]
-offset_left = 48.0
-offset_top = 426.0
-offset_right = 88.0
-offset_bottom = 466.0
+offset_left = 16.0
+offset_top = 440.0
+offset_right = 56.0
+offset_bottom = 480.0
 CombatCtrl = NodePath("../../Control")
 
 [node name="Enemy" type="Button" parent="UI"]
@@ -50,10 +50,10 @@ offset_bottom = 208.0
 text = "Enemy"
 
 [node name="RecallPanel" parent="UI" instance=ExtResource("5_lnhn1")]
-offset_left = 256.0
-offset_top = 444.0
-offset_right = 530.0
-offset_bottom = 518.0
+offset_left = 192.0
+offset_top = 440.0
+offset_right = 466.0
+offset_bottom = 514.0
 
 [node name="EnemyView" parent="UI" instance=ExtResource("6_brs8u")]
 position = Vector2(743, 258)
