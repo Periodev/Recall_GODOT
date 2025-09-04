@@ -190,7 +190,7 @@ public sealed class Translator
 		for (int i = 1; i < span.Length; i++)
 		{
 			if (span[i] != span[i - 1] + 1)
-				return FailCode.IndixNotContiguous;
+				return FailCode.IndexNotContiguous;
 		}
 
 		return FailCode.None;
