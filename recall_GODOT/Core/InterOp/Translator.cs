@@ -11,7 +11,7 @@ using static CombatCore.GameConst;
 public delegate bool TryGetActorById(int id, out Actor actor);
 public abstract record Intent(int? TargetId);
 public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
-public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
+public sealed record RecallIntent(int[] RecallIndices, int? ConfigKey = null) : Intent((int?)null);
 public sealed record EchoIntent(Echo Echo, int? TargetId, int SlotIndex) : Intent(TargetId);
 
 public readonly struct TranslationResult
@@ -262,13 +262,18 @@ public sealed class Translator
 		if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)
 			return TranslationResult.Fail(FailCode.IndexLimited); // 僅開放 1L
 
+		// Recipe 驗證
+		var sequence = intent.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
+		var patternKey = PatternEncoder.Encode(sequence);
+		var configKey = intent.ConfigKey ?? 1; // 預設配置為 1
+		if (!RecipeSystem.HasRecipe(patternKey, configKey))
+			return TranslationResult.Fail(FailCode.NoRecipe);
 
 		// AP 檢查
 		// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
 		int apCost = (self.AP != null) ? 1 : 0;
 		if (apCost > 0 && !self.HasAP(apCost)) return TranslationResult.Fail(FailCode.NoAP);
 
-		var sequence = intent.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
 		var plan = new RecallPlan(self, sequence, apCost);
 		return TranslationResult.Pass(plan, intent);
 	}
