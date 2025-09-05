@@ -9,7 +9,7 @@ namespace CombatCore
 	{
 		public HP HP { get; }
 		public Shield Shield { get; }
-		public AP AP { get; }
+		public AP? AP { get; }
 		public Charge? Charge { get; }
 		public Copy? Copy { get; }
 
@@ -26,7 +26,7 @@ namespace CombatCore
 		}
 
 		public bool IsAlive => HP.Value > 0;
-		public bool HasAP(int cost) => AP.Value >= cost;
+		public bool HasAP(int cost) => AP?.Value >= cost;
 		public bool HasCharge(int cost) => Charge?.Value >= cost;
 		/*
 				public T? Get<T>() where T : Component

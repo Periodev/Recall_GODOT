@@ -6,7 +6,7 @@ namespace CombatCore.Command
 {
 	public sealed class CmdExecutor
 	{
-		public ExecResult ExecuteAll(IEnumerable<AtomicCmd> cmds)
+		public static ExecResult ExecuteAll(IEnumerable<AtomicCmd> cmds)
 		{
 			ArgumentNullException.ThrowIfNull(cmds);
 
@@ -21,7 +21,7 @@ namespace CombatCore.Command
 			return ExecResult.Pass(log);
 		}
 
-		public ExecResult ExecuteOrDiscard(IEnumerable<AtomicCmd> cmds)
+		public static ExecResult ExecuteOrDiscard(IEnumerable<AtomicCmd> cmds)
 		{
 			ArgumentNullException.ThrowIfNull(cmds);
 			var batch = new List<AtomicCmd>(cmds);

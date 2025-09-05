@@ -53,12 +53,14 @@ namespace CombatCore.ActorOp
 
 		// AP
 		public static int GainAP(Actor self, int amount) => 
-			(self == null || amount <= 0) ? 0 : self.AP.Add(amount);
+			(self?.AP == null || amount <= 0) ? 0 : self.AP.Add(amount);
 
 		public static bool ConsumeAP(Actor self, int amount)
 		{
-			if (self == null || amount <= 0) return FAIL;
-			return self.AP.Use(amount) ? PASS : FAIL;
+			if (self is null) return FAIL;
+			if (amount <= 0) return PASS;          // 不需消耗 → 放行
+			return self.AP == null                 // 無 AP 系統 → 放行
+				? PASS : (self.AP.Use(amount) ? PASS : FAIL);
 		}
 
 		public static int RefillAP(Actor self) => self?.AP?.Refill() ?? 0;

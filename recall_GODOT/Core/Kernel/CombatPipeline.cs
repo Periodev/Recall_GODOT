@@ -10,17 +10,10 @@ namespace CombatCore.Kernel
 {
 	public static class CombatPipeline
 	{
-		// === 靜態實例，避免重複創建無狀態對象 ===
-		private static readonly Translator Translator = new();
-		private static readonly InterOps InterOps = new();
-		private static readonly CmdExecutor Executor = new();
-
 		public static PhaseQueue EnemyInstantQueue { get; } = new();
 		public static PhaseQueue PlayerQueue { get; } = new();
 		public static PhaseQueue EnemyDelayedQueue { get; } = new();
 		public static PhaseQueue TurnEndQueue { get; } = new();
-
-
 
 		/// 階段1：將 HLA Intent 轉換為 AtomicCmd 陣列
 		/// 使用時機：PlayerPlanning, EnemyPlanning 階段
@@ -53,7 +46,7 @@ namespace CombatCore.Kernel
 		public static ExecutionResult ExecuteCommands(CombatState state, AtomicCmd[] commands, Intent originalIntent)
 		{
 			// 執行階段
-			var execResult = Executor.ExecuteOrDiscard(commands);
+			var execResult = CmdExecutor.ExecuteOrDiscard(commands);
 			if (!execResult.Ok)
 				return ExecutionResult.Fail(execResult.Code);
 
