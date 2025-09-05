@@ -40,6 +40,18 @@ namespace CombatCore.ActorOp
 
 		public static void ClearCharge(Actor self) => self?.Charge?.Clear();
 
+		// Copy
+		public static int GainCopy(Actor self, int amount) => 
+			(self?.Copy == null || amount <= 0) ? 0 : self.Copy.Add(amount);
+
+		public static bool ConsumeCopy(Actor self, int amount = 1)
+		{
+			if (self?.Copy == null || amount <= 0) return FAIL;
+			return self.Copy.Use(amount);
+		}
+
+		public static void ClearCopy(Actor self) => self?.Copy?.Clear();
+
 		// AP
 		public static int GainAP(Actor self, int amount) => 
 			(self == null || amount <= 0) ? 0 : self.AP.Add(amount);

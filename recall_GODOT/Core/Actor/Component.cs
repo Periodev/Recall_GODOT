@@ -1,6 +1,7 @@
 
 using System;
 using CombatCore;
+using static CombatCore.GameConst;
 
 namespace CombatCore.Component
 {
@@ -86,5 +87,10 @@ namespace CombatCore.Component
 	public class Charge : Component, Component.IBasic
 	{
 		public Charge() : base(3) { }
+	}
+
+	public class Copy : Component, Component.IBasic
+	{
+		public Copy() : base(COPY_MAX) { }  // 使用常數定義上限
 	}
 }

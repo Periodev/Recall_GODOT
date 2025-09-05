@@ -11,7 +11,9 @@ namespace CombatCore.Command
 		AddShield = 0x02,
 		GainCharge = 0x03,
 		ConsumeCharge = 0x04,
-		ConsumeAP = 0x05     // ← 新增
+		ConsumeAP = 0x05,
+		GainCopy = 0x06,
+		ConsumeCopy = 0x07
 	}
 
 	/// <summary>
@@ -49,6 +51,12 @@ namespace CombatCore.Command
 		public static AtomicCmd ConsumeAP(Actor src, int amount) =>
 			new AtomicCmd(CmdType.ConsumeAP, src, src, amount);
 
+		public static AtomicCmd GainCopy(Actor target, int amount) =>
+			new AtomicCmd(CmdType.GainCopy, null, target, amount);
+
+		public static AtomicCmd ConsumeCopy(Actor target, int amount) =>
+			new AtomicCmd(CmdType.ConsumeCopy, null, target, amount);
+
 		/// <summary>
 		/// 執行命令並返回主要資源變動量
 		/// DealDamage = HP損失量（不含護盾吸收）
@@ -56,6 +64,8 @@ namespace CombatCore.Command
 		/// GainCharge = 實際新增充能量
 		/// ConsumeCharge = 實際消耗的充能量
 		/// ConsumeAP = 實際消耗的 AP
+		/// GainCopy = 實際新增Copy量
+		/// ConsumeCopy = 實際消耗的Copy量
 		/// </summary>
 		/// <returns>主要資源的實際變動量</returns>
 		public int Execute()
@@ -69,6 +79,8 @@ namespace CombatCore.Command
 				CmdType.GainCharge => ExecuteGainCharge(),
 				CmdType.ConsumeCharge => ExecuteConsumeCharge(),
 				CmdType.ConsumeAP => ExecuteConsumeAP(),
+				CmdType.GainCopy => ExecuteGainCopy(),
+				CmdType.ConsumeCopy => ExecuteConsumeCopy(),
 				_ => 0
 			};
 		}
@@ -154,6 +166,33 @@ namespace CombatCore.Command
 			else
 			{
 				Debug.WriteLine($"[ConsumeAP] FAILED {GetSourceName()} (not enough AP)");
+			}
+#endif
+
+			return actualConsumed;
+		}
+
+		private int ExecuteGainCopy()
+		{
+			int actualGained = SelfOp.GainCopy(Target, Value);
+
+#if DEBUG
+			if (actualGained > 0)
+			{
+				Debug.WriteLine($"[GainCopy] {GetTargetName()} gained {actualGained} copy");
+			}
+#endif
+
+			return actualGained;
+		}
+
+		private int ExecuteConsumeCopy()
+		{
+			int actualConsumed = SelfOp.ConsumeCopy(Target, Value) ? Value : 0;
+#if DEBUG
+			if (actualConsumed > 0)
+			{
+				Debug.WriteLine($"[ConsumeCopy] {GetTargetName()} consumed {actualConsumed} copy");
 			}
 #endif
 

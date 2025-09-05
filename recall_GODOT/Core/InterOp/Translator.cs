@@ -49,15 +49,7 @@ public readonly struct RecallView
 	public int Count => Ops.Count;
 }
 
-// Extension method for Actor to ensure null-safe HasCharge
-public static class ActorExtensions
-{
-	public static bool HasCharge(this Actor actor, int cost) =>
-		(actor.Charge?.Value ?? 0) >= cost;
-
-	public static bool HasAP(this Actor actor, int cost) =>
-		(actor.AP?.Value ?? 0) >= cost;
-}
+// Extension methods moved to Actor.cs to avoid duplication
 
 public sealed class Translator
 {
@@ -108,6 +100,15 @@ public sealed class Translator
 		if (numbers.APCost > 0 && !self.HasAP(numbers.APCost))
 			return FailCode.NoAP;
 		
+		// C 操作的 Copy 上限檢查
+		int finalGainAmount = numbers.GainAmount;
+		if (bi.Act == ActionType.C && self.Copy != null)
+		{
+			// 如果已達 Copy 上限，則不獲得 Copy (GainAmount = 0)
+			if (self.Copy.Value >= COPY_MAX)
+				finalGainAmount = 0;
+		}
+		
 		// 動態決定此次可用的 Charge 數量與加成
 		int use = 0;
 		if (bi.Act == ActionType.A || bi.Act == ActionType.B)
@@ -120,7 +121,11 @@ public sealed class Translator
 		int finalBlk = blk;   
 		int chargeCostThisAction = use;
 
-		plan = new BasicPlan(bi.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, numbers.GainAmount, numbers.APCost);
+		// Copy support for TryBasic method
+		bool hasCopy = self.HasCopy() && (bi.Act == ActionType.A || bi.Act == ActionType.B);
+		int copyCost = hasCopy ? 1 : 0;
+		
+		plan = new BasicPlan(bi.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, copyCost, finalGainAmount, numbers.APCost);
 
 		return FailCode.None;
 	}
@@ -160,7 +165,7 @@ public sealed class Translator
 		{
 			ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost),
 			ActionType.B => (Damage: 0, Block: 3, GainAmount: 0, ChargeCost: 0, APCost: apCost),
-			ActionType.C => (Damage: 0, Block: 0, GainAmount: 1, ChargeCost: 0, APCost: apCost),
+			ActionType.C => (Damage: 0, Block: 0, GainAmount: C_GAIN_COPY, ChargeCost: 0, APCost: apCost),
 			_ => (0, 0, 0, 0, apCost)
 		};
 	}
@@ -226,19 +231,31 @@ public sealed class Translator
 		if (numbers.APCost > 0 && !self.HasAP(numbers.APCost))
 			return TranslationResult.Fail(FailCode.NoAP);
 		
-		// 動態決定此次可用的 Charge 數量與加成
-		int use = 0;
+		// C 操作的 Copy 上限檢查
+		int finalGainAmount = numbers.GainAmount;
+		if (intent.Act == ActionType.C && self.Copy != null)
+		{
+			// 如果已達 Copy 上限，則不獲得 Copy (GainAmount = 0)
+			if (self.Copy.Value >= COPY_MAX)
+				finalGainAmount = 0;
+		}
+		
+		// 檢查是否有 Copy 待觸發 (只對 A/B 有效)
+		bool hasCopy = self.HasCopy() && (intent.Act == ActionType.A || intent.Act == ActionType.B);
+		int copyCost = hasCopy ? 1 : 0;
+		
+		// 動態決定此次可用的 Charge 數量與加成 (敵人邏輯)
+		int chargeCostThisAction = 0;
 		if (intent.Act == ActionType.A || intent.Act == ActionType.B)
-			use = Math.Min(self.Charge?.Value ?? 0, CHARGE_MAX_PER_ACTION);
+			chargeCostThisAction = Math.Min(self.Charge?.Value ?? 0, CHARGE_MAX_PER_ACTION);
 
-		int dmg = numbers.Damage + (intent.Act == ActionType.A ? A_BONUS_PER_CHARGE * use : 0);
-		int blk = numbers.Block  + (intent.Act == ActionType.B ? B_BONUS_PER_CHARGE * use : 0);
+		int dmg = numbers.Damage + (intent.Act == ActionType.A ? A_BONUS_PER_CHARGE * chargeCostThisAction : 0);
+		int blk = numbers.Block  + (intent.Act == ActionType.B ? B_BONUS_PER_CHARGE * chargeCostThisAction : 0);
 		
 		int finalDmg = dmg;   
 		int finalBlk = blk;   
-		int chargeCostThisAction = use;
 
-		var plan = new BasicPlan(intent.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, numbers.GainAmount, numbers.APCost);
+		var plan = new BasicPlan(intent.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, copyCost, finalGainAmount, numbers.APCost);
 		return TranslationResult.Pass(plan, intent);
 	}
 
@@ -318,11 +335,11 @@ public sealed class Translator
 		return echo.Op switch
 		{
 			HLAop.Attack => new BasicPlan(ActionType.A, self, target, 
-				numbers.Damage, 0, 0, 0, echo.CostAP),
+				numbers.Damage, 0, 0, 0, 0, echo.CostAP),
 			HLAop.Block => new BasicPlan(ActionType.B, self, self,
-				0, numbers.Block, 0, 0, echo.CostAP),
+				0, numbers.Block, 0, 0, 0, echo.CostAP),
 			HLAop.Charge => new BasicPlan(ActionType.C, self, self,
-				0, 0, 0, numbers.GainAmount, echo.CostAP),
+				0, 0, 0, 0, numbers.GainAmount, echo.CostAP),
 			_ => null  // CA 等其他返回 null
 		};
 	}

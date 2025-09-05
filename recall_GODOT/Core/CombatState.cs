@@ -21,7 +21,7 @@ public partial class CombatState
 
 		// 使用不同的 Component 組合來定義 Player 和 Enemy
 		// Player: 擁有 HP, Shield, AP, 和 Charge 元件
-		Player = new Actor(maxHP: 100, apPerTurn: 3, withCharge: true);
+		Player = new Actor(maxHP: 100, apPerTurn: 3, withCharge: false, withCopy: true);
 		// Enemy: 只有基礎的 HP 和 Shield 元件
 		Enemy = new Actor(maxHP: 80, withAP: false, withCharge: false);
 	}

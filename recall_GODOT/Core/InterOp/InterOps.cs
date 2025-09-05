@@ -17,6 +17,7 @@ namespace CombatCore.InterOp
 		int Damage,       // A
 		int Block,        // B
 		int ChargeCost,   // A/B charge consumption attempt
+		int CopyCost,     // A/B copy consumption attempt  
 		int GainAmount,   // C gain amount
 		int APCost        // AP consumption
 	) : Plan(Source, APCost);
@@ -41,28 +42,53 @@ namespace CombatCore.InterOp
 
 		public static AtomicCmd[] BuildBasic(BasicPlan plan)
 		{
-			var list = new List<AtomicCmd>(capacity: 4);
+			var list = new List<AtomicCmd>(capacity: 6);
 			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));   // Add even if 0
 
 			switch (plan.Act)
 			{
 				case ActionType.A:
+					// 玩家：先消耗 Copy，再執行攻擊
+					if (plan.CopyCost > 0)
+						list.Add(AtomicCmd.ConsumeCopy(plan.Source, plan.CopyCost));
+					// 敵人：消耗 Charge 加成
 					if (plan.ChargeCost > 0)
 						list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.ChargeCost));
-					if (plan.Damage > 0)
-						list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, plan.Damage));
+					
+					// 根據 Copy 決定執行次數：Copy值+1
+					int attackTimes = plan.CopyCost + 1;
+					for (int i = 0; i < attackTimes; i++)
+					{
+						if (plan.Damage > 0)
+							list.Add(AtomicCmd.DealDamage(plan.Source, plan.Target, plan.Damage));
+					}
 					break;
 
 				case ActionType.B:
+					// 類似 A 的邏輯
+					if (plan.CopyCost > 0)
+						list.Add(AtomicCmd.ConsumeCopy(plan.Source, plan.CopyCost));
 					if (plan.ChargeCost > 0)
 						list.Add(AtomicCmd.ConsumeCharge(plan.Source, plan.ChargeCost));
-					if (plan.Block > 0)
-						list.Add(AtomicCmd.AddShield(plan.Target, plan.Block));
+					
+					int blockTimes = plan.CopyCost + 1;
+					for (int i = 0; i < blockTimes; i++)
+					{
+						if (plan.Block > 0)
+							list.Add(AtomicCmd.AddShield(plan.Target, plan.Block));
+					}
 					break;
 
 				case ActionType.C:
+					// 根據角色的組件類型決定獲得什麼
+					// 有 Copy 組件的角色獲得 Copy，有 Charge 組件的角色獲得 Charge
 					if (plan.GainAmount > 0)
-						list.Add(AtomicCmd.GainCharge(plan.Source, plan.GainAmount));
+					{
+						if (plan.Source.Copy != null)
+							list.Add(AtomicCmd.GainCopy(plan.Source, plan.GainAmount));
+						else if (plan.Source.Charge != null)
+							list.Add(AtomicCmd.GainCharge(plan.Source, plan.GainAmount));
+					}
 					break;
 			}
 

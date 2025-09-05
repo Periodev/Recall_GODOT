@@ -7,7 +7,7 @@ public partial class PlayerView : Node2D
 
 	[Export] public Label HpLabel;
 	[Export] public Label ShieldLabel;
-	[Export] public Label ChargeLabel;
+	[Export] public Label CopyLabel;
 
 	
 	private Actor _actor;
@@ -27,7 +27,7 @@ public partial class PlayerView : Node2D
 	{
 		if (_actor == null) return;
 		HpLabel.Text = $"HP: {_actor.HP.Value}/{_actor.HP.Max}";
-		ChargeLabel.Text = $"Charge: {_actor.Charge?.Value ?? 0}/3";
+		CopyLabel.Text = $"Copy: {_actor.Copy?.Value ?? 0}/2";
 		ShieldLabel.Text = $"Shield: {_actor.Shield?.Value ?? 0}";
 	}
 }
