@@ -8,7 +8,7 @@ namespace CombatCore.Command
 	{
 		public ExecResult ExecuteAll(IEnumerable<AtomicCmd> cmds)
 		{
-			if (cmds is null) throw new ArgumentNullException(nameof(cmds));
+			ArgumentNullException.ThrowIfNull(cmds);
 
 			var log = new CmdLog();
 
@@ -23,7 +23,7 @@ namespace CombatCore.Command
 
 		public ExecResult ExecuteOrDiscard(IEnumerable<AtomicCmd> cmds)
 		{
-			if (cmds is null) throw new ArgumentNullException(nameof(cmds));
+			ArgumentNullException.ThrowIfNull(cmds);
 			var batch = new List<AtomicCmd>(cmds);
 
 			// check if cmd actor is dead

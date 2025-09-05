@@ -12,7 +12,7 @@ namespace CombatCore.Recall
 
 		public MemoryQueue(int capacity)
 		{
-			if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
 			_capacity = capacity;
 		}
 

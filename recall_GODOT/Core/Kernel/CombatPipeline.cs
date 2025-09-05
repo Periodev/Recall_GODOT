@@ -6,7 +6,7 @@ using CombatCore.Command;
 using CombatCore.InterOp;
 using CombatCore.Recall;
 
-namespace CombatCore
+namespace CombatCore.Kernel
 {
 	public static class CombatPipeline
 	{

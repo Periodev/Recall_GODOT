@@ -3,7 +3,7 @@ using System;
 using CombatCore;
 using static CombatCore.GameConst;
 
-namespace CombatCore.Component
+namespace CombatCore.ActorOp
 {
 	public class Component
 	{

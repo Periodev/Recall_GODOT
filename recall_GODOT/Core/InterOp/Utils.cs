@@ -1,5 +1,6 @@
 
 using System;
+using CombatCore;
 
 namespace CombatCore
 {
@@ -16,7 +17,7 @@ namespace CombatCore
 		Recall = 0x10,      // 對應 RecallIntent
 		EndTurn = 0xFF      // 結束回合意圖
 	}
-	
+
 	public enum TargetType { None, Self, Target, All };
 }
 

@@ -1,6 +1,5 @@
 
 using System;
-using CombatCore.Component;
 using static CombatCore.Result;
 
 // SelfOp is a static class that provides operations for the Actor class.

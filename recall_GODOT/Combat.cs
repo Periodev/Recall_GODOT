@@ -1,10 +1,12 @@
 using Godot;
 using System;
 using CombatCore;
-using CombatCore.Component;
+using CombatCore.Kernel;
+using CombatCore.ActorOp;
 using CombatCore.InterOp;
 using CombatCore.Recall;
 using CombatCore.Command;
+using CombatCore.UI;
 
 /// <summary>
 /// Combat 控制器 - 負責 UI 與戰鬥系統的整合
@@ -140,13 +142,13 @@ public partial class Combat : Control
 	private void SetupUIListeners()
 	{
 		// 狀態變化監聽
-		UISignalHub.OnHPChanged += OnStatusChanged;
-		UISignalHub.OnChargeChanged += OnStatusChanged;
-		UISignalHub.OnShieldChanged += OnStatusChanged;
-		UISignalHub.OnAPChanged += OnStatusChanged;
+		SignalHub.OnHPChanged += OnStatusChanged;
+		SignalHub.OnChargeChanged += OnStatusChanged;
+		SignalHub.OnShieldChanged += OnStatusChanged;
+		SignalHub.OnAPChanged += OnStatusChanged;
 
 		// Phase 事件監聽
-		UISignalHub.OnPlayerDrawComplete += OnPlayerDrawComplete;
+		SignalHub.OnPlayerDrawComplete += OnPlayerDrawComplete;
 
 		// Recall 事件監聽
 		RecallPanel.ConfirmPressed += OnRecallConfirm;
@@ -154,11 +156,11 @@ public partial class Combat : Control
 
 	private void CleanupUIListeners()
 	{
-		UISignalHub.OnChargeChanged -= OnStatusChanged;
-		UISignalHub.OnHPChanged -= OnStatusChanged;
-		UISignalHub.OnShieldChanged -= OnStatusChanged;
-		UISignalHub.OnAPChanged -= OnStatusChanged;
-		UISignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
+		SignalHub.OnChargeChanged -= OnStatusChanged;
+		SignalHub.OnHPChanged -= OnStatusChanged;
+		SignalHub.OnShieldChanged -= OnStatusChanged;
+		SignalHub.OnAPChanged -= OnStatusChanged;
+		SignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
 
 		if (RecallPanel != null)
 		{

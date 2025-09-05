@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using CombatCore.ActorOp;
+using CombatCore.UI;
 
 namespace CombatCore.Command
 {
@@ -99,7 +100,7 @@ namespace CombatCore.Command
 
 			// 計算實際 HP 傷害
 			int hpDamage = SelfOp.CutHP(Target, penetrating);
-			UISignalHub.NotifyHPChanged(hpDamage);
+			SignalHub.NotifyHPChanged(hpDamage);
 #if DEBUG
 			if (hpDamage > 0 || shieldAbsorbed > 0)
 			{

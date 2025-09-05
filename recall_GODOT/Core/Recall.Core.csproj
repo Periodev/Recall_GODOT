@@ -6,6 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Recall.Core</AssemblyName>
     <RootNamespace>Recall.Core</RootNamespace>
+    
+    <!-- Enable code analysis for dead code detection -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <WarningsAsErrors />
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    
+    <!-- Enable specific warnings for unused code -->
+    <WarningsNotAsErrors>IDE0051;IDE0052;CS0169;CS0414;CS8618</WarningsNotAsErrors>
   </PropertyGroup>
 
 </Project>
