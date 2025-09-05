@@ -17,13 +17,13 @@ namespace CombatCore.Kernel
 		public static PhaseResult HandlePlayerInit(CombatState state)
 		{
 			Debug.Print($"[PhaseFunction] Executing player init system services");
-			Debug.Print($"[PhaseFunction] Player AP before refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
+			Debug.Print($"[PhaseFunction] Player AP before refill: {state.Player.AP?.Value}/{state.Player.AP?.PerTurn}");
 
 			// 🎯 恢復玩家 AP 到每回合最大值
-			state.Player.AP.Refill();
-			SignalHub.NotifyAPChanged(state.Player.AP.Value);
+			state.Player.AP?.Refill();
+			SignalHub.NotifyAPChanged(((state.Player.AP == null) ? 0 : state.Player.AP.Value));
 
-			Debug.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP.Value}/{state.Player.AP.PerTurn}");
+			Debug.Print($"[PhaseFunction] Player AP after refill: {state.Player.AP?.Value}/{state.Player.AP?.PerTurn}");
 
 			//  clear charge and shield on turn start
 			SelfOp.ClearShield(state.Player);

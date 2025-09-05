@@ -85,7 +85,7 @@ using static CombatCore.GameConst;
 				ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost),
 				ActionType.B => (Damage: 0, Block: 3, GainAmount: 0, ChargeCost: 0, APCost: apCost),
 				ActionType.C => (Damage: 0, Block: 0, GainAmount: C_GAIN_COPY, ChargeCost: 0, APCost: apCost),
-				_ => (0, 0, 0, 0, apCost)
+				_ => (Damage: 0, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost)
 			};
 		}
 
