@@ -8,14 +8,30 @@ using CombatCore.Command;
 using CombatCore.Recall;
 using static CombatCore.GameConst;
 
-//namespace CombatCore
-//{
+namespace CombatCore
+{
 	public delegate bool TryGetActorById(int id, out Actor actor);
 	public abstract record Intent(int? TargetId);
 	public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
 	public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
 	public sealed record EchoIntent(Echo Echo, int? TargetId, int SlotIndex) : Intent(TargetId);
 
+	public readonly struct RecallView
+	{
+		public RecallView(IReadOnlyList<ActionType> ops, IReadOnlyList<int> turns)
+		{
+			Ops = ops ?? Array.Empty<ActionType>();
+			Turns = turns ?? Array.Empty<int>();
+		}
+
+		public IReadOnlyList<ActionType> Ops { get; }
+		public IReadOnlyList<int> Turns { get; }
+		public int Count => Ops.Count;
+	}
+}
+
+namespace CombatCore.InterOp
+{
 	public readonly struct TranslationResult
 	{
 		public bool Success { get; }
@@ -37,21 +53,6 @@ using static CombatCore.GameConst;
 		public static TranslationResult Fail(FailCode code) =>
 			new(false, code, null!, null!);
 	}
-
-	public readonly struct RecallView
-	{
-		public RecallView(IReadOnlyList<ActionType> ops, IReadOnlyList<int> turns)
-		{
-			Ops = ops ?? Array.Empty<ActionType>();
-			Turns = turns ?? Array.Empty<int>();
-		}
-
-		public IReadOnlyList<ActionType> Ops { get; }
-		public IReadOnlyList<int> Turns { get; }
-		public int Count => Ops.Count;
-	}
-
-	// Extension methods moved to Actor.cs to avoid duplication
 
 	public sealed class Translator
 	{
@@ -264,4 +265,4 @@ using static CombatCore.GameConst;
 			};
 		}
 	}
-//}
+}

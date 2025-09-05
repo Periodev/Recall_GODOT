@@ -9,9 +9,9 @@ public partial class PlayerView : Node2D
 	[Export] public Label ShieldLabel;
 	[Export] public Label CopyLabel;
 
-	
+
 	private Actor _actor;
-	
+
 	public void BindActor(Actor actor)
 	{
 		_actor = actor;

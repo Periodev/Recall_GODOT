@@ -93,7 +93,7 @@ public partial class Combat : Control
 	public void TryRunEcho(Echo echo, int? targetId)
 	{
 		GD.Print($"[Combat] TryRunEcho: {echo.Name}, target: {targetId}");
-		
+
 		// 找到選中的槽位索引
 		var slots = State.echoStore.ToSlots();
 		int slotIndex = -1;
@@ -105,16 +105,16 @@ public partial class Combat : Control
 				break;
 			}
 		}
-		
+
 		if (slotIndex == -1)
 		{
 			GD.Print("[Combat] Echo not found in store");
 			return;
 		}
-		
+
 		var intent = new EchoIntent(echo, targetId, slotIndex);
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
-		
+
 		GD.Print($"[Combat] Echo result: {result}");
 		RefreshAllUI();
 	}

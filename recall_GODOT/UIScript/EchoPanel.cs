@@ -60,20 +60,22 @@ public partial class EchoPanel : Control
 
 	// === 槽位管理 ===
 
+	/// <summary>
 	/// 刷新 Echo 槽位顯示
 	public void RefreshEchoSlots()
 	{
-		if (CombatCtrl?.State?.echoStore == null)
+		var store = CombatCtrl?.State?.echoStore;
+
+		if (store is null)
 		{
 			// 無資料時顯示空槽
 			for (int i = 0; i < _slotButtons.Count; i++)
-			{
 				UpdateSlotButton(i, null, false);
-			}
+			_selectedSlotIndex = -1; // 也順手清掉選取
 			return;
 		}
 
-		var echoSlots = CombatCtrl.State.echoStore.ToSlots();
+		var echoSlots = store.ToSlots();
 
 		for (int i = 0; i < _slotButtons.Count; i++)
 		{
@@ -83,8 +85,10 @@ public partial class EchoPanel : Control
 		}
 	}
 
+	/// <summary>
 	/// 更新單個槽位按鈕的顯示
-	private void UpdateSlotButton(int index, Echo? echo, bool isSelected)
+	/// </summary>
+	private void UpdateSlotButton(int index, Echo echo, bool isSelected)
 	{
 		if (index >= _slotButtons.Count) return;
 
@@ -114,6 +118,7 @@ public partial class EchoPanel : Control
 		}
 	}
 
+	/// <summary>
 	/// 處理槽位點擊事件
 	private void OnSlotPressed(int slotIndex)
 	{
@@ -140,6 +145,7 @@ public partial class EchoPanel : Control
 
 	// === 資訊顯示 ===
 
+	/// <summary>
 	/// 更新右側 Echo 資訊顯示
 	private void UpdateEchoInfo(Echo echo)
 	{
@@ -150,6 +156,7 @@ public partial class EchoPanel : Control
 		GD.Print($"[EchoPanel] Updated info for: {echo.Name}");
 	}
 
+	/// <summary>
 	/// 清空 Echo 資訊顯示
 	private void ClearEchoInfo()
 	{
@@ -158,6 +165,7 @@ public partial class EchoPanel : Control
 		if (Summary != null) Summary.Text = "Select an Echo to view details";
 	}
 
+	/// <summary>
 	/// 更新操作按鈕狀態
 	private void UpdateActionButtons()
 	{
@@ -176,6 +184,7 @@ public partial class EchoPanel : Control
 
 	// === 操作處理 ===
 
+	/// <summary>
 	/// 處理 Play 按鈕點擊
 	private void OnPlayPressed()
 	{
@@ -195,7 +204,7 @@ public partial class EchoPanel : Control
 		GD.Print($"[EchoPanel] Playing Echo: {_selectedEcho.Name}");
 
 		int? targetId = DetermineTargetId(_selectedEcho.TargetType);
-		
+
 		// 呼叫 Combat 執行
 		CombatCtrl?.TryRunEcho(_selectedEcho, targetId);
 
@@ -204,6 +213,7 @@ public partial class EchoPanel : Control
 		CallDeferred(nameof(RefreshEchoSlots));
 	}
 
+	/// <summary>
 	/// 處理 Cancel 按鈕點擊
 	private void OnCancelPressed()
 	{
@@ -211,6 +221,7 @@ public partial class EchoPanel : Control
 		ClearSelection();
 	}
 
+	/// <summary>
 	/// 清空選擇狀態
 	private void ClearSelection()
 	{
@@ -225,8 +236,9 @@ public partial class EchoPanel : Control
 
 	// === 工具方法 ===
 
+	/// <summary>
 	/// 根據 TargetType 決定目標 ID
-	private int? DetermineTargetId(TargetType targetType)
+	private static int? DetermineTargetId(TargetType targetType)
 	{
 		return targetType switch
 		{
@@ -238,6 +250,7 @@ public partial class EchoPanel : Control
 		};
 	}
 
+	/// <summary>
 	/// 顯示錯誤或狀態訊息
 	private void ShowReason(string message)
 	{
@@ -250,6 +263,7 @@ public partial class EchoPanel : Control
 		GD.Print($"[EchoPanel] Reason: {message}");
 	}
 
+	/// <summary>
 	/// 清空狀態訊息
 	private void ClearReason()
 	{
@@ -262,6 +276,7 @@ public partial class EchoPanel : Control
 
 	// === 公開介面 ===
 
+	/// <summary>
 	/// 外部呼叫：刷新整個面板（當 EchoStore 變更時）
 	public void RefreshPanel()
 	{

@@ -8,7 +8,7 @@ public partial class EnemyView : Node2D
 	[Export] public Label ShieldLabel;
 
 	private Actor _actor;
-	
+
 	public void BindActor(Actor actor)
 	{
 		_actor = actor;
@@ -21,7 +21,7 @@ public partial class EnemyView : Node2D
 		HpLabel.Text = $"HP: {_actor.HP.Value}/{_actor.HP.Max}";
 		//ChargeLabel.Text = $"Charge: {_actor.Charge?.Value ?? 0}/3";
 		ShieldLabel.Text = $"Shield: {_actor.Shield?.Value ?? 0}";
-		
+
 	}
 
 }
