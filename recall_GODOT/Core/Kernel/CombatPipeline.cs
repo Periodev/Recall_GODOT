@@ -221,15 +221,14 @@ namespace CombatCore.Kernel
 			return ExecutionResult.Pass(new CmdLog());
 		}
 
-		/// 從 RecallIntent 的索引，在指定的 MemoryView 中重建出行為序列。
+		/// 從 RecallIntent 的 RecipeId，重建出行為序列。
 		/// <param name="memory">目前回合的記憶視圖</param>
-		/// <param name="intent">RecallIntent，內含索引</param>
+		/// <param name="intent">RecallIntent，內含 RecipeId</param>
 		/// <returns>對應的 ActionType 序列</returns>
 		public static ActionType[] RebuildMemSeq(RecallView memory, RecallIntent intent)
 		{
-			return intent.RecallIndices
-						 .Select(i => memory.Ops[i])
-						 .ToArray();
+			// TODO: 等待 RecipeSystem 實現，暫時返回固定序列
+			return new ActionType[] { ActionType.A };
 		}
 
 	}

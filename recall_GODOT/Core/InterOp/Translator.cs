@@ -13,7 +13,7 @@ namespace CombatCore
 	public delegate bool TryGetActorById(int id, out Actor actor);
 	public abstract record Intent(int? TargetId);
 	public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
-	public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
+	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
 	public sealed record EchoIntent(Echo Echo, int? TargetId, int SlotIndex) : Intent(TargetId);
 
 	public readonly struct RecallView
@@ -70,7 +70,7 @@ namespace CombatCore.InterOp
 			{
 
 				BasicIntent bi => TranslateBasicIntentInternal(bi, state.PhaseCtx, state.TryGetActor, self),
-				RecallIntent ri => TranslateRecallIntentInternal(ri, state, self),
+				RecallIntent ri => TranslateRecallIntentInternal(ri, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
 				EchoIntent ei => TranslateEchoIntentInternal(ei, state.PhaseCtx, state.TryGetActor, self),
 				_ => TranslationResult.Fail(FailCode.UnknownIntent)
 			};
@@ -180,32 +180,24 @@ namespace CombatCore.InterOp
 		}
 
 		private static TranslationResult TranslateRecallIntentInternal(
-			RecallIntent intent, CombatState state, Actor self)
+			RecallIntent intent, PhaseContext phase, RecallView memory, 
+			TryGetActorById tryGetActor, Actor self)
 		{
 			// 一次/回合檢查
-			if (RecallUsedThisTurn(state.PhaseCtx)) return TranslationResult.Fail(FailCode.RecallUsed);
+			if (RecallUsedThisTurn(phase)) 
+				return TranslationResult.Fail(FailCode.RecallUsed);
 
-			// EchoStore full check
-			if (state.IsEchoStoreFull)
-				return TranslationResult.Fail(FailCode.EchoSlotsFull);
-
-			// 索引合法性檢查（包含空集合檢查）
-			var memory = state.GetRecallView();
-			FailCode fail = ValidateIndices(intent.RecallIndices, memory, state.PhaseCtx.TurnNum);
-
-			if (fail != FailCode.None) return TranslationResult.Fail(fail);
-
-			// 暫時開放 1L Echo
-			if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)
-				return TranslationResult.Fail(FailCode.IndexLimited); // 僅開放 1L
-
-
-			// AP 檢查
-			// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
+			// AP 檢查（核心責任）
 			int apCost = (self.AP != null) ? 1 : 0;
-			if (apCost > 0 && !self.HasAP(apCost)) return TranslationResult.Fail(FailCode.NoAP);
+			if (apCost > 0 && !self.HasAP(apCost)) 
+				return TranslationResult.Fail(FailCode.NoAP);
 
-			var sequence = intent.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
+			// RecipeId 合法性檢查（簡化版）
+			if (intent.RecipeId <= 0)
+				return TranslationResult.Fail(FailCode.NoRecipe);
+
+			// 建立 Plan（信任 UI 層已驗證索引）
+			var sequence = new ActionType[] { ActionType.A }; // TODO: 從 RecipeId 解析實際序列
 			var plan = new RecallPlan(self, sequence, apCost);
 			return TranslationResult.Pass(plan, intent);
 		}

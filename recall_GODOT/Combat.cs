@@ -127,13 +127,25 @@ public partial class Combat : Control
 	{
 		GD.Print($"[Combat] OnRecallConfirm: [{string.Join(", ", indices)}]");
 
-		// 設定 Recall 意圖
-		var intent = new RecallIntent(indices);
+		// 🔒 第一段：UI 層統一驗證
+		var result = RecallQuery.ValidateAndSelectRecipe(
+			indices, 
+			State.GetRecallView(), 
+			State.PhaseCtx.TurnNum);
+		
+		if (!result.IsValid)
+		{
+			GD.Print($"[Combat] Recall validation failed: {result.ErrorCode}");
+			// TODO: 顯示用戶友好的錯誤訊息
+			RefreshAllUI();
+			return;
+		}
 
-		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
-		GD.Print($"[Combat] Recall result: {result}, Step: {State.PhaseCtx.Step}");
-
-		// 刷新 UI
+		// ✅ 第二段：提交到簡化的 Translator
+		var intent = new RecallIntent(result.RecipeId);
+		var phaseResult = PhaseRunner.TryExecutePlayerAction(State, intent);
+		
+		GD.Print($"[Combat] Recall result: {phaseResult}, Step: {State.PhaseCtx.Step}");
 		RefreshAllUI();
 	}
 
