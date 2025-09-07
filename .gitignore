@@ -27,3 +27,5 @@ coveragereport/
 .godot/
 .import/
 .mono/
+/issue/
+*.txt
