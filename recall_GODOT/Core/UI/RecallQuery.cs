@@ -33,8 +33,13 @@ namespace CombatCore.UI
         public static RecallValidationResult ValidateAndSelectRecipe(
             int[] indices, 
             RecallView memory, 
-            int currentTurn)
+            int currentTurn,
+            bool isEchoStoreFull)
         {
+			// EchoStore full check
+			if (isEchoStoreFull)
+				return RecallValidationResult.Fail(FailCode.EchoSlotsFull);
+
             // 索引驗證（從 Translator 移出的邏輯）
             var indexValidation = ValidateIndices(indices, memory, currentTurn);
             if (indexValidation != FailCode.None)
