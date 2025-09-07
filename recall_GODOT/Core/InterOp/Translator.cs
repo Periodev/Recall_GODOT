@@ -154,12 +154,12 @@ namespace CombatCore.InterOp
 			TryGetActorById tryGetActor, Actor self)
 		{
 			// 一次/回合檢查
-			if (RecallUsedThisTurn(phase)) 
+			if (RecallUsedThisTurn(phase))
 				return TranslationResult.Fail(FailCode.RecallUsed);
 
 			// AP 檢查（核心責任）
 			int apCost = (self.AP != null) ? 1 : 0;
-			if (apCost > 0 && !self.HasAP(apCost)) 
+			if (apCost > 0 && !self.HasAP(apCost))
 				return TranslationResult.Fail(FailCode.NoAP);
 
 			// RecipeId 合法性檢查（簡化版）

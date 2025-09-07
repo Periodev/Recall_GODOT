@@ -5,6 +5,7 @@ using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
 using CombatCore.Recall;
+using CombatCore.UI;
 
 namespace CombatCore.Kernel
 {
@@ -28,7 +29,10 @@ namespace CombatCore.Kernel
 			var translationResult = Translator.TryTranslate(intent, state, actor);
 
 			if (!translationResult.Success)
+			{
+				SignalHub.NotifyError(translationResult.ErrorCode);
 				return TranslationResult.Fail(translationResult.ErrorCode);
+			}
 
 			var commands = InterOps.Build(translationResult.Plan);
 			return TranslationResult.Pass(commands, translationResult.OriginalIntent);

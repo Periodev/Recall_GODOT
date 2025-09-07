@@ -7,6 +7,7 @@ public partial class PlayerView : Node2D
 
 	[Export] public Label HpLabel;
 	[Export] public Label ShieldLabel;
+	[Export] public Label APLabel;
 	[Export] public Label CopyLabel;
 
 
@@ -29,5 +30,6 @@ public partial class PlayerView : Node2D
 		HpLabel.Text = $"HP: {_actor.HP.Value}/{_actor.HP.Max}";
 		CopyLabel.Text = $"Copy: {_actor.Copy?.Value ?? 0}/2";
 		ShieldLabel.Text = $"Shield: {_actor.Shield?.Value ?? 0}";
+		APLabel.Text = $"AP: {_actor.AP?.Value ?? 0}/{_actor.AP?.PerTurn}";
 	}
 }

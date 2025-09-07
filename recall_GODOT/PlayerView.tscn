@@ -2,22 +2,28 @@
 
 [ext_resource type="Script" uid="uid://drb6gylfe86wb" path="res://UIScript/PlayerView.cs" id="1_r3aac"]
 
-[node name="PlayerView" type="Node2D" node_paths=PackedStringArray("HpLabel", "ShieldLabel", "CopyLabel")]
+[node name="PlayerView" type="Node2D" node_paths=PackedStringArray("HpLabel", "ShieldLabel", "APLabel", "CopyLabel")]
 script = ExtResource("1_r3aac")
 HpLabel = NodePath("HpLabel")
 ShieldLabel = NodePath("ShieldLabel")
+APLabel = NodePath("APLabel")
 CopyLabel = NodePath("CopyLabel")
 
 [node name="HpLabel" type="Label" parent="."]
 offset_left = 99.0
 offset_right = 267.0
-offset_bottom = 80.0
+offset_bottom = 40.0
 
 [node name="ShieldLabel" type="Label" parent="."]
 offset_right = 63.0
 offset_bottom = 36.0
 
+[node name="APLabel" type="Label" parent="."]
+offset_top = 48.0
+offset_right = 64.0
+offset_bottom = 88.0
+
 [node name="CopyLabel" type="Label" parent="."]
-offset_top = 88.0
+offset_top = 112.0
 offset_right = 90.0
 offset_bottom = 171.0

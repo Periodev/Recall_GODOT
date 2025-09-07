@@ -15,6 +15,7 @@ namespace CombatCore.UI
 		public static Action<int>? OnShieldChanged { get; set; }
 		public static Action<int>? OnAPChanged { get; set; }
 
+		public static Action<FailCode>? OnErrorOccurred {get; set; }
 		public static Action? OnPlayerDrawComplete { get; set; }
 
 		public static void NotifyHPChanged(int value)
@@ -41,6 +42,12 @@ namespace CombatCore.UI
 		{
 			OnPlayerDrawComplete?.Invoke();
 		}
+
+		public static void NotifyError(FailCode failCode)
+		{
+			OnErrorOccurred?.Invoke(failCode);
+		}
+
 
 	}
 }

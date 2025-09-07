@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://c82pb1vuwbgl8"]
+[gd_scene load_steps=9 format=3 uid="uid://c82pb1vuwbgl8"]
 
 [ext_resource type="Script" uid="uid://dam1eokyyxylh" path="res://Combat.cs" id="1_vj48t"]
 [ext_resource type="Script" uid="uid://1t356q0hj5nv" path="res://CombatStateNode.cs" id="2_e5xpt"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://dqbfm5aptvpyf" path="res://RecallPanel.tscn" id="5_lnhn1"]
 [ext_resource type="PackedScene" uid="uid://ogmhcsudweq1" path="res://EnemyView.tscn" id="6_brs8u"]
 [ext_resource type="PackedScene" uid="uid://b462cro86qi7w" path="res://EchoPanel.tscn" id="7_e5xpt"]
+[ext_resource type="PackedScene" uid="uid://dd5xsqx1t2j8b" path="res://ErrorLabel.tscn" id="8_58mxa"]
 
 [node name="Combat" type="Control"]
 layout_mode = 3
@@ -14,7 +15,7 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatNode", "PlayerView", "EnemyView", "RecallPanel", "EchoPanel")]
+[node name="Control" type="Control" parent="." node_paths=PackedStringArray("CombatNode", "PlayerView", "EnemyView", "RecallPanel", "EchoPanel", "ErrorLabel")]
 visible = false
 anchors_preset = 0
 offset_right = 40.0
@@ -25,6 +26,7 @@ PlayerView = NodePath("../UI/PlayerView")
 EnemyView = NodePath("../UI/EnemyView")
 RecallPanel = NodePath("../UI/RecallPanel")
 EchoPanel = NodePath("../UI/EchoPanel")
+ErrorLabel = NodePath("../UI/ErrorLabel")
 
 [node name="CombatStateNode" type="Node" parent="."]
 script = ExtResource("2_e5xpt")
@@ -65,3 +67,9 @@ offset_top = 352.0
 offset_right = 608.0
 offset_bottom = 392.0
 CombatCtrl = NodePath("../../Control")
+
+[node name="ErrorLabel" parent="UI" instance=ExtResource("8_58mxa")]
+offset_left = 192.0
+offset_top = 392.0
+offset_right = 232.0
+offset_bottom = 432.0
