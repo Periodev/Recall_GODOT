@@ -8,6 +8,7 @@ public partial class RecallPanel : Control
 	public enum RecallState { EnemyPhase, PlayerPhase, Selecting }
 
 	[Export] public Button BtnRecall;
+	[Export] public Button BtnCheck;
 	[Export] public Button BtnConfirm;
 	[Export] public Button BtnCancel;
 	[Export] public Control Timeline;       // 內含 5 顆 BtnSlot*
@@ -23,6 +24,7 @@ public partial class RecallPanel : Control
 	{
 		// 綁定按鈕事件
 		if (BtnRecall != null) BtnRecall.Pressed += OnRecallPressed;
+		if (BtnCheck != null) BtnCheck.Pressed += OnCheckPressed;
 		if (BtnConfirm != null) BtnConfirm.Pressed += OnConfirmPressed;
 		if (BtnCancel != null) BtnCancel.Pressed += OnCancelPressed;
 
@@ -40,11 +42,11 @@ public partial class RecallPanel : Control
 
 		// 初始化
 		_currentTurnSlots = new bool[_slots.Count];
-
+		
 		// 初始狀態
 		SetState(RecallState.EnemyPhase);
 		//SetState(RecallState.PlayerPhase);
-
+		
 		//GD.Print($"[RecallPanel] Ready - {_slots.Count} slots, state: {_state}");
 	}
 
@@ -99,13 +101,13 @@ public partial class RecallPanel : Control
 	{
 		//GD.Print($"[RecallPanel] State: {_state} → {newState}");
 		_state = newState;
-
+		
 		// 清除選取（除非是在 Selecting 狀態內操作）
 		if (newState != RecallState.Selecting)
 		{
 			_selected.Clear();
 		}
-
+		
 		ApplyCurrentStateUI();
 	}
 
@@ -138,7 +140,7 @@ public partial class RecallPanel : Control
 	{
 		// 所有按鈕禁用
 		SetButtonStates(false, false, false);
-
+		
 		// 所有槽位禁用，恢復原色
 		foreach (var slot in _slots)
 		{
@@ -151,7 +153,7 @@ public partial class RecallPanel : Control
 	{
 		// Recall 可用，其他禁用
 		SetButtonStates(true, false, false);
-
+		
 		// 槽位純顯示，不可點擊，恢復原色
 		foreach (var slot in _slots)
 		{
@@ -164,18 +166,18 @@ public partial class RecallPanel : Control
 	{
 		// Recall 禁用，Cancel 可用，Confirm 動態
 		SetButtonStates(false, _selected.Count > 0, true);
-
+		
 		// 槽位根據條件設定
 		for (int i = 0; i < _slots.Count; i++)
 		{
 			var slot = _slots[i];
-
+			
 			// 空槽位或本回合的槽位不可選
 			bool isEmptySlot = (i >= _currentTurnSlots.Length) || (slot.Text == "-");
 			bool isCurrentTurn = (i < _currentTurnSlots.Length) && _currentTurnSlots[i];
-
+			
 			slot.Disabled = isEmptySlot || isCurrentTurn;
-
+			
 			// 更新選取外觀
 			UpdateSlotAppearance(i, _selected.Contains(i));
 		}
@@ -187,7 +189,7 @@ public partial class RecallPanel : Control
 	{
 		if (_state != RecallState.Selecting) return;
 		if (_slots[idx].Disabled) return;
-
+		
 		// 切換選取狀態
 		bool wasSelected = _selected.Contains(idx);
 		if (wasSelected)
@@ -198,12 +200,12 @@ public partial class RecallPanel : Control
 		{
 			_selected.Add(idx);
 		}
-
+		
 		// 更新視覺外觀
 		UpdateSlotAppearance(idx, !wasSelected);
-
+		
 		//GD.Print($"[RecallPanel] Slot {idx} {(wasSelected ? "deselected" : "selected")}, total: {_selected.Count}");
-
+		
 		// 動態更新 Confirm 按鈕
 		SetButtonStates(false, _selected.Count > 0, true);
 	}
@@ -228,6 +230,12 @@ public partial class RecallPanel : Control
 		if (_state != RecallState.PlayerPhase) return;
 		SetState(RecallState.Selecting);
 	}
+
+	private void OnCheckPressed()
+	{
+
+	}
+
 
 	private void OnConfirmPressed()
 	{
