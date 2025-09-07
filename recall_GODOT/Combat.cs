@@ -19,7 +19,7 @@ public partial class Combat : Control
 	[Export] public EnemyView EnemyView;
 	[Export] public RecallPanel RecallPanel;
 	[Export] public EchoPanel EchoPanel;
-
+	[Export] public ErrorLabel ErrorLabel;
 
 	public CombatState State => CombatNode!.State;
 
@@ -147,6 +147,10 @@ public partial class Combat : Control
 
 		// Phase 事件監聽
 		SignalHub.OnPlayerDrawComplete += OnPlayerDrawComplete;
+
+		// Error message
+		SignalHub.OnErrorOccurred += ShowError;
+
 	}
 
 	private void CleanupUIListeners()
@@ -156,6 +160,7 @@ public partial class Combat : Control
 		SignalHub.OnShieldChanged -= OnStatusChanged;
 		SignalHub.OnAPChanged -= OnStatusChanged;
 		SignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
+		SignalHub.OnErrorOccurred -= ShowError;
 	}
 
 	private void BindActorsToUI()
@@ -247,6 +252,11 @@ public partial class Combat : Control
 		{
 			RecallPanel?.EnterPlayerPhase();
 		}
+	}
+
+	private void ShowError(FailCode code)
+	{
+		ErrorLabel.ShowError(code);
 	}
 
 
