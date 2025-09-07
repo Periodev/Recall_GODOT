@@ -123,26 +123,12 @@ public partial class Combat : Control
 	/// <summary>
 	/// 處理 Recall 確認
 	/// </summary>
-	private void OnRecallConfirm(int[] indices)
+	private void OnRecallConfirm(int recipeId)
 	{
-		GD.Print($"[Combat] OnRecallConfirm: [{string.Join(", ", indices)}]");
+		GD.Print($"[Combat] OnRecallConfirm: recipeId={recipeId}");
 
-		// 🔒 第一段：UI 層統一驗證
-		var result = RecallQuery.ValidateAndSelectRecipe(
-			indices,
-			State.GetRecallView(),
-			State.PhaseCtx.TurnNum);
-
-		if (!result.IsValid)
-		{
-			GD.Print($"[Combat] Recall validation failed: {result.ErrorCode}");
-			// TODO: 顯示用戶友好的錯誤訊息
-			RefreshAllUI();
-			return;
-		}
-
-		// ✅ 第二段：提交到簡化的 Translator
-		var intent = new RecallIntent(result.RecipeId);
+		// ✅ RecipeId 已通過 UI 層驗證，直接提交到 Translator
+		var intent = new RecallIntent(recipeId);
 		var phaseResult = PhaseRunner.TryExecutePlayerAction(State, intent);
 
 		GD.Print($"[Combat] Recall result: {phaseResult}, Step: {State.PhaseCtx.Step}");

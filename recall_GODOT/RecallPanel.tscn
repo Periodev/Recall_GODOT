@@ -10,7 +10,7 @@ offset_right = 271.0
 offset_bottom = 84.0
 script = ExtResource("1_ty0qy")
 BtnRecall = NodePath("VBoxContainer/BtnRecall")
-BtnCheck = NodePath("VBoxContainer/BtinCheck")
+BtnCheck = NodePath("VBoxContainer/BtnCheck")
 BtnConfirm = NodePath("VBoxContainer/BtnConfirm")
 BtnCancel = NodePath("VBoxContainer/BtnCancel")
 Timeline = NodePath("Timeline")
@@ -26,7 +26,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Recall"
 
-[node name="BtinCheck" type="Button" parent="VBoxContainer"]
+[node name="BtnCheck" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Check"
 
