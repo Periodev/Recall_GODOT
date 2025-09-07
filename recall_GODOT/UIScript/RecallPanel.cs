@@ -20,6 +20,10 @@ public partial class RecallPanel : Control
 	private List<int> _selected = new();
 	private bool[] _currentTurnSlots = Array.Empty<bool>(); // 本回合的槽位（不可選）
 	private int _validatedRecipeId = -1; // Check 通過後存儲的 RecipeId
+	
+	// 委派函數用於獲取驗證所需數據
+	public System.Func<RecallView> GetRecallView;
+	public System.Func<int> GetCurrentTurn;
 
 	public override void _Ready()
 	{
@@ -255,26 +259,31 @@ public partial class RecallPanel : Control
 	private void OnCheckPressed()
 	{
 		if (_state != RecallState.Selecting || _selected.Count == 0) return;
+		if (GetRecallView == null || GetCurrentTurn == null)
+		{
+			GD.Print("[RecallPanel] Error: GetRecallView or GetCurrentTurn delegates not set");
+			return;
+		}
 
 		GD.Print($"[RecallPanel] Check pressed with selection: [{string.Join(", ", _selected)}]");
 
-		// TODO: 等待 RecallQuery 實現後，用以下邏輯替換
-		// var result = RecallQuery.ValidateAndSelectRecipe(
-		//     _selected.ToArray(),
-		//     GetRecallView(),
-		//     GetCurrentTurn());
-		
-		// 暫時的模擬實現
-		if (_selected.Count > 0)
+		// 🔒 第一段：UI 層統一驗證
+		var result = CombatCore.UI.RecallQuery.ValidateAndSelectRecipe(
+			_selected.ToArray(),
+			GetRecallView(),
+			GetCurrentTurn());
+
+		if (!result.IsValid)
 		{
-			_validatedRecipeId = 101; // 暫時固定值
-			SetState(RecallState.Checked);
-			GD.Print($"[RecallPanel] Recipe validated (mock): {_validatedRecipeId}");
+			GD.Print($"[RecallPanel] Validation failed: {result.ErrorCode}");
+			// TODO: 顯示用戶友好的錯誤訊息
+			return;
 		}
-		else
-		{
-			GD.Print("[RecallPanel] Validation failed: No selection");
-		}
+
+		// ✅ 驗證成功，進入 Checked 狀態
+		_validatedRecipeId = result.RecipeId;
+		SetState(RecallState.Checked);
+		GD.Print($"[RecallPanel] Recipe validated successfully: {_validatedRecipeId}");
 	}
 
 
