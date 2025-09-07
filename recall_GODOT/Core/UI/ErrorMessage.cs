@@ -18,6 +18,6 @@ namespace CombatCore.UI
             };
 
         public static string Get(FailCode code)
-            => Map.TryGetValue(code, out var s) ? s : "";
+            => Map.TryGetValue(code, out var s) ? s : "Unknown";
     }
 }

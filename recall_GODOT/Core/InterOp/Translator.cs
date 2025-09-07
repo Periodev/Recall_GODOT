@@ -6,7 +6,6 @@ using CombatCore;
 using CombatCore.InterOp;
 using CombatCore.Command;
 using CombatCore.Recall;
-using CombatCore.UI;
 using static CombatCore.GameConst;
 
 namespace CombatCore
@@ -51,11 +50,8 @@ namespace CombatCore.InterOp
 		public static TranslationResult Pass(Plan plan, Intent intent) =>
 			new(true, FailCode.None, plan, intent);
 
-		public static TranslationResult Fail(FailCode code)
-		{
-			SignalHub.NotifyError(code);
-			return new (false, code, null!, null!);
-		}
+		public static TranslationResult Fail(FailCode code) =>
+			new(false, code, null!, null!);
 	}
 
 	public sealed class Translator
