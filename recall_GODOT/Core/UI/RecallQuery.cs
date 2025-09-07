@@ -19,10 +19,14 @@ namespace CombatCore.UI
             RecipeId = recipeId;
         }
         
-        public static RecallValidationResult Success(int recipeId) => 
+        public static RecallValidationResult Pass(int recipeId) => 
             new(true, FailCode.None, recipeId);
-        public static RecallValidationResult Fail(FailCode code) => 
-            new(false, code, -1);
+
+        public static RecallValidationResult Fail(FailCode code)
+        {
+            SignalHub.NotifyError(code);
+            return new(false, code, -1);
+        }
     }
 
     public static class RecallQuery
@@ -53,7 +57,7 @@ namespace CombatCore.UI
             
             Debug.Print($"[Recipe]: {recipeId}");
 
-            return RecallValidationResult.Success(recipeId);
+            return RecallValidationResult.Pass(recipeId);
         }
 
         /// <summary>
