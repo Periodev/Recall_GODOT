@@ -26,7 +26,7 @@ namespace CombatCore.Kernel
 		public static TranslationResult TranslateIntent(CombatState state, Actor actor, Intent intent)
 		{
 			var translationResult = Translator.TryTranslate(intent, state, actor);
-				
+
 			if (!translationResult.Success)
 				return TranslationResult.Fail(translationResult.ErrorCode);
 
@@ -132,11 +132,21 @@ namespace CombatCore.Kernel
 
 			if (intent is RecallIntent recallIntent)
 			{
-				state.PhaseCtx.MarkRecallUsed();
-
+				// 先組裝序列與 Echo，但「不要先 MarkRecallUsed」
 				var sequence = RebuildMemSeq(state.GetRecallView(), recallIntent);
 				var echo = Echo.Build(sequence, state.PhaseCtx.TurnNum);
-				state.echoStore.TryAdd(echo);
+
+				// 硬性防線：只有實際加入成功才視為本回合已使用 Recall
+				if (state.echoStore.TryAdd(echo) == FailCode.None)
+				{
+					state.PhaseCtx.MarkRecallUsed();
+				}
+				else
+				{
+					// Echo 槽滿或加入失敗 → 不標記 RecallUsed、不寫入 Memory
+					// （若執行階段已扣 AP，這裡可視設計加「AP 還原」邏輯）
+					return;
+				}
 			}
 
 			// 新增 Echo 處理
