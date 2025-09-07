@@ -90,36 +90,6 @@ namespace CombatCore.InterOp
 			};
 		}
 
-		// 索引驗證
-		private static FailCode ValidateIndices(int[] indices, RecallView memory, int currentTurn)
-		{
-
-			// 空索引防呆：避免花 1 AP 做空操作
-			if (indices.Length == 0) return FailCode.BadIndex;
-
-			// 檢查索引範圍和重複
-			if (indices.Any(idx => idx < 0 || idx >= memory.Count) ||
-				indices.Distinct().Count() != indices.Length)
-			{
-				return FailCode.IndexOutOfBound;
-			}
-
-			// 排除本回合：檢查是否引用當前回合的記憶
-			if (indices.Any(idx => memory.Turns[idx] == currentTurn))
-			{
-				return FailCode.IndexLimited;
-			}
-
-			// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）
-			var span = indices.Distinct().OrderBy(x => x).ToArray();
-			for (int i = 1; i < span.Length; i++)
-			{
-				if (span[i] != span[i - 1] + 1)
-					return FailCode.IndixNotContiguous;
-			}
-
-			return FailCode.None;
-		}
 
 		// 輔助方法
 		private static Actor? ResolveTarget(int? id, TryGetActorById tryGetActor) =>

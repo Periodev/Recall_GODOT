@@ -129,10 +129,10 @@ public partial class Combat : Control
 
 		// 🔒 第一段：UI 層統一驗證
 		var result = RecallQuery.ValidateAndSelectRecipe(
-			indices, 
-			State.GetRecallView(), 
+			indices,
+			State.GetRecallView(),
 			State.PhaseCtx.TurnNum);
-		
+
 		if (!result.IsValid)
 		{
 			GD.Print($"[Combat] Recall validation failed: {result.ErrorCode}");
@@ -144,7 +144,7 @@ public partial class Combat : Control
 		// ✅ 第二段：提交到簡化的 Translator
 		var intent = new RecallIntent(result.RecipeId);
 		var phaseResult = PhaseRunner.TryExecutePlayerAction(State, intent);
-		
+
 		GD.Print($"[Combat] Recall result: {phaseResult}, Step: {State.PhaseCtx.Step}");
 		RefreshAllUI();
 	}
@@ -280,7 +280,7 @@ public partial class Combat : Control
 		{
 			Id = 1,
 			RecipeId = 1,
-			Name = "Basic Attack",
+			Name = "Attack",
 			RecipeLabel = "A",
 			Summary = "[Test] Basic attack",
 			CostAP = 1,
@@ -293,7 +293,7 @@ public partial class Combat : Control
 		{
 			Id = 2,
 			RecipeId = 102,
-			Name = "Basic Block",
+			Name = "Block",
 			RecipeLabel = "B",
 			Summary = "[Test] Basic Block",
 			CostAP = 1,

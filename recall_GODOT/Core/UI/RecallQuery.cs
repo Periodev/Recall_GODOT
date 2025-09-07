@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Diagnostics;
+
 using CombatCore;
 
 namespace CombatCore.UI
@@ -44,6 +46,8 @@ namespace CombatCore.UI
             // TODO: 等待 RecipeSystem 實現，暫時返回固定 recipeId
             int recipeId = 101; // 臨時實現
             
+            Debug.Print($"[Recipe]: {recipeId}");
+
             return RecallValidationResult.Success(recipeId);
         }
 
@@ -67,6 +71,14 @@ namespace CombatCore.UI
             {
                 return FailCode.IndexLimited;
             }
+
+			// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）
+			var span = indices.Distinct().OrderBy(x => x).ToArray();
+			for (int i = 1; i < span.Length; i++)
+			{
+				if (span[i] != span[i - 1] + 1)
+					return FailCode.IndixNotContiguous;
+			}
 
             return FailCode.None;
         }
