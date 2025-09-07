@@ -123,7 +123,7 @@ public partial class Combat : Control
 	/// <summary>
 	/// 處理 Recall 確認
 	/// </summary>
-	private void OnRecallConfirm(int recipeId)
+	public void OnRecallConfirm(int recipeId)
 	{
 		GD.Print($"[Combat] OnRecallConfirm: recipeId={recipeId}");
 
@@ -147,9 +147,6 @@ public partial class Combat : Control
 
 		// Phase 事件監聽
 		SignalHub.OnPlayerDrawComplete += OnPlayerDrawComplete;
-
-		// Recall 事件監聽
-		RecallPanel.ConfirmPressed += OnRecallConfirm;
 	}
 
 	private void CleanupUIListeners()
@@ -159,11 +156,6 @@ public partial class Combat : Control
 		SignalHub.OnShieldChanged -= OnStatusChanged;
 		SignalHub.OnAPChanged -= OnStatusChanged;
 		SignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
-
-		if (RecallPanel != null)
-		{
-			RecallPanel.ConfirmPressed -= OnRecallConfirm;
-		}
 	}
 
 	private void BindActorsToUI()

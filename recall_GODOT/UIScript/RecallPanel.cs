@@ -14,8 +14,6 @@ public partial class RecallPanel : Control
 	[Export] public Button BtnCancel;
 	[Export] public Control Timeline;       // 內含 5 顆 BtnSlot*
 
-	[Signal] public delegate void ConfirmPressedEventHandler(int recipeId); // 改為 recipeId 而不是 indices
-
 	private readonly List<Button> _slots = new();
 	private RecallState _state = RecallState.EnemyPhase;
 	private List<int> _selected = new();
@@ -291,8 +289,8 @@ public partial class RecallPanel : Control
 
 		GD.Print($"[RecallPanel] Confirm with validated recipeId: {_validatedRecipeId}");
 		
-		// 發送 RecipeId 而不是原始索引
-		EmitSignal(SignalName.ConfirmPressed, _validatedRecipeId);
+		// 直接調用 Combat 方法，而不是 EmitSignal
+		CombatCtrl?.OnRecallConfirm(_validatedRecipeId);
 
 		// 重置狀態
 		_validatedRecipeId = -1;
