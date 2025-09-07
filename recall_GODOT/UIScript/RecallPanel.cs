@@ -5,24 +5,26 @@ using CombatCore; // 為了 ActionType
 
 public partial class RecallPanel : Control
 {
-	public enum RecallState { EnemyPhase, PlayerPhase, Selecting }
+	public enum RecallState { EnemyPhase, PlayerPhase, Selecting, Checked }
 
+	[Export] public Combat CombatCtrl;
 	[Export] public Button BtnRecall;
+	[Export] public Button BtnCheck;
 	[Export] public Button BtnConfirm;
 	[Export] public Button BtnCancel;
 	[Export] public Control Timeline;       // 內含 5 顆 BtnSlot*
-
-	[Signal] public delegate void ConfirmPressedEventHandler(int[] indices);
 
 	private readonly List<Button> _slots = new();
 	private RecallState _state = RecallState.EnemyPhase;
 	private List<int> _selected = new();
 	private bool[] _currentTurnSlots = Array.Empty<bool>(); // 本回合的槽位（不可選）
+	private int _validatedRecipeId = -1; // Check 通過後存儲的 RecipeId
 
 	public override void _Ready()
 	{
 		// 綁定按鈕事件
 		if (BtnRecall != null) BtnRecall.Pressed += OnRecallPressed;
+		if (BtnCheck != null) BtnCheck.Pressed += OnCheckPressed;
 		if (BtnConfirm != null) BtnConfirm.Pressed += OnConfirmPressed;
 		if (BtnCancel != null) BtnCancel.Pressed += OnCancelPressed;
 
@@ -122,14 +124,18 @@ public partial class RecallPanel : Control
 			case RecallState.Selecting:
 				SetSelectingUI();
 				break;
+			case RecallState.Checked:
+				SetCheckedUI();
+				break;
 		}
 	}
 
 	// === 輔助方法 === //
 
-	private void SetButtonStates(bool recallEnabled, bool confirmEnabled, bool cancelEnabled)
+	private void SetButtonStates(bool recallEnabled, bool checkEnabled, bool confirmEnabled, bool cancelEnabled)
 	{
 		if (BtnRecall != null) BtnRecall.Disabled = !recallEnabled;
+		if (BtnCheck != null) BtnCheck.Disabled = !checkEnabled;
 		if (BtnConfirm != null) BtnConfirm.Disabled = !confirmEnabled;
 		if (BtnCancel != null) BtnCancel.Disabled = !cancelEnabled;
 	}
@@ -137,7 +143,7 @@ public partial class RecallPanel : Control
 	private void SetEnemyPhaseUI()
 	{
 		// 所有按鈕禁用
-		SetButtonStates(false, false, false);
+		SetButtonStates(false, false, false, false);
 
 		// 所有槽位禁用，恢復原色
 		foreach (var slot in _slots)
@@ -150,7 +156,7 @@ public partial class RecallPanel : Control
 	private void SetPlayerPhaseUI()
 	{
 		// Recall 可用，其他禁用
-		SetButtonStates(true, false, false);
+		SetButtonStates(true, false, false, false);
 
 		// 槽位純顯示，不可點擊，恢復原色
 		foreach (var slot in _slots)
@@ -162,8 +168,8 @@ public partial class RecallPanel : Control
 
 	private void SetSelectingUI()
 	{
-		// Recall 禁用，Cancel 可用，Confirm 動態
-		SetButtonStates(false, _selected.Count > 0, true);
+		// Recall 禁用，Check 動態，Cancel 可用，Confirm 禁用
+		SetButtonStates(false, _selected.Count > 0, false, true);
 
 		// 槽位根據條件設定
 		for (int i = 0; i < _slots.Count; i++)
@@ -177,6 +183,22 @@ public partial class RecallPanel : Control
 			slot.Disabled = isEmptySlot || isCurrentTurn;
 
 			// 更新選取外觀
+			UpdateSlotAppearance(i, _selected.Contains(i));
+		}
+	}
+
+	private void SetCheckedUI()
+	{
+		// Check 完成後：只有 Confirm 和 Cancel 可用
+		SetButtonStates(false, false, true, true);
+
+		// 槽位保持選中外觀但禁用點擊
+		for (int i = 0; i < _slots.Count; i++)
+		{
+			var slot = _slots[i];
+			slot.Disabled = true;
+
+			// 保持選中的視覺效果
 			UpdateSlotAppearance(i, _selected.Contains(i));
 		}
 	}
@@ -204,8 +226,8 @@ public partial class RecallPanel : Control
 
 		//GD.Print($"[RecallPanel] Slot {idx} {(wasSelected ? "deselected" : "selected")}, total: {_selected.Count}");
 
-		// 動態更新 Confirm 按鈕
-		SetButtonStates(false, _selected.Count > 0, true);
+		// 動態更新 Check 按鈕
+		SetButtonStates(false, _selected.Count > 0, false, true);
 	}
 
 	private void UpdateSlotAppearance(int idx, bool selected)
@@ -229,19 +251,59 @@ public partial class RecallPanel : Control
 		SetState(RecallState.Selecting);
 	}
 
-	private void OnConfirmPressed()
+	private void OnCheckPressed()
 	{
 		if (_state != RecallState.Selecting || _selected.Count == 0) return;
 
-		//GD.Print($"[RecallPanel] Confirm with selection: [{string.Join(", ", _selected)}]");
-		EmitSignal(SignalName.ConfirmPressed, _selected.ToArray());
+		if (CombatCtrl == null)
+		{
+			GD.Print("[RecallPanel] Error: CombatCtrl not set in Inspector");
+			return;
+		}
 
+		GD.Print($"[RecallPanel] Check pressed with selection: [{string.Join(", ", _selected)}]");
+
+		// 🔒 第一段：UI 層統一驗證 - 直接使用 CombatCtrl
+		var result = CombatCore.UI.RecallQuery.ValidateAndSelectRecipe(
+			_selected.ToArray(),
+			CombatCtrl.State.GetRecallView(),
+			CombatCtrl.State.PhaseCtx.TurnNum,
+			CombatCtrl.State.IsEchoStoreFull);
+
+		if (!result.IsValid)
+		{
+			GD.Print($"[RecallPanel] Validation failed: {result.ErrorCode}");
+			// TODO: 顯示用戶友好的錯誤訊息
+			return;
+		}
+
+		// ✅ 驗證成功，進入 Checked 狀態
+		_validatedRecipeId = result.RecipeId;
+		SetState(RecallState.Checked);
+		GD.Print($"[RecallPanel] Recipe validated successfully: {_validatedRecipeId}");
+	}
+
+
+	private void OnConfirmPressed()
+	{
+		if (_state != RecallState.Checked || _validatedRecipeId <= 0) return;
+
+		GD.Print($"[RecallPanel] Confirm with validated recipeId: {_validatedRecipeId}");
+
+		// 直接調用 Combat 方法，而不是 EmitSignal
+		CombatCtrl?.OnRecallConfirm(_validatedRecipeId);
+
+		// 重置狀態
+		_validatedRecipeId = -1;
 		SetState(RecallState.PlayerPhase);
 	}
 
 	private void OnCancelPressed()
 	{
-		if (_state != RecallState.Selecting) return;
+		if (_state != RecallState.Selecting && _state != RecallState.Checked) return;
+
+		// 重置驗證狀態
+		_validatedRecipeId = -1;
 		SetState(RecallState.PlayerPhase);
 	}
 

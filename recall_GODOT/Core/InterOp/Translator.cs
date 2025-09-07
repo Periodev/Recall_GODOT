@@ -13,7 +13,7 @@ namespace CombatCore
 	public delegate bool TryGetActorById(int id, out Actor actor);
 	public abstract record Intent(int? TargetId);
 	public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
-	public sealed record RecallIntent(int[] RecallIndices) : Intent((int?)null);
+	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
 	public sealed record EchoIntent(Echo Echo, int? TargetId, int SlotIndex) : Intent(TargetId);
 
 	public readonly struct RecallView
@@ -70,7 +70,7 @@ namespace CombatCore.InterOp
 			{
 
 				BasicIntent bi => TranslateBasicIntentInternal(bi, state.PhaseCtx, state.TryGetActor, self),
-				RecallIntent ri => TranslateRecallIntentInternal(ri, state, self),
+				RecallIntent ri => TranslateRecallIntentInternal(ri, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
 				EchoIntent ei => TranslateEchoIntentInternal(ei, state.PhaseCtx, state.TryGetActor, self),
 				_ => TranslationResult.Fail(FailCode.UnknownIntent)
 			};
@@ -90,36 +90,6 @@ namespace CombatCore.InterOp
 			};
 		}
 
-		// 索引驗證
-		private static FailCode ValidateIndices(int[] indices, RecallView memory, int currentTurn)
-		{
-
-			// 空索引防呆：避免花 1 AP 做空操作
-			if (indices.Length == 0) return FailCode.BadIndex;
-
-			// 檢查索引範圍和重複
-			if (indices.Any(idx => idx < 0 || idx >= memory.Count) ||
-				indices.Distinct().Count() != indices.Length)
-			{
-				return FailCode.IndexOutOfBound;
-			}
-
-			// 排除本回合：檢查是否引用當前回合的記憶
-			if (indices.Any(idx => memory.Turns[idx] == currentTurn))
-			{
-				return FailCode.IndexLimited;
-			}
-
-			// 連續性檢查：去重 + 由小到大排序 → 相鄰索引必須差 1（預留給未來 2L/3L）
-			var span = indices.Distinct().OrderBy(x => x).ToArray();
-			for (int i = 1; i < span.Length; i++)
-			{
-				if (span[i] != span[i - 1] + 1)
-					return FailCode.IndixNotContiguous;
-			}
-
-			return FailCode.None;
-		}
 
 		// 輔助方法
 		private static Actor? ResolveTarget(int? id, TryGetActorById tryGetActor) =>
@@ -180,32 +150,24 @@ namespace CombatCore.InterOp
 		}
 
 		private static TranslationResult TranslateRecallIntentInternal(
-			RecallIntent intent, CombatState state, Actor self)
+			RecallIntent intent, PhaseContext phase, RecallView memory, 
+			TryGetActorById tryGetActor, Actor self)
 		{
 			// 一次/回合檢查
-			if (RecallUsedThisTurn(state.PhaseCtx)) return TranslationResult.Fail(FailCode.RecallUsed);
+			if (RecallUsedThisTurn(phase)) 
+				return TranslationResult.Fail(FailCode.RecallUsed);
 
-			// EchoStore full check
-			if (state.IsEchoStoreFull)
-				return TranslationResult.Fail(FailCode.EchoSlotsFull);
-
-			// 索引合法性檢查（包含空集合檢查）
-			var memory = state.GetRecallView();
-			FailCode fail = ValidateIndices(intent.RecallIndices, memory, state.PhaseCtx.TurnNum);
-
-			if (fail != FailCode.None) return TranslationResult.Fail(fail);
-
-			// 暫時開放 1L Echo
-			if (intent.RecallIndices == null || intent.RecallIndices.Length != 1)
-				return TranslationResult.Fail(FailCode.IndexLimited); // 僅開放 1L
-
-
-			// AP 檢查
-			// Recall 的 AP cost: 如果角色有 AP 系統，則消耗 1，否則為 0
+			// AP 檢查（核心責任）
 			int apCost = (self.AP != null) ? 1 : 0;
-			if (apCost > 0 && !self.HasAP(apCost)) return TranslationResult.Fail(FailCode.NoAP);
+			if (apCost > 0 && !self.HasAP(apCost)) 
+				return TranslationResult.Fail(FailCode.NoAP);
 
-			var sequence = intent.RecallIndices.Select(idx => memory.Ops[idx]).ToArray();
+			// RecipeId 合法性檢查（簡化版）
+			if (intent.RecipeId <= 0)
+				return TranslationResult.Fail(FailCode.NoRecipe);
+
+			// 建立 Plan（信任 UI 層已驗證索引）
+			var sequence = new ActionType[] { ActionType.A }; // TODO: 從 RecipeId 解析實際序列
 			var plan = new RecallPlan(self, sequence, apCost);
 			return TranslationResult.Pass(plan, intent);
 		}

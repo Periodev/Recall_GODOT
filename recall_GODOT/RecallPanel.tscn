@@ -3,40 +3,43 @@
 [ext_resource type="PackedScene" uid="uid://bpc2p5fd8gggf" path="res://TimelineSelector.tscn" id="1_neier"]
 [ext_resource type="Script" uid="uid://dm2aen53gq2t6" path="res://UIScript/RecallPanel.cs" id="1_ty0qy"]
 
-
-[node name="RecallPanel" type="Control" node_paths=PackedStringArray("BtnRecall", "BtnConfirm", "BtnCancel", "Timeline")]
+[node name="RecallPanel" type="Control" node_paths=PackedStringArray("BtnRecall", "BtnCheck", "BtnConfirm", "BtnCancel", "Timeline")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 271.0
 offset_bottom = 84.0
 script = ExtResource("1_ty0qy")
-BtnRecall = NodePath("HBoxContainer/BtnRecall")
-BtnConfirm = NodePath("HBoxContainer/BtnConfirm")
-BtnCancel = NodePath("HBoxContainer/BtnCancel")
+BtnRecall = NodePath("VBoxContainer/BtnRecall")
+BtnCheck = NodePath("VBoxContainer/BtnCheck")
+BtnConfirm = NodePath("VBoxContainer/BtnConfirm")
+BtnCancel = NodePath("VBoxContainer/BtnCancel")
 Timeline = NodePath("Timeline")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_right = 268.0
-offset_bottom = 79.0
+offset_left = 280.0
+offset_right = 360.0
+offset_bottom = 136.0
 
-[node name="BtnRecall" type="Button" parent="HBoxContainer"]
+[node name="BtnRecall" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Recall"
 
-[node name="BtnConfirm" type="Button" parent="HBoxContainer"]
+[node name="BtnCheck" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Check"
+
+[node name="BtnConfirm" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Confirm"
 
-[node name="BtnCancel" type="Button" parent="HBoxContainer"]
+[node name="BtnCancel" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Cancel"
 
 [node name="Timeline" parent="." instance=ExtResource("1_neier")]
-offset_left = 3.0
-offset_top = 119.0
-offset_right = 43.0
-offset_bottom = 159.0
+offset_top = 80.0
+offset_bottom = 120.0

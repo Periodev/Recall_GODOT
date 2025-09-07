@@ -49,11 +49,12 @@ offset_right = 868.0
 offset_bottom = 208.0
 text = "Enemy"
 
-[node name="RecallPanel" parent="UI" instance=ExtResource("5_lnhn1")]
+[node name="RecallPanel" parent="UI" node_paths=PackedStringArray("CombatCtrl") instance=ExtResource("5_lnhn1")]
 offset_left = 192.0
 offset_top = 440.0
 offset_right = 466.0
 offset_bottom = 514.0
+CombatCtrl = NodePath("../../Control")
 
 [node name="EnemyView" parent="UI" instance=ExtResource("6_brs8u")]
 position = Vector2(743, 258)

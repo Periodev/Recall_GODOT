@@ -123,17 +123,15 @@ public partial class Combat : Control
 	/// <summary>
 	/// 處理 Recall 確認
 	/// </summary>
-	private void OnRecallConfirm(int[] indices)
+	public void OnRecallConfirm(int recipeId)
 	{
-		GD.Print($"[Combat] OnRecallConfirm: [{string.Join(", ", indices)}]");
+		GD.Print($"[Combat] OnRecallConfirm: recipeId={recipeId}");
 
-		// 設定 Recall 意圖
-		var intent = new RecallIntent(indices);
+		// ✅ RecipeId 已通過 UI 層驗證，直接提交到 Translator
+		var intent = new RecallIntent(recipeId);
+		var phaseResult = PhaseRunner.TryExecutePlayerAction(State, intent);
 
-		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
-		GD.Print($"[Combat] Recall result: {result}, Step: {State.PhaseCtx.Step}");
-
-		// 刷新 UI
+		GD.Print($"[Combat] Recall result: {phaseResult}, Step: {State.PhaseCtx.Step}");
 		RefreshAllUI();
 	}
 
@@ -149,9 +147,6 @@ public partial class Combat : Control
 
 		// Phase 事件監聽
 		SignalHub.OnPlayerDrawComplete += OnPlayerDrawComplete;
-
-		// Recall 事件監聽
-		RecallPanel.ConfirmPressed += OnRecallConfirm;
 	}
 
 	private void CleanupUIListeners()
@@ -161,11 +156,6 @@ public partial class Combat : Control
 		SignalHub.OnShieldChanged -= OnStatusChanged;
 		SignalHub.OnAPChanged -= OnStatusChanged;
 		SignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
-
-		if (RecallPanel != null)
-		{
-			RecallPanel.ConfirmPressed -= OnRecallConfirm;
-		}
 	}
 
 	private void BindActorsToUI()
@@ -268,7 +258,7 @@ public partial class Combat : Control
 		{
 			Id = 1,
 			RecipeId = 1,
-			Name = "Basic Attack",
+			Name = "Attack",
 			RecipeLabel = "A",
 			Summary = "[Test] Basic attack",
 			CostAP = 1,
@@ -281,7 +271,7 @@ public partial class Combat : Control
 		{
 			Id = 2,
 			RecipeId = 102,
-			Name = "Basic Block",
+			Name = "Block",
 			RecipeLabel = "B",
 			Summary = "[Test] Basic Block",
 			CostAP = 1,
