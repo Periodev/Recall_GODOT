@@ -7,6 +7,7 @@ public partial class RecallPanel : Control
 {
 	public enum RecallState { EnemyPhase, PlayerPhase, Selecting, Checked }
 
+	[Export] public Combat CombatCtrl;
 	[Export] public Button BtnRecall;
 	[Export] public Button BtnCheck;
 	[Export] public Button BtnConfirm;
@@ -20,10 +21,6 @@ public partial class RecallPanel : Control
 	private List<int> _selected = new();
 	private bool[] _currentTurnSlots = Array.Empty<bool>(); // 本回合的槽位（不可選）
 	private int _validatedRecipeId = -1; // Check 通過後存儲的 RecipeId
-	
-	// 委派函數用於獲取驗證所需數據
-	public System.Func<RecallView> GetRecallView;
-	public System.Func<int> GetCurrentTurn;
 
 	public override void _Ready()
 	{
@@ -259,19 +256,20 @@ public partial class RecallPanel : Control
 	private void OnCheckPressed()
 	{
 		if (_state != RecallState.Selecting || _selected.Count == 0) return;
-		if (GetRecallView == null || GetCurrentTurn == null)
+		
+		if (CombatCtrl == null)
 		{
-			GD.Print("[RecallPanel] Error: GetRecallView or GetCurrentTurn delegates not set");
+			GD.Print("[RecallPanel] Error: CombatCtrl not set in Inspector");
 			return;
 		}
 
 		GD.Print($"[RecallPanel] Check pressed with selection: [{string.Join(", ", _selected)}]");
 
-		// 🔒 第一段：UI 層統一驗證
+		// 🔒 第一段：UI 層統一驗證 - 直接使用 CombatCtrl
 		var result = CombatCore.UI.RecallQuery.ValidateAndSelectRecipe(
 			_selected.ToArray(),
-			GetRecallView(),
-			GetCurrentTurn());
+			CombatCtrl.State.GetRecallView(),
+			CombatCtrl.State.PhaseCtx.TurnNum);
 
 		if (!result.IsValid)
 		{

@@ -150,10 +150,6 @@ public partial class Combat : Control
 
 		// Recall 事件監聽
 		RecallPanel.ConfirmPressed += OnRecallConfirm;
-		
-		// 設置 RecallPanel 驗證委派
-		RecallPanel.GetRecallView = () => State.GetRecallView();
-		RecallPanel.GetCurrentTurn = () => State.PhaseCtx.TurnNum;
 	}
 
 	private void CleanupUIListeners()
