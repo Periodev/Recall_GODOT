@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using CombatCore;
 
 namespace CombatCore.Recall
@@ -8,6 +7,7 @@ namespace CombatCore.Recall
 	{
 		public const int Capacity = 5;
 		private readonly List<Echo> _echos = new(Capacity);
+		private int _nextId = 1; // Session-wide unique ID counter
 
 		public int Count => _echos.Count;
 		public bool IsFull => _echos.Count >= Capacity;
@@ -18,23 +18,11 @@ namespace CombatCore.Recall
 		{
 			if (IsFull) return FailCode.EchoSlotsFull; // 滿了不 pop，直接 fail
 			
-			// Update ID to avoid duplicates with current slots
-			echo.Id = GenerateUniqueId();
+			// Assign unique incremental ID - never reuse removed IDs
+			echo.Id = _nextId++;
 			
 			_echos.Add(echo);
 			return FailCode.None;
-		}
-		
-		private int GenerateUniqueId()
-		{
-			int id;
-			var random = new Random();
-			do
-			{
-				id = random.Next(int.MinValue, int.MaxValue);
-			} while (_echos.Any(e => e.Id == id));
-			
-			return id;
 		}
 
 		public FailCode TryRemoveAt(int index)

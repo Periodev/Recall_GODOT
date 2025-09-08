@@ -280,7 +280,7 @@ public partial class Combat : Control
 		var shieldEcho = new Echo
 		{
 			Id = 2,
-			RecipeId = 102,
+			RecipeId = 2,
 			Name = "Block",
 			RecipeLabel = "B",
 			Summary = "[Test] Basic Block",
