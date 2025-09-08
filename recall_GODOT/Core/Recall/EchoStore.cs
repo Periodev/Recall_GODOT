@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CombatCore;
 
 namespace CombatCore.Recall
@@ -16,8 +17,35 @@ namespace CombatCore.Recall
 		public FailCode TryAdd(Echo echo)
 		{
 			if (IsFull) return FailCode.EchoSlotsFull; // 滿了不 pop，直接 fail
-			_echos.Add(echo);
+			
+			// Generate unique random ID to avoid duplicates
+			var uniqueId = GenerateUniqueId();
+			var uniqueEcho = new Echo
+			{
+				Id = uniqueId,
+				RecipeId = echo.RecipeId,
+				Name = echo.Name,
+				RecipeLabel = echo.RecipeLabel,
+				Summary = echo.Summary,
+				CostAP = echo.CostAP,
+				Op = echo.Op,
+				TargetType = echo.TargetType
+			};
+			
+			_echos.Add(uniqueEcho);
 			return FailCode.None;
+		}
+		
+		private int GenerateUniqueId()
+		{
+			int id;
+			var random = new Random();
+			do
+			{
+				id = random.Next(int.MinValue, int.MaxValue);
+			} while (_echos.Any(e => e.Id == id));
+			
+			return id;
 		}
 
 		public FailCode TryRemoveAt(int index)

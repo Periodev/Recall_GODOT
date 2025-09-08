@@ -8,16 +8,17 @@ namespace CombatCore.Recall
 		/// <summary>
 		/// Creates an Echo from a recipe ID using pure lookup table approach.
 		/// Returns Echo with all fields populated from RecipeRegistry lookup.
+		/// Initial ID will be updated during echoStore.TryAdd to ensure uniqueness.
 		/// </summary>
-		public static Echo BuildFromRecipe(int recipeId, int turn, int runSeed = 0)
+		public static Echo BuildFromRecipe(int recipeId, int turn)
 		{
 			if (!RecipeRegistry.TryGetRecipe(recipeId, out var recipe))
 			{
 				throw new ArgumentException($"Recipe with ID {recipeId} not found", nameof(recipeId));
 			}
 			
-			// Generate deterministic ID: Hash(recipeId, turn, runSeed)
-			var id = StableHash($"{recipeId}:{turn}:{runSeed}");
+			// Temporary ID - will be replaced with unique random hash in echoStore.TryAdd
+			var id = StableHash($"{recipeId}:{turn}");
 			
 			return new Echo
 			{
