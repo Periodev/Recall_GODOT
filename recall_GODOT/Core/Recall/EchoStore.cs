@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CombatCore;
 
 namespace CombatCore.Recall
@@ -7,6 +8,7 @@ namespace CombatCore.Recall
 	{
 		public const int Capacity = 5;
 		private readonly List<Echo> _echos = new(Capacity);
+		private int _nextId = 1; // Session-wide unique ID counter
 
 		public int Count => _echos.Count;
 		public bool IsFull => _echos.Count >= Capacity;
@@ -16,6 +18,21 @@ namespace CombatCore.Recall
 		public FailCode TryAdd(Echo echo)
 		{
 			if (IsFull) return FailCode.EchoSlotsFull; // 滿了不 pop，直接 fail
+
+			// Assign unique incremental ID - never reuse removed IDs
+			if (echo.Id == 0)
+			{
+				echo.Id = _nextId++;
+			}
+			else if (_echos.Any(e => e.Id == echo.Id))
+			{
+				// Safety: if non-zero ID already exists, find next available ID
+				do
+				{
+					echo.Id = _nextId++;
+				} while (_echos.Any(e => e.Id == echo.Id));
+			}
+
 			_echos.Add(echo);
 			return FailCode.None;
 		}
@@ -25,6 +42,19 @@ namespace CombatCore.Recall
 			if ((uint)index >= (uint)_echos.Count) return FailCode.BadIndex;
 			_echos.RemoveAt(index); // 自動左移：前密後空
 			return FailCode.None;
+		}
+
+		public FailCode TryRemove(Echo echo)
+		{
+			for (int i = 0; i < _echos.Count; i++)
+			{
+				if (_echos[i].Id == echo.Id)
+				{
+					_echos.RemoveAt(i);
+					return FailCode.None;
+				}
+			}
+			return FailCode.BadIndex; // Echo not found
 		}
 
 		public void Clear() => _echos.Clear();

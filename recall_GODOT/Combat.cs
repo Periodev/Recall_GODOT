@@ -112,7 +112,7 @@ public partial class Combat : Control
 			return;
 		}
 
-		var intent = new EchoIntent(echo, targetId, slotIndex);
+		var intent = new EchoIntent(echo, targetId);
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
 
 		GD.Print($"[Combat] Echo result: {result}");
@@ -266,7 +266,7 @@ public partial class Combat : Control
 		// Echo 1: 攻擊類 (對敵人)
 		var attackEcho = new Echo
 		{
-			Id = 1,
+			//Id = 0,
 			RecipeId = 1,
 			Name = "Attack",
 			RecipeLabel = "A",
@@ -279,8 +279,8 @@ public partial class Combat : Control
 		// Echo 2: 防禦類 (對自己)
 		var shieldEcho = new Echo
 		{
-			Id = 2,
-			RecipeId = 102,
+			//Id = 0,
+			RecipeId = 2,
 			Name = "Block",
 			RecipeLabel = "B",
 			Summary = "[Test] Basic Block",

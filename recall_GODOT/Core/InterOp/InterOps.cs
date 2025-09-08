@@ -24,7 +24,7 @@ namespace CombatCore.InterOp
 
 	public sealed record RecallPlan(
 		Actor Source,
-		ActionType[] ActionSequence, // display only
+		int RecipeId,
 		int APCost
 	) : Plan(Source, APCost);
 
@@ -104,8 +104,7 @@ namespace CombatCore.InterOp
 			list.Add(AtomicCmd.ConsumeAP(plan.Source, plan.APCost));
 
 			// diagnostic message (non-invasive)
-			var pattern = string.Join("", plan.ActionSequence.Select(x => x.ToString()));
-			Debug.WriteLine($"Player recalled [{pattern}]");
+			Debug.WriteLine($"Player recalled RecipeId[{plan.RecipeId}]");
 
 			return list.ToArray();
 		}
