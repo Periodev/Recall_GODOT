@@ -112,7 +112,7 @@ public partial class Combat : Control
 			return;
 		}
 
-		var intent = new EchoIntent(echo, targetId, slotIndex);
+		var intent = new EchoIntent(echo, targetId);
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
 
 		GD.Print($"[Combat] Echo result: {result}");

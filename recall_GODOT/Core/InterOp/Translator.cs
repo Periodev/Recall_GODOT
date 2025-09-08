@@ -14,7 +14,7 @@ namespace CombatCore
 	public abstract record Intent(int? TargetId);
 	public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
 	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
-	public sealed record EchoIntent(Echo Echo, int? TargetId, int SlotIndex) : Intent(TargetId);
+	public sealed record EchoIntent(Echo Echo, int? TargetId) : Intent(TargetId);
 
 	public readonly struct RecallView
 	{
@@ -167,8 +167,7 @@ namespace CombatCore.InterOp
 				return TranslationResult.Fail(FailCode.NoRecipe);
 
 			// 建立 Plan（信任 UI 層已驗證索引）
-			var sequence = new ActionType[] { ActionType.A }; // TODO: 從 RecipeId 解析實際序列
-			var plan = new RecallPlan(self, sequence, apCost);
+			var plan = new RecallPlan(self, intent.RecipeId, apCost);
 			return TranslationResult.Pass(plan, intent);
 		}
 

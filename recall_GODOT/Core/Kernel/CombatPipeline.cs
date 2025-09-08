@@ -156,7 +156,7 @@ namespace CombatCore.Kernel
 			// 新增 Echo 處理
 			if (intent is EchoIntent echoIntent)
 			{
-				state.echoStore.TryRemoveAt(echoIntent.SlotIndex);
+				state.echoStore.TryRemove(echoIntent.Echo);
 				// Echo 不寫入 Memory
 			}
 		}

@@ -27,6 +27,19 @@ namespace CombatCore.Recall
 			return FailCode.None;
 		}
 
+		public FailCode TryRemove(Echo echo)
+		{
+			for (int i = 0; i < _echos.Count; i++)
+			{
+				if (_echos[i].Id == echo.Id)
+				{
+					_echos.RemoveAt(i);
+					return FailCode.None;
+				}
+			}
+			return FailCode.BadIndex; // Echo not found
+		}
+
 		public void Clear() => _echos.Clear();
 
 		/// 產生固定 5 格的槽位陣列：前段為 Echo 實例，後段為 null 代表空槽。
