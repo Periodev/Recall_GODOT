@@ -1,2 +1,0 @@
-roslynator analyze .\Recall_GODOT.sln -o .\R.txt
-pause

@@ -135,7 +135,7 @@ public partial class EchoPanel : Control
 		_selectedSlotIndex = slotIndex;
 		_selectedEcho = echo;
 
-		GD.Print($"[EchoPanel] Selected slot {slotIndex}: {echo.Name}");
+		GD.Print($"[EchoPanel] Selected slot {slotIndex}, ID {echo.Id}: {echo.Name}");
 
 		// 刷新 UI
 		RefreshEchoSlots();
