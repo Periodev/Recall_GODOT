@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CombatCore;
 
 namespace CombatCore.Recall
@@ -17,10 +18,21 @@ namespace CombatCore.Recall
 		public FailCode TryAdd(Echo echo)
 		{
 			if (IsFull) return FailCode.EchoSlotsFull; // 滿了不 pop，直接 fail
-			
+
 			// Assign unique incremental ID - never reuse removed IDs
-			echo.Id = _nextId++;
-			
+			if (echo.Id == 0)
+			{
+				echo.Id = _nextId++;
+			}
+			else if (_echos.Any(e => e.Id == echo.Id))
+			{
+				// Safety: if non-zero ID already exists, find next available ID
+				do
+				{
+					echo.Id = _nextId++;
+				} while (_echos.Any(e => e.Id == echo.Id));
+			}
+
 			_echos.Add(echo);
 			return FailCode.None;
 		}

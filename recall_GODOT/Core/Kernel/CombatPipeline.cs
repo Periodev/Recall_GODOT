@@ -137,7 +137,7 @@ namespace CombatCore.Kernel
 			if (intent is RecallIntent recallIntent)
 			{
 				// Use RecipeId lookup to build Echo directly
-				var echo = EchoFactory.BuildFromRecipe(recallIntent.RecipeId, state.PhaseCtx.TurnNum);
+				var echo = EchoFactory.BuildFromRecipe(recallIntent.RecipeId);
 
 				// Only mark RecallUsed if successfully added to store
 				if (state.echoStore.TryAdd(echo) == FailCode.None)
