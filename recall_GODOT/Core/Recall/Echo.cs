@@ -6,7 +6,7 @@ namespace CombatCore.Recall
 	public partial class Echo
 	{
 		// UI view
-		public int Id { get; init; }
+		public int Id { get; set; }
 		public int RecipeId { get; init; }
 
 		public string Name { get; init; } = "";

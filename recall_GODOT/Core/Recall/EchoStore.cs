@@ -18,21 +18,10 @@ namespace CombatCore.Recall
 		{
 			if (IsFull) return FailCode.EchoSlotsFull; // 滿了不 pop，直接 fail
 			
-			// Generate unique random ID to avoid duplicates
-			var uniqueId = GenerateUniqueId();
-			var uniqueEcho = new Echo
-			{
-				Id = uniqueId,
-				RecipeId = echo.RecipeId,
-				Name = echo.Name,
-				RecipeLabel = echo.RecipeLabel,
-				Summary = echo.Summary,
-				CostAP = echo.CostAP,
-				Op = echo.Op,
-				TargetType = echo.TargetType
-			};
+			// Update ID to avoid duplicates with current slots
+			echo.Id = GenerateUniqueId();
 			
-			_echos.Add(uniqueEcho);
+			_echos.Add(echo);
 			return FailCode.None;
 		}
 		
