@@ -21,6 +21,7 @@ namespace CombatCore.Recall
 
 		/// 最小建構：由記憶序列組出一張 Echo（決定論 Id / RecipeId）。
 		/// 預設命名： "Recall " + 連成字串；Summary 預設空字串。
+		[Obsolete("Use EchoFactory.BuildFromRecipe instead")]
 		public static Echo Build(
 			ActionType[] sequence,
 			int turn,

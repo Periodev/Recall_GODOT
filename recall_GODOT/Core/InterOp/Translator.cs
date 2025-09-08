@@ -163,7 +163,7 @@ namespace CombatCore.InterOp
 				return TranslationResult.Fail(FailCode.NoAP);
 
 			// RecipeId 合法性檢查（簡化版）
-			if (intent.RecipeId <= 0)
+			if (intent.RecipeId <= 0 || !RecipeRegistry.ContainsRecipe(intent.RecipeId))
 				return TranslationResult.Fail(FailCode.NoRecipe);
 
 			// 建立 Plan（信任 UI 層已驗證索引）

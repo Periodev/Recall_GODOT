@@ -136,21 +136,21 @@ namespace CombatCore.Kernel
 
 			if (intent is RecallIntent recallIntent)
 			{
-				// 先組裝序列與 Echo，但「不要先 MarkRecallUsed」
-				var sequence = RebuildMemSeq(state.GetRecallView(), recallIntent);
-				var echo = Echo.Build(sequence, state.PhaseCtx.TurnNum);
+				// Use RecipeId lookup to build Echo directly
+				var echo = EchoFactory.BuildFromRecipe(recallIntent.RecipeId, state.PhaseCtx.TurnNum);
 
-				// 硬性防線：只有實際加入成功才視為本回合已使用 Recall
+				// Only mark RecallUsed if successfully added to store
 				if (state.echoStore.TryAdd(echo) == FailCode.None)
 				{
 					state.PhaseCtx.MarkRecallUsed();
 				}
 				else
 				{
-					// Echo 槽滿或加入失敗 → 不標記 RecallUsed、不寫入 Memory
-					// （若執行階段已扣 AP，這裡可視設計加「AP 還原」邏輯）
+					// Echo slot full or add failed → don't mark RecallUsed, don't write to Memory
+					// (If AP already consumed during execution, consider AP restoration logic here)
 					return;
 				}
+				// RecallIntent does not write to Memory
 			}
 
 			// 新增 Echo 處理
@@ -235,15 +235,6 @@ namespace CombatCore.Kernel
 			return ExecutionResult.Pass(new CmdLog());
 		}
 
-		/// 從 RecallIntent 的 RecipeId，重建出行為序列。
-		/// <param name="memory">目前回合的記憶視圖</param>
-		/// <param name="intent">RecallIntent，內含 RecipeId</param>
-		/// <returns>對應的 ActionType 序列</returns>
-		public static ActionType[] RebuildMemSeq(RecallView memory, RecallIntent intent)
-		{
-			// TODO: 等待 RecipeSystem 實現，暫時返回固定序列
-			return new ActionType[] { ActionType.A };
-		}
 
 	}
 
