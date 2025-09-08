@@ -53,7 +53,7 @@ namespace CombatCore.UI
             var sequence = indices.Select(idx => memory.Ops[idx]).ToArray();
             
             // TODO: 等待 RecipeSystem 實現，暫時返回固定 recipeId
-            int recipeId = 101; // 臨時實現
+            int recipeId = 1; // 臨時實現
             
             Debug.Print($"[Recipe]: {recipeId}");
 

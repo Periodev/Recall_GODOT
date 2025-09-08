@@ -7,8 +7,7 @@ namespace CombatCore.Recall
 	{
 		/// <summary>
 		/// Creates an Echo from a recipe ID using pure lookup table approach.
-		/// Returns Echo with only execution semantic fields (Id, RecipeId, Op, TargetType, CostAP).
-		/// Does not include name/summary - UI should get display strings via RecipeRegistry.
+		/// Returns Echo with all fields populated from RecipeRegistry lookup.
 		/// </summary>
 		public static Echo BuildFromRecipe(int recipeId, int turn, int runSeed = 0)
 		{
@@ -28,10 +27,10 @@ namespace CombatCore.Recall
 				TargetType = recipe.TargetType,
 				CostAP = recipe.CostAP,
 				
-				// Empty display fields - UI should use RecipeRegistry for these
-				Name = "",
-				RecipeLabel = "",
-				Summary = ""
+				// Display fields filled from RecipeRegistry
+				Name = recipe.Name,
+				RecipeLabel = recipe.Label,
+				Summary = recipe.Summary
 			};
 		}
 		
