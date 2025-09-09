@@ -54,7 +54,9 @@ namespace CombatCore.UI
             var sequence = indices.Select(idx => memory.Ops[idx]).ToArray();
 
             int pattern = PatternExtractor.Encode(sequence);
-            Debug.Print($"[pattern]: {pattern}");
+            //Debug.Print($"[pattern]: {pattern}");
+
+            RecipeSystem.FilterRecipesByPattern(pattern);
 
             // TODO: 等待 RecipeSystem 實現，暫時返回固定 recipeId
             int recipeId = 1; // 臨時實現

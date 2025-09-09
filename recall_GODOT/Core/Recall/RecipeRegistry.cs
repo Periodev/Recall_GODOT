@@ -56,10 +56,15 @@ namespace CombatCore.Recall
 			// ID 規劃：11x/12x = 2L Echo（採用直觀數字對應）
 			// TargetType 原則：只要含 A（攻擊）就需要 Target；純 B 給 Self
 			// ----------------------------------------------------
-			AddRecipe(111, HLAop.Attack, TargetType.Target, 1, "Echo: AA — Double Strike", "A+A", "double hit)");
-			AddRecipe(121, HLAop.Attack, TargetType.Target, 1, "Echo: AB — Strike + Guard", "A+B", "(attack then block)");
-			AddRecipe(211, HLAop.Attack, TargetType.Target, 1, "Echo: BA — Guard + Strike", "B+A", "(block then attack)");
-			AddRecipe(221, HLAop.Block, TargetType.Self, 1, "Echo: BB — Fortify", "B+B", "(reinforce shield)");
+			AddRecipe(111, HLAop.Attack, TargetType.Target, 1, "Echo: AA — Double Strike", "A+A", "double hit");
+			AddRecipe(112, HLAop.Attack, TargetType.Target, 1, "Echo: AA — Heavy Strike", "A+A", "Heavy Strike");
+
+			AddRecipe(121, HLAop.Attack, TargetType.Target, 1, "Echo: AB — Strike + Guard", "A+B", "attack then block");
+
+			AddRecipe(211, HLAop.Attack, TargetType.Target, 1, "Echo: BA — Guard + Strike", "B+A", "block then attack");
+			AddRecipe(212, HLAop.Attack, TargetType.Target, 1, "Echo: BA — Bash Attack", "B+A", "Bash Attack");
+
+			AddRecipe(221, HLAop.Block, TargetType.Self, 1, "Echo: BB — Fortify", "B+B", "reinforce shield");
 
 		}
 
