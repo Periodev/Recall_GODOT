@@ -57,7 +57,9 @@ namespace CombatCore.UI
                 return RecallValidationResult.Fail(indexValidation);
 
             // 內部調用 RecipeSystem 獲取配方
-            var sequence = indices.Select(idx => memory.Ops[idx]).ToArray();
+            // 按 timeline 位置排序，而非點擊順序
+            var sortedIndices = indices.OrderBy(idx => idx).ToArray();
+            var sequence = sortedIndices.Select(idx => memory.Ops[idx]).ToArray();
 
             int pattern = PatternExtractor.Encode(sequence);
             //Debug.Print($"[pattern]: {pattern}");
