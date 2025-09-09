@@ -50,7 +50,7 @@ namespace CombatCore.Recall
 			{
 				ActionType.A => 1,
 				ActionType.B => 2,
-				// 未來擴展：ActionType.C => 3,
+				ActionType.C => 3,
 				_ => throw new ArgumentException($"Unsupported action: {action}")
 			};
 		}

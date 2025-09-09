@@ -13,6 +13,7 @@ namespace CombatCore.UI
                 [FailCode.BadTarget] = "無效目標",
                 [FailCode.RecallUsed] = "本回合已使用召回",
                 [FailCode.IndexNotContiguous] = "序列必須連續",
+                [FailCode.NoRecipe] = "無效序列",
                 [FailCode.EchoSlotsFull] = "Echo槽已滿",
                 [FailCode.PhaseLocked] = "當前階段無法操作",
             };

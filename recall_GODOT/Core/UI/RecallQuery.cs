@@ -64,6 +64,9 @@ namespace CombatCore.UI
 
             var candidateRecipeIds = RecipeSystem.FilterRecipesByPattern(pattern);
 
+            if (candidateRecipeIds.Count == 0)
+                return RecallValidationResult.Fail(FailCode.NoRecipe);
+
             return RecallValidationResult.Pass(candidateRecipeIds);
         }
 

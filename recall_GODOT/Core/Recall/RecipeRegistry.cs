@@ -49,7 +49,7 @@ namespace CombatCore.Recall
 			// Sample recipes - these would be populated from actual game data
 			AddRecipe(11, HLAop.Attack, TargetType.Target, 1, "Attack", "A", "Basic attack");
 			AddRecipe(21, HLAop.Block, TargetType.Self, 1, "Block", "B", "Basic defense");
-			AddRecipe(31, HLAop.Charge, TargetType.Self, 1, "Charge", "C", "Gain charge/copy");
+			//AddRecipe(31, HLAop.Charge, TargetType.Self, 1, "Charge", "C", "Gain charge/copy");
 
 			// ----------------------------------------------------
 			// Echo (2L) — 對應 PatternKey: AA=11, AB=12, BA=21, BB=22
