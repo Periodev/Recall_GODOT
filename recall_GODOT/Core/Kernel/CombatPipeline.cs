@@ -23,19 +23,19 @@ namespace CombatCore.Kernel
 		/// <param name="state">戰鬥狀態</param>
 		/// <param name="actor">執行動作的角色</param>
 		/// <param name="intent">高階行動意圖</param>
-                /// <returns>轉換結果，包含命令陣列或錯誤碼</returns>
-                public static PipelineTranslationResult TranslateIntent(CombatState state, Actor actor, Intent intent)
+		/// <returns>轉換結果，包含命令陣列或錯誤碼</returns>
+		public static PipelineResult TranslateIntent(CombatState state, Actor actor, Intent intent)
 		{
 			var translationResult = Translator.TryTranslate(intent, state, actor);
 
 			if (!translationResult.Success)
 			{
-                                SignalHub.NotifyError(translationResult.ErrorCode);
-                                return PipelineTranslationResult.Fail(translationResult.ErrorCode);
+				SignalHub.NotifyError(translationResult.ErrorCode);
+				return PipelineResult.Fail(translationResult.ErrorCode);
 			}
 
-                        var commands = InterOps.Build(translationResult.Plan);
-                        return PipelineTranslationResult.Pass(commands, translationResult.OriginalIntent);
+			var commands = InterOps.Build(translationResult.Plan);
+			return PipelineResult.Pass(commands, translationResult.OriginalIntent);
 		}
 
 
@@ -239,29 +239,29 @@ namespace CombatCore.Kernel
 	}
 
 
-        /// Intent 轉換結果 - 包含即將執行的指令序列
-        /// 用於預測型反應：其他系統可以分析 Commands 並提前應對
-        public readonly struct PipelineTranslationResult
-        {
-                public bool Success { get; }
-                public FailCode ErrorCode { get; }
-                public AtomicCmd[] Commands { get; }
-                public Intent OriginalIntent { get; }
+	/// Intent 轉換結果 - 包含即將執行的指令序列
+	/// 用於預測型反應：其他系統可以分析 Commands 並提前應對
+	public readonly struct PipelineResult
+	{
+		public bool Success { get; }
+		public FailCode ErrorCode { get; }
+		public AtomicCmd[] Commands { get; }
+		public Intent OriginalIntent { get; }
 
-                private PipelineTranslationResult(bool success, FailCode errorCode, AtomicCmd[] commands, Intent originalIntent)
-                {
-                        Success = success;
-                        ErrorCode = errorCode;
-                        Commands = commands ?? Array.Empty<AtomicCmd>();
-                        OriginalIntent = originalIntent;
-                }
+		private PipelineResult(bool success, FailCode errorCode, AtomicCmd[] commands, Intent originalIntent)
+		{
+			Success = success;
+			ErrorCode = errorCode;
+			Commands = commands ?? Array.Empty<AtomicCmd>();
+			OriginalIntent = originalIntent;
+		}
 
-                public static PipelineTranslationResult Pass(AtomicCmd[] commands, Intent intent) =>
-                        new(true, FailCode.None, commands, intent);
+		public static PipelineResult Pass(AtomicCmd[] commands, Intent intent) =>
+				new(true, FailCode.None, commands, intent);
 
-                public static PipelineTranslationResult Fail(FailCode code) =>
-                        new(false, code, Array.Empty<AtomicCmd>(), null!);
-        }
+		public static PipelineResult Fail(FailCode code) =>
+				new(false, code, Array.Empty<AtomicCmd>(), null!);
+	}
 
 	/// 命令執行結果 - 包含實際發生的效果記錄
 	/// 用於結果型反應：其他系統可以分析 Log 並觸發連鎖反應
