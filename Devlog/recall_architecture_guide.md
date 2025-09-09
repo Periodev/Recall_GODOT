@@ -272,12 +272,12 @@ public static PhaseResult HandlePlayerExecution(ref CombatState state)
 
 #### **層級 5: CombatPipeline - 工具方法庫**
 ```csharp
-public static TranslationResult TranslateIntent(CombatState state, Actor actor, HLAIntent intent)
+public static PipelineTranslationResult TranslateIntent(CombatState state, Actor actor, HLAIntent intent)
 {
     // 呼叫 HLATranslator 進行轉換
     var failCode = Translator.TryTranslate(...);
     if (failCode != FailCode.None)
-        return TranslationResult.Fail(failCode);
+        return PipelineTranslationResult.Fail(failCode);
     
     // 呼叫 InterOps 組裝命令
     var commands = intent switch
@@ -287,7 +287,7 @@ public static TranslationResult TranslateIntent(CombatState state, Actor actor, 
         _ => Array.Empty<AtomicCmd>()
     };
     
-    return TranslationResult.Pass(commands, intent);
+    return PipelineTranslationResult.Pass(commands, intent);
 }
 ```
 

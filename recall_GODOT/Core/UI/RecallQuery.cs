@@ -85,8 +85,8 @@ namespace CombatCore.UI
 			var span = indices.Distinct().OrderBy(x => x).ToArray();
 			for (int i = 1; i < span.Length; i++)
 			{
-				if (span[i] != span[i - 1] + 1)
-					return FailCode.IndixNotContiguous;
+                                if (span[i] != span[i - 1] + 1)
+                                        return FailCode.IndexNotContiguous;
 			}
 
             return FailCode.None;
