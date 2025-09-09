@@ -14,6 +14,13 @@ public partial class RecallPanel : Control
 	[Export] public Button BtnCancel;
 	[Export] public Control Timeline;       // 內含 5 顆 BtnSlot*
 
+	// recipe review
+	[Export] private Label EchoName;
+	[Export] private Label Recipe;
+	[Export] private RichTextLabel Summary;
+	[Export] private ItemList RecipeIDList;
+	
+
 	private readonly List<Button> _slots = new();
 	private RecallState _state = RecallState.EnemyPhase;
 	private List<int> _selected = new();
