@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://bpc2p5fd8gggf" path="res://TimelineSelector.tscn" id="1_neier"]
 [ext_resource type="Script" uid="uid://dm2aen53gq2t6" path="res://UIScript/RecallPanel.cs" id="1_ty0qy"]
 
-[node name="RecallPanel" type="Control" node_paths=PackedStringArray("BtnRecall", "BtnCheck", "BtnConfirm", "BtnCancel", "Timeline")]
+[node name="RecallPanel" type="Control" node_paths=PackedStringArray("BtnRecall", "BtnCheck", "BtnConfirm", "BtnCancel", "Timeline", "EchoName", "Recipe", "Summary", "RecipeIDList")]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 271.0
@@ -14,11 +14,15 @@ BtnCheck = NodePath("VBoxContainer/BtnCheck")
 BtnConfirm = NodePath("VBoxContainer/BtnConfirm")
 BtnCancel = NodePath("VBoxContainer/BtnCancel")
 Timeline = NodePath("Timeline")
+EchoName = NodePath("Info/EchoName")
+Recipe = NodePath("Info/Recipe")
+Summary = NodePath("Info/Summary")
+RecipeIDList = NodePath("RecipeIDList")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 280.0
-offset_right = 360.0
+offset_left = 272.0
+offset_right = 352.0
 offset_bottom = 136.0
 
 [node name="BtnRecall" type="Button" parent="VBoxContainer"]
@@ -43,3 +47,23 @@ text = "Cancel"
 [node name="Timeline" parent="." instance=ExtResource("1_neier")]
 offset_top = 80.0
 offset_bottom = 120.0
+
+[node name="Info" type="VBoxContainer" parent="."]
+offset_right = 128.0
+offset_bottom = 72.0
+
+[node name="EchoName" type="Label" parent="Info"]
+layout_mode = 2
+
+[node name="Recipe" type="Label" parent="Info"]
+layout_mode = 2
+
+[node name="Summary" type="RichTextLabel" parent="Info"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RecipeIDList" type="ItemList" parent="."]
+layout_mode = 0
+offset_left = 136.0
+offset_right = 264.0
+offset_bottom = 64.0
