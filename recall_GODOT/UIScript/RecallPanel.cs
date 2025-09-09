@@ -48,6 +48,8 @@ public partial class RecallPanel : Control
 			_slots[i].Pressed += () => OnSlotPressed(idx);
 		}
 
+		RecipeIDList.ItemSelected += OnRecipeSelected;
+
 		// 初始化
 		_currentTurnSlots = new bool[_slots.Count];
 
@@ -363,13 +365,6 @@ public partial class RecallPanel : Control
 				RecipeIDList.AddItem(name);
 				RecipeIDList.SetItemMetadata(RecipeIDList.GetItemCount() - 1, recipeId);
 			}
-		}
-		
-		// 綁定選擇事件（只綁定一次）
-		if (!RecipeIDList.IsConnected(ItemList.SignalName.ItemSelected, 
-			new Callable(this, nameof(OnRecipeSelected))))
-		{
-			RecipeIDList.ItemSelected += OnRecipeSelected;
 		}
 	}
 
