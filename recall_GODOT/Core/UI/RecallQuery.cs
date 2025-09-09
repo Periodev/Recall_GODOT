@@ -11,23 +11,29 @@ namespace CombatCore.UI
     {
         public bool IsValid { get; }
         public FailCode ErrorCode { get; }
-        public int RecipeId { get; }
+        public List<int> CandidateRecipeIds { get; }
+        public int SelectedRecipeId { get; }
 
-        private RecallValidationResult(bool isValid, FailCode errorCode, int recipeId)
+        private RecallValidationResult(bool isValid, FailCode errorCode, 
+            List<int> candidateRecipeIds, int selectedRecipeId)
         {
             IsValid = isValid;
             ErrorCode = errorCode;
-            RecipeId = recipeId;
+            CandidateRecipeIds = candidateRecipeIds ?? new List<int>();
+            SelectedRecipeId = selectedRecipeId;
         }
 
-        public static RecallValidationResult Pass(int recipeId) =>
-            new(true, FailCode.None, recipeId);
+        public static RecallValidationResult Pass(List<int> candidateIds) =>
+            new(true, FailCode.None, candidateIds, -1);
 
         public static RecallValidationResult Fail(FailCode code)
         {
             SignalHub.NotifyError(code);
-            return new(false, code, -1);
+            return new(false, code, new List<int>(), -1);
         }
+        
+        public RecallValidationResult WithSelection(int recipeId) =>
+            new(IsValid, ErrorCode, CandidateRecipeIds, recipeId);
     }
 
     public static class RecallQuery
@@ -56,14 +62,26 @@ namespace CombatCore.UI
             int pattern = PatternExtractor.Encode(sequence);
             //Debug.Print($"[pattern]: {pattern}");
 
-            RecipeSystem.FilterRecipesByPattern(pattern);
+            var candidateRecipeIds = RecipeSystem.FilterRecipesByPattern(pattern);
 
-            // TODO: 等待 RecipeSystem 實現，暫時返回固定 recipeId
-            int recipeId = 1; // 臨時實現
+            return RecallValidationResult.Pass(candidateRecipeIds);
+        }
 
-            Debug.Print($"[Recipe]: {recipeId}");
-
-            return RecallValidationResult.Pass(recipeId);
+        /// <summary>
+        /// 獲取 Recipe 顯示信息的方法
+        /// </summary>
+        public static bool TryGetRecipeDisplayInfo(int recipeId, 
+            out string name, out string label, out string summary)
+        {
+            name = label = summary = string.Empty;
+            
+            if (!RecipeRegistry.TryGetRecipe(recipeId, out var recipe))
+                return false;
+                
+            name = recipe.Name;
+            label = recipe.Label;  
+            summary = recipe.Summary;
+            return true;
         }
 
         /// <summary>

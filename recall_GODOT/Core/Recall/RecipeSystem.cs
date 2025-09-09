@@ -6,7 +6,7 @@ namespace CombatCore.Recall
 {
 	public static class RecipeSystem
 	{
-		public static void FilterRecipesByPattern(int pattern)
+		public static List<int> FilterRecipesByPattern(int pattern)
 		{
 			var matchingRecipes = new List<int>();
 			
@@ -19,10 +19,7 @@ namespace CombatCore.Recall
 				}
 			}
 			
-			foreach (int id in matchingRecipes)
-			{
-				Debug.Print($"Recipe ID: {id}");
-			}
+			return matchingRecipes;
 		}
 		
 		private static IEnumerable<int> GetAllRecipeIds()
