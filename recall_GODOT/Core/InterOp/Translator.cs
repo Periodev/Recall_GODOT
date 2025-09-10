@@ -12,19 +12,19 @@ namespace CombatCore
 {
 	public delegate bool TryGetActorById(int id, out Actor actor);
 	public abstract record Intent(int? TargetId);
-	public sealed record BasicIntent(ActionType Act, int? TargetId) : Intent(TargetId);
+	public sealed record BasicIntent(TokenType Act, int? TargetId) : Intent(TargetId);
 	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
 	public sealed record EchoIntent(Echo Echo, int? TargetId) : Intent(TargetId);
 
 	public readonly struct RecallView
 	{
-		public RecallView(IReadOnlyList<ActionType> ops, IReadOnlyList<int> turns)
+		public RecallView(IReadOnlyList<TokenType> ops, IReadOnlyList<int> turns)
 		{
-			Ops = ops ?? Array.Empty<ActionType>();
+			Ops = ops ?? Array.Empty<TokenType>();
 			Turns = turns ?? Array.Empty<int>();
 		}
 
-		public IReadOnlyList<ActionType> Ops { get; }
+		public IReadOnlyList<TokenType> Ops { get; }
 		public IReadOnlyList<int> Turns { get; }
 		public int Count => Ops.Count;
 	}
@@ -77,15 +77,15 @@ namespace CombatCore.InterOp
 		}
 
 		// 數值計算集中處理
-		private static (int Damage, int Block, int GainAmount, int ChargeCost, int APCost) ComputeBasicNumbers(ActionType act, Actor self)
+		private static (int Damage, int Block, int GainAmount, int ChargeCost, int APCost) ComputeBasicNumbers(TokenType act, Actor self)
 		{
 			// 如果角色有 AP 系統，則消耗 1，否則為 0
 			int apCost = (self.AP != null) ? 1 : 0;
 			return act switch
 			{
-				ActionType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost),
-				ActionType.B => (Damage: 0, Block: 3, GainAmount: 0, ChargeCost: 0, APCost: apCost),
-				ActionType.C => (Damage: 0, Block: 0, GainAmount: C_GAIN_COPY, ChargeCost: 0, APCost: apCost),
+				TokenType.A => (Damage: 5, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost),
+				TokenType.B => (Damage: 0, Block: 3, GainAmount: 0, ChargeCost: 0, APCost: apCost),
+				TokenType.C => (Damage: 0, Block: 0, GainAmount: C_GAIN_COPY, ChargeCost: 0, APCost: apCost),
 				_ => (Damage: 0, Block: 0, GainAmount: 0, ChargeCost: 0, APCost: apCost)
 			};
 		}
@@ -102,7 +102,7 @@ namespace CombatCore.InterOp
 		{
 			// 嚴格目標驗證
 			var tgt = ResolveTarget(intent.TargetId, tryGetActor);
-			if (intent.Act == ActionType.A)
+			if (intent.Act == TokenType.A)
 			{
 				// A 必須有有效且非 self 的目標
 				if (tgt is null || ReferenceEquals(tgt, self))
@@ -123,7 +123,7 @@ namespace CombatCore.InterOp
 
 			// C 操作的 Copy 上限檢查
 			int finalGainAmount = numbers.GainAmount;
-			if (intent.Act == ActionType.C && self.Copy != null)
+			if (intent.Act == TokenType.C && self.Copy != null)
 			{
 				// 如果已達 Copy 上限，則不獲得 Copy (GainAmount = 0)
 				if (self.Copy.Value >= COPY_MAX)
@@ -131,16 +131,16 @@ namespace CombatCore.InterOp
 			}
 
 			// 檢查是否有 Copy 待觸發 (只對 A/B 有效)
-			bool hasCopy = self.HasCopy() && (intent.Act == ActionType.A || intent.Act == ActionType.B);
+			bool hasCopy = self.HasCopy() && (intent.Act == TokenType.A || intent.Act == TokenType.B);
 			int copyCost = hasCopy ? 1 : 0;
 
 			// 動態決定此次可用的 Charge 數量與加成 (敵人邏輯)
 			int chargeCostThisAction = 0;
-			if (intent.Act == ActionType.A || intent.Act == ActionType.B)
+			if (intent.Act == TokenType.A || intent.Act == TokenType.B)
 				chargeCostThisAction = Math.Min(self.Charge?.Value ?? 0, CHARGE_MAX_PER_ACTION);
 
-			int dmg = numbers.Damage + (intent.Act == ActionType.A ? A_BONUS_PER_CHARGE * chargeCostThisAction : 0);
-			int blk = numbers.Block + (intent.Act == ActionType.B ? B_BONUS_PER_CHARGE * chargeCostThisAction : 0);
+			int dmg = numbers.Damage + (intent.Act == TokenType.A ? A_BONUS_PER_CHARGE * chargeCostThisAction : 0);
+			int blk = numbers.Block + (intent.Act == TokenType.B ? B_BONUS_PER_CHARGE * chargeCostThisAction : 0);
 
 			int finalDmg = dmg;
 			int finalBlk = blk;
@@ -208,19 +208,19 @@ namespace CombatCore.InterOp
 			// 使用與 Basic 相同的數值
 			var numbers = ComputeBasicNumbers(echo.Op switch
 			{
-				HLAop.Attack => ActionType.A,
-				HLAop.Block => ActionType.B,
-				HLAop.Charge => ActionType.C,
-				_ => ActionType.A  // fallback
+				HLAop.Attack => TokenType.A,
+				HLAop.Block => TokenType.B,
+				HLAop.Charge => TokenType.C,
+				_ => TokenType.A  // fallback
 			}, self);
 
 			return echo.Op switch
 			{
-				HLAop.Attack => new BasicPlan(ActionType.A, self, target,
+				HLAop.Attack => new BasicPlan(TokenType.A, self, target,
 					numbers.Damage, 0, 0, 0, 0, echo.CostAP),
-				HLAop.Block => new BasicPlan(ActionType.B, self, self,
+				HLAop.Block => new BasicPlan(TokenType.B, self, self,
 					0, numbers.Block, 0, 0, 0, echo.CostAP),
-				HLAop.Charge => new BasicPlan(ActionType.C, self, self,
+				HLAop.Charge => new BasicPlan(TokenType.C, self, self,
 					0, 0, 0, 0, numbers.GainAmount, echo.CostAP),
 				_ => null  // CA 等其他返回 null
 			};

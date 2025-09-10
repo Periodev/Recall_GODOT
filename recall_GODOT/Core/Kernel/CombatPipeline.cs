@@ -195,7 +195,7 @@ namespace CombatCore.Kernel
 		{
 			if (intent is BasicIntent basicIntent)
 			{
-				return basicIntent.Act == ActionType.B || basicIntent.Act == ActionType.C;
+				return basicIntent.Act == TokenType.B || basicIntent.Act == TokenType.C;
 			}
 			return false;
 		}
@@ -211,7 +211,7 @@ namespace CombatCore.Kernel
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
 				// B = instant
-				var blockIntent = new BasicIntent(ActionType.B, null);
+				var blockIntent = new BasicIntent(TokenType.B, null);
 				EnemyInstantQueue.Enqueue(enemy, blockIntent, "Block");
 			}
 
@@ -219,7 +219,7 @@ namespace CombatCore.Kernel
 			else
 			{
 				// A = delay  
-				var attackIntent = new BasicIntent(ActionType.A, 0);
+				var attackIntent = new BasicIntent(TokenType.A, 0);
 				EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Attack");
 			}
 

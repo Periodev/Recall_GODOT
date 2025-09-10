@@ -1,7 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using CombatCore; // 為了 ActionType
+using CombatCore; // 為了 TokenType
 
 public partial class RecallPanel : Control
 {
@@ -69,7 +69,7 @@ public partial class RecallPanel : Control
 		}
 	}
 
-	public void RefreshSnapshot(IReadOnlyList<ActionType> ops, IReadOnlyList<int> turns, int currentTurn)
+	public void RefreshSnapshot(IReadOnlyList<TokenType> ops, IReadOnlyList<int> turns, int currentTurn)
 	{
 		if (_slots.Count == 0) return;
 
@@ -97,11 +97,11 @@ public partial class RecallPanel : Control
 		ApplyCurrentStateUI();
 	}
 
-	private static string OpToChar(ActionType op) => op switch
+	private static string OpToChar(TokenType op) => op switch
 	{
-		ActionType.A => "A",
-		ActionType.B => "B",
-		ActionType.C => "C",
+		TokenType.A => "A",
+		TokenType.B => "B",
+		TokenType.C => "C",
 		_ => "-"
 	};
 

@@ -63,7 +63,7 @@ public partial class Combat : Control
 	/// <summary>
 	/// 處理基本動作按鈕點擊
 	/// </summary>
-	public void TryRunBasic(ActionType act, int? targetId)
+	public void TryRunBasic(TokenType act, int? targetId)
 	{
 		GD.Print($"[CombatUI] TryRunBasic: {act}, target: {targetId}");
 
