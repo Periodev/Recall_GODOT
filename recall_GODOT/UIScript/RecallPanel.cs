@@ -19,7 +19,7 @@ public partial class RecallPanel : Control
 	[Export] private Label Recipe;
 	[Export] private RichTextLabel Summary;
 	[Export] private ItemList RecipeIDList;
-	
+
 
 	private readonly List<Button> _slots = new();
 	private RecallState _state = RecallState.EnemyPhase;
@@ -298,7 +298,7 @@ public partial class RecallPanel : Control
 		_candidateRecipeIds = result.CandidateRecipeIds;
 		ShowRecipeList(_candidateRecipeIds);
 		SetState(RecallState.Checked);
-		
+
 		GD.Print($"[RecallPanel] Found {_candidateRecipeIds.Count} candidate recipes");
 	}
 
@@ -354,9 +354,9 @@ public partial class RecallPanel : Control
 	private void ShowRecipeList(List<int> recipeIds)
 	{
 		if (RecipeIDList == null) return;
-		
+
 		RecipeIDList.Clear();
-		
+
 		foreach (int recipeId in recipeIds)
 		{
 			if (CombatCore.UI.RecallQuery.TryGetRecipeDisplayInfo(
@@ -374,16 +374,16 @@ public partial class RecallPanel : Control
 	private void OnRecipeSelected(long index)
 	{
 		if (RecipeIDList == null || index < 0) return;
-		
+
 		var recipeId = RecipeIDList.GetItemMetadata((int)index).AsInt32();
 		_selectedRecipeId = recipeId;
-		
+
 		// 更新右側預覽
 		UpdateRecipePreview(recipeId);
-		
+
 		// 更新按鈕狀態：選中Recipe後啟用Confirm
 		SetButtonStates(false, false, true, true);
-		
+
 		GD.Print($"[RecallPanel] Selected Recipe: {recipeId}");
 	}
 
@@ -408,9 +408,9 @@ public partial class RecallPanel : Control
 	{
 		RecipeIDList?.Clear();
 		if (EchoName != null) EchoName.Text = "-";
-		if (Recipe != null) Recipe.Text = "-"; 
+		if (Recipe != null) Recipe.Text = "-";
 		if (Summary != null) Summary.Text = "";
-		
+
 		_candidateRecipeIds.Clear();
 		_selectedRecipeId = -1;
 	}

@@ -342,7 +342,7 @@ public partial class Combat : Control
 		//GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
 		//GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
 		//GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
-		GD.Print($"[Combat] - Basic Action Slots added");
+		GD.Print("[Combat] - Basic Action Slots added");
 	}
 
 }
