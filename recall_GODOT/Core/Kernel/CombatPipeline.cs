@@ -11,9 +11,9 @@ namespace CombatCore.Kernel
 {
 	public static class CombatPipeline
 	{
-		public static PhaseQueue EnemyInstantQueue { get; } = new();
+		public static PhaseQueue EnemyMarkQueue { get; } = new();
 		public static PhaseQueue PlayerQueue { get; } = new();
-		public static PhaseQueue EnemyDelayedQueue { get; } = new();
+		public static PhaseQueue EnemyActionQueue { get; } = new();
 		public static PhaseQueue TurnEndQueue { get; } = new();
 
 		/// 階段1：將 HLA Intent 轉換為 AtomicCmd 陣列
@@ -40,7 +40,7 @@ namespace CombatCore.Kernel
 
 
 		/// 階段2：執行 AtomicCmd 陣列並提交狀態變更
-		/// 使用時機：PlayerExecute, EnemyExecInstant 階段
+		/// 使用時機：PlayerExecute, EnemyExecMark 階段
 		/// 介入點：執行完成後（結果型反應）
 
 		/// <param name="state">戰鬥狀態</param>
@@ -64,14 +64,14 @@ namespace CombatCore.Kernel
 			PlayerQueue.Enqueue(actor, intent, reason);
 		}
 
-		public static void EnqueueEnemyInstantAction(Actor enemy, Intent intent, string reason = "Enemy instant")
+		public static void EnqueueEnemyMark(Actor enemy, Intent intent, string reason = "Enemy mark")
 		{
-			EnemyInstantQueue.Enqueue(enemy, intent, reason);
+			EnemyMarkQueue.Enqueue(enemy, intent, reason);
 		}
 
-		public static void EnqueueEnemyDelayedAction(Actor enemy, Intent intent, string reason = "Enemy delayed")
+		public static void EnqueueEnemyAction(Actor enemy, Intent intent, string reason = "Enemy action")
 		{
-			EnemyDelayedQueue.Enqueue(enemy, intent, reason);
+			EnemyActionQueue.Enqueue(enemy, intent, reason);
 		}
 
 		public static ExecutionResult ProcessPlayerQueue(CombatState state)
@@ -101,17 +101,17 @@ namespace CombatCore.Kernel
 			return results.Count > 0 ? results[0] : ExecutionResult.Fail(FailCode.None);
 		}
 
-		public static ExecutionResult ProcessEnemyInstantQueue(CombatState state)
+		public static ExecutionResult ProcessEnemyMarkQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
 
-			while (EnemyInstantQueue.TryDequeue(out var queuedIntent))
+			while (EnemyMarkQueue.TryDequeue(out var queuedIntent))
 			{
 				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
 				if (!translationResult.Success)
 				{
-					Debug.Print($"[Pipeline] Enemy instant translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Enemy mark translation failed: {translationResult.ErrorCode}");
 					continue;
 				}
 
@@ -121,6 +121,13 @@ namespace CombatCore.Kernel
 					results.Add(execResult);
 				}
 			}
+
+			var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+			{
+				new CombatCore.UI.EnemyIntentUIItem("", ""),
+			};
+
+			SignalHub.NotifyEnemyIntentUpdated(1, Declare);
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -133,17 +140,17 @@ namespace CombatCore.Kernel
 			if (intent is EchoIntent echoIntent)
 			{
 				var echo = echoIntent.Echo;
-				
+
 				// 觸發冷卻
 				if (echo.CooldownTurns > 0)
 					echo.CooldownCounter = echo.CooldownTurns;
-				
+
 				// 推入記憶
 				if (echo.ActionFlags.HasFlag(ActionType.Basic) && echo.PushMemory.HasValue)
 				{
 					state.Mem?.Push(echo.PushMemory.Value, state.PhaseCtx.TurnNum);
 				}
-				
+
 				// 移除消耗型 Echo
 				if (echo.ConsumeOnPlay)
 				{
@@ -173,19 +180,19 @@ namespace CombatCore.Kernel
 		}
 
 		/// <summary>
-		/// 處理 Enemy DelayedQueue 中的所有 Intent
+		/// 處理 Enemy ActionQueue 中的所有 Intent
 		/// </summary>
-		public static ExecutionResult ProcessEnemyDelayedQueue(CombatState state)
+		public static ExecutionResult ProcessEnemyActionQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
 
-			while (EnemyDelayedQueue.TryDequeue(out var queuedIntent))
+			while (EnemyActionQueue.TryDequeue(out var queuedIntent))
 			{
 				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
 				if (!translationResult.Success)
 				{
-					Debug.Print($"[Pipeline] Enemy delayed translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Enemy action translation failed: {translationResult.ErrorCode}");
 					continue;
 				}
 
@@ -196,13 +203,20 @@ namespace CombatCore.Kernel
 				}
 			}
 
+			var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+			{
+				new CombatCore.UI.EnemyIntentUIItem("", ""),
+			};
+
+			SignalHub.NotifyEnemyIntentUpdated(1, Declare);
+
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
 
 		/// <summary>
 		/// 判斷行為是否為即時執行
 		/// </summary>
-		private static bool IsInstantAction(Intent intent)
+		private static bool IsMarkAction(Intent intent)
 		{
 			if (intent is EchoIntent echoIntent)
 			{
@@ -218,20 +232,35 @@ namespace CombatCore.Kernel
 			// 簡單 AI 邏輯：生成多個敵人行為
 			var enemy = state.Enemy;
 
-			// 偶數回合防禦(instant)，奇數回合攻擊(delay)
+			// 偶數回合防禦(mark)，奇數回合攻擊(delay)
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
-				// B = instant
+				// B = mark
 				var blockEcho = CreateEnemyBasicEcho(HLAop.Block, TokenType.B);
 				var blockIntent = new EchoIntent(blockEcho, null);
-				EnemyInstantQueue.Enqueue(enemy, blockIntent, "Block");
+				EnemyMarkQueue.Enqueue(enemy, blockIntent, "Block");
+
+
+				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+				{
+					new CombatCore.UI.EnemyIntentUIItem("🛡", "Block 1"),  // Block(1) → 下回合開始會套上
+				};
+
+				SignalHub.NotifyEnemyIntentUpdated(1, Declare);
 			}
 			else
 			{
 				// A = delay  
 				var attackEcho = CreateEnemyBasicEcho(HLAop.Attack, TokenType.A);
 				var attackIntent = new EchoIntent(attackEcho, 0);
-				EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Attack");
+				EnemyActionQueue.Enqueue(enemy, attackIntent, "Attack");
+
+				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+				{
+					new CombatCore.UI.EnemyIntentUIItem("⚔", "Attack 2"),
+				};
+
+				SignalHub.NotifyEnemyIntentUpdated(1, Declare);
 			}
 
 		}

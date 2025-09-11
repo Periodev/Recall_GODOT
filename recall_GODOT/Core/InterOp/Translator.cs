@@ -142,8 +142,8 @@ namespace CombatCore.InterOp
 			// 根據 HLAop 生成計劃
 			var plan = echo.Op switch
 			{
-				HLAop.Attack => new BasicPlan(TokenType.A, self, target!, 5, 0, 0, 0, 0, echo.CostAP),
-				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 3, 0, 0, 0, echo.CostAP),
+				HLAop.Attack => new BasicPlan(TokenType.A, self, target!, 2, 0, 0, 0, 0, echo.CostAP),
+				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 1, 0, 0, 0, echo.CostAP),
 				HLAop.Charge => new BasicPlan(TokenType.C, self, self, 0, 0, 0, 0, 2, echo.CostAP),
 				_ => throw new ArgumentException($"Unsupported HLAop: {echo.Op}")
 			};

@@ -65,6 +65,32 @@ namespace CombatCore.Kernel
 		// === Enemy Phase Functions ===
 
 		/// <summary>
+		/// 處理敵人上回合效果
+		/// </summary>
+		public static PhaseResult HandleEnemyMarkExecution(CombatState state)
+		{
+			if (CombatPipeline.EnemyMarkQueue.HasIntents)
+			{
+				Debug.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyMarkQueue.Count} enemy mark intents");
+
+				var result = CombatPipeline.ProcessEnemyMarkQueue(state);
+
+				if (CheckCombatEnd(state))
+					return PhaseResult.CombatEnd;
+			}
+#if DEBUG
+			else
+			{
+				Debug.Print($"[PhaseFunction] No enemy instant intents to process");
+			}
+#endif
+
+			// 推進到 Enemy Intent 階段
+			state.PhaseCtx.Step = PhaseStep.EnemyIntent;
+			return PhaseResult.Continue;
+		}
+
+		/// <summary>
 		/// 處理敵人意圖生成：查詢 AI 策略表，決定敵人行動並分派到對應隊列
 		/// </summary>
 		public static PhaseResult HandleEnemyAI(CombatState state)
@@ -74,55 +100,31 @@ namespace CombatCore.Kernel
 
 			Debug.Print($"[PhaseFunction] Enemy actions generated and queued");
 
-			state.PhaseCtx.Step = PhaseStep.EnemyExecInstant;
-			return PhaseResult.Continue;
-		}
-
-		/// <summary>
-		/// 處理敵人即時執行隊列
-		/// </summary>
-		public static PhaseResult HandleEnemyInstantExecution(CombatState state)
-		{
-			if (CombatPipeline.EnemyInstantQueue.HasIntents)
-			{
-				Debug.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyInstantQueue.Count} enemy instant intents");
-
-				var result = CombatPipeline.ProcessEnemyInstantQueue(state);
-
-				if (CheckCombatEnd(state))
-					return PhaseResult.CombatEnd;
-			}
-#if DEBUG
-		else
-		{
-			Debug.Print($"[PhaseFunction] No enemy instant intents to process");
-		}
-#endif
-
-			// 推進到 PlayerInit 階段
+			// 交到 Player Init 階段
 			state.PhaseCtx.Step = PhaseStep.PlayerInit;
 			return PhaseResult.Continue;
 		}
 
-		/// <summary>
-		/// 處理 Enemy DelayedQueue：執行回合末的延遲動作
-		/// </summary>
-		public static PhaseResult HandleEnemyDelayed(CombatState state)
-		{
-			if (CombatPipeline.EnemyDelayedQueue.HasIntents)
-			{
-				Debug.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyDelayedQueue.Count} enemy delayed intents");
 
-				var result = CombatPipeline.ProcessEnemyDelayedQueue(state);
+		/// <summary>
+		/// 處理 Enemy ActionQueue：執行回合動作
+		/// </summary>
+		public static PhaseResult HandleEnemyAction(CombatState state)
+		{
+			if (CombatPipeline.EnemyActionQueue.HasIntents)
+			{
+				Debug.Print($"[PhaseFunction] Processing {CombatPipeline.EnemyActionQueue.Count} enemy intents");
+
+				var result = CombatPipeline.ProcessEnemyActionQueue(state);
 
 				if (CheckCombatEnd(state))
 					return PhaseResult.CombatEnd;
 			}
 #if DEBUG
-		else
-		{
-			Debug.Print($"[PhaseFunction] No enemy delayed intents to process");
-		}
+			else
+			{
+				Debug.Print($"[PhaseFunction] No enemy intents to process");
+			}
 #endif
 
 			// 推進到回合結束
