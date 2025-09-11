@@ -124,6 +124,10 @@ namespace CombatCore.InterOp
 		{
 			var echo = intent.Echo;
 			
+			// 冷卻檢查
+			if (!echo.IsReady)
+				return TranslationResult.Fail(FailCode.EchoCooldown);
+			
 			// 目標解析
 			var target = ResolveTarget(intent.TargetId, tryGetActor);
 			if (echo.TargetType == TargetType.Target && (target == null || ReferenceEquals(target, self)))
@@ -139,7 +143,7 @@ namespace CombatCore.InterOp
 			var plan = echo.Op switch
 			{
 				HLAop.Attack => new BasicPlan(TokenType.A, self, target!, 5, 0, 0, 0, 0, echo.CostAP),
-				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 6, 0, 0, 0, echo.CostAP),
+				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 3, 0, 0, 0, echo.CostAP),
 				HLAop.Charge => new BasicPlan(TokenType.C, self, self, 0, 0, 0, 0, 2, echo.CostAP),
 				_ => throw new ArgumentException($"Unsupported HLAop: {echo.Op}")
 			};

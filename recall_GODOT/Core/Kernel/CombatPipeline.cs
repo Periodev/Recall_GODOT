@@ -134,13 +134,17 @@ namespace CombatCore.Kernel
 			{
 				var echo = echoIntent.Echo;
 				
-				// Basic Echo：推入記憶
+				// 觸發冷卻
+				if (echo.CooldownTurns > 0)
+					echo.CooldownCounter = echo.CooldownTurns;
+				
+				// 推入記憶
 				if (echo.ActionFlags.HasFlag(ActionType.Basic) && echo.PushMemory.HasValue)
 				{
 					state.Mem?.Push(echo.PushMemory.Value, state.PhaseCtx.TurnNum);
 				}
 				
-				// 消耗型 Echo：從 Store 移除
+				// 移除消耗型 Echo
 				if (echo.ConsumeOnPlay)
 				{
 					state.echoStore.TryRemove(echo);

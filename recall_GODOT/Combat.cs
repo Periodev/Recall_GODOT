@@ -21,39 +21,6 @@ public partial class Combat : Control
 	[Export] public EchoPanel EchoPanel;
 	[Export] public ErrorLabel ErrorLabel;
 
-	// Basic Echo 常數 - 取代原 BasicIntent
-	private static readonly Echo AttackEcho = new()
-	{
-		ActionFlags = ActionType.Basic,
-		PushMemory = TokenType.A,
-		ConsumeOnPlay = false,
-		Op = HLAop.Attack,
-		TargetType = TargetType.Target,
-		Name = "Attack",
-		CostAP = 1
-	};
-
-	private static readonly Echo BlockEcho = new()
-	{
-		ActionFlags = ActionType.Basic,
-		PushMemory = TokenType.B,
-		ConsumeOnPlay = false,
-		Op = HLAop.Block,
-		TargetType = TargetType.Self,
-		Name = "Block",
-		CostAP = 1
-	};
-
-	private static readonly Echo ChargeEcho = new()
-	{
-		ActionFlags = ActionType.Basic,
-		PushMemory = TokenType.C,
-		ConsumeOnPlay = false,
-		Op = HLAop.Charge,
-		TargetType = TargetType.Self,
-		Name = "Charge",
-		CostAP = 1
-	};
 
 	public CombatState State => CombatNode!.State;
 
@@ -94,29 +61,6 @@ public partial class Combat : Control
 
 	// === UI 事件處理 ===
 
-	/// <summary>
-	/// 處理基本動作按鈕點擊
-	/// </summary>
-	public void TryRunBasic(TokenType act, int? targetId)
-	{
-		GD.Print($"[CombatUI] TryRunBasic: {act}, target: {targetId}");
-
-		// 選擇對應的 Basic Echo
-		var echo = act switch
-		{
-			TokenType.A => AttackEcho,
-			TokenType.B => BlockEcho,
-			TokenType.C => ChargeEcho,
-			_ => throw new ArgumentException($"Unknown TokenType: {act}")
-		};
-
-		// 統一使用 EchoIntent
-		var intent = new EchoIntent(echo, targetId);
-		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
-
-		GD.Print($"[CombatUI] Basic action result: {result}, Current step: {State.PhaseCtx.Step}");
-		RefreshAllUI();
-	}
 
 	public void TryEndTurn()
 	{
@@ -330,13 +274,58 @@ public partial class Combat : Control
 			TargetType = TargetType.Self
 		};
 
-		// 加入到 EchoStore
-		var result1 = State.echoStore.TryAdd(attackEcho);
-		var result2 = State.echoStore.TryAdd(shieldEcho);
+		// 初始化 Basic Action Slots
+		var basicEchoes = new[]
+		{
+			new Echo
+			{
+				Id = 101,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.A,
+				ConsumeOnPlay = false,
+				CooldownTurns = 1,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				Name = "Attack",
+				CostAP = 1
+			},
+			new Echo
+			{
+				Id = 102,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.B,
+				ConsumeOnPlay = false,
+				CooldownTurns = 1,
+				Op = HLAop.Block,
+				TargetType = TargetType.Self,
+				Name = "Block",
+				CostAP = 1
+			},
+			new Echo
+			{
+				Id = 103,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.C,
+				ConsumeOnPlay = false,
+				CooldownTurns = 2,
+				Op = HLAop.Charge,
+				TargetType = TargetType.Self,
+				Name = "Copy",
+				CostAP = 1
+			}
+		};
 
-		GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
-		GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
-		GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
+		// 加入到 EchoStore
+		//var result1 = State.echoStore.TryAdd(attackEcho);
+		//var result2 = State.echoStore.TryAdd(shieldEcho);
+		
+		foreach (var echo in basicEchoes)
+			State.echoStore.TryAdd(echo);
+
+		//GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
+		//GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
+		//GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
+		GD.Print($"[Combat] - Basic Action Slots added");
 	}
 
 }
