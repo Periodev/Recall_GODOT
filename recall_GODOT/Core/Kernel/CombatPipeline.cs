@@ -122,12 +122,7 @@ namespace CombatCore.Kernel
 				}
 			}
 
-			var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
-			{
-				new CombatCore.UI.EnemyIntentUIItem("", ""),
-			};
-
-			SignalHub.NotifyEnemyIntentUpdated(1, Declare);
+			SignalHub.NotifyEnemyIntentCleared(1);
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -203,12 +198,7 @@ namespace CombatCore.Kernel
 				}
 			}
 
-			var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
-			{
-				new CombatCore.UI.EnemyIntentUIItem("", ""),
-			};
-
-			SignalHub.NotifyEnemyIntentUpdated(1, Declare);
+			SignalHub.NotifyEnemyIntentCleared(1);
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}

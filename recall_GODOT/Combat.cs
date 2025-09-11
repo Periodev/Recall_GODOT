@@ -140,6 +140,7 @@ public partial class Combat : Control
 		SignalHub.OnErrorOccurred += ShowError;
 
 		SignalHub.OnEnemyIntentUpdated += UpdateEnemyIntent;
+		SignalHub.OnEnemyIntentCleared += ClearEnemyIntent;
 	}
 
 	private void CleanupUIListeners()
@@ -151,6 +152,7 @@ public partial class Combat : Control
 		SignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
 		SignalHub.OnErrorOccurred -= ShowError;
 		SignalHub.OnEnemyIntentUpdated -= UpdateEnemyIntent;
+		SignalHub.OnEnemyIntentCleared -= ClearEnemyIntent;
 	}
 
 	private void BindActorsToUI()
@@ -249,11 +251,16 @@ public partial class Combat : Control
 		ErrorLabel.ShowError(code);
 	}
 
-
 	private void UpdateEnemyIntent(int ActorID, IReadOnlyList<EnemyIntentUIItem> items)
 	{
 		EnemyView.UpdateIntent(items[0].Icon, items[0].Text);
 	}
+
+	private void ClearEnemyIntent(int ActorID)
+	{
+		EnemyView.ClearIntent();
+	}
+
 
 	// debug function
 	private void CreateDebugEchos()

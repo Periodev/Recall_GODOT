@@ -30,5 +30,10 @@ public partial class EnemyView : Node2D
 		IntentLabel.Text = $"Enemy Declare : {Text}";
 	}
 
+	public void ClearIntent()
+	{
+		IntentLabel.Text = "";
+	}
+
 
 }

@@ -32,6 +32,7 @@ namespace CombatCore.UI
 		/// - 結算後：推送移除已結算項目的剩餘清單（或空清單）
 		/// </summary>
 		public static Action<int, IReadOnlyList<EnemyIntentUIItem>>? OnEnemyIntentUpdated { get; set; }
+		public static Action<int>? OnEnemyIntentCleared { get; set; }
 
 		// ===== Notify 包裝（含既有） =====
 		public static void NotifyHPChanged(int value) => OnHPChanged?.Invoke(value);
@@ -43,5 +44,7 @@ namespace CombatCore.UI
 
 		public static void NotifyEnemyIntentUpdated(int enemyId, IReadOnlyList<EnemyIntentUIItem> items)
 			=> OnEnemyIntentUpdated?.Invoke(enemyId, items);
+
+		public static void NotifyEnemyIntentCleared(int enemyId) => OnEnemyIntentCleared(enemyId);
 	}
 }
