@@ -3,9 +3,12 @@ using CombatCore;
 
 namespace CombatCore.Recall
 {
+	[Flags]
+	public enum ActionType { Basic = 1, Echo = 2 }
+
 	public partial class Echo
 	{
-		// UI view
+		// === 原有 UI 屬性 ===
 		public int Id { get; set; }
 		public int RecipeId { get; init; }
 
@@ -13,10 +16,16 @@ namespace CombatCore.Recall
 		public string RecipeLabel { get; init; } = "";
 		public string Summary { get; init; } = "";
 
-		// HLA behavior
+		// === 原有 HLA 屬性 ===
 		public int CostAP { get; init; } = 1;
 		public HLAop Op { get; init; }
 		public TargetType TargetType { get; init; }
+
+		// === 新增：行為分類與執行規則 ===
+		public ActionType ActionFlags { get; init; } = ActionType.Echo;
+		public TokenType? PushMemory { get; init; } = null;      // A/B/C or null
+		public bool ConsumeOnPlay { get; init; } = true;         // Echo=true, Basic=false
+		public int CooldownTurns { get; init; } = 0;             // 未來擴展用
 
 	}
 
