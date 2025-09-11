@@ -15,9 +15,9 @@ namespace CombatCore.AI
         {
             return intent switch
             {
-                BasicIntent bi when bi.Act == TokenType.A => ExecuteTiming.Delayed,
-                BasicIntent bi when bi.Act == TokenType.B => ExecuteTiming.Instant,
-                BasicIntent bi when bi.Act == TokenType.C => ExecuteTiming.Instant,
+                EchoIntent ei when ei.Echo.Op == HLAop.Attack => ExecuteTiming.Delayed,
+                EchoIntent ei when ei.Echo.Op == HLAop.Block => ExecuteTiming.Instant,
+                EchoIntent ei when ei.Echo.Op == HLAop.Charge => ExecuteTiming.Instant,
                 _ => ExecuteTiming.Instant
             };
         }

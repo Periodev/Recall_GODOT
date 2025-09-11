@@ -129,9 +129,10 @@ namespace CombatCore.Kernel
 		{
 			if (!execResult.Success) return;
 
-			if (intent is BasicIntent basicIntent)
+			if (intent is EchoIntent echoIntent && echoIntent.Echo.ActionFlags == ActionType.Basic)
 			{
-				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
+				if (echoIntent.Echo.PushMemory.HasValue)
+					state.Mem?.Push(echoIntent.Echo.PushMemory.Value, state.PhaseCtx.TurnNum);
 			}
 
 			if (intent is RecallIntent recallIntent)
@@ -154,9 +155,9 @@ namespace CombatCore.Kernel
 			}
 
 			// 新增 Echo 處理
-			if (intent is EchoIntent echoIntent)
+			if (intent is EchoIntent echoIntentForRemoval)
 			{
-				state.echoStore.TryRemove(echoIntent.Echo);
+				state.echoStore.TryRemove(echoIntentForRemoval.Echo);
 				// Echo 不寫入 Memory
 			}
 		}
@@ -193,9 +194,9 @@ namespace CombatCore.Kernel
 		/// </summary>
 		private static bool IsInstantAction(Intent intent)
 		{
-			if (intent is BasicIntent basicIntent)
+			if (intent is EchoIntent echoIntent)
 			{
-				return basicIntent.Act == TokenType.B || basicIntent.Act == TokenType.C;
+				return echoIntent.Echo.Op == HLAop.Block || echoIntent.Echo.Op == HLAop.Charge;
 			}
 			return false;
 		}
@@ -211,7 +212,17 @@ namespace CombatCore.Kernel
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
 				// B = instant
-				var blockIntent = new BasicIntent(TokenType.B, null);
+				var blockEcho = new Echo
+				{
+					ActionFlags = ActionType.Basic,
+					PushMemory = TokenType.B,
+					ConsumeOnPlay = false,
+					Op = HLAop.Block,
+					TargetType = TargetType.Self,
+					Name = "Block",
+					CostAP = 1
+				};
+				var blockIntent = new EchoIntent(blockEcho, null);
 				EnemyInstantQueue.Enqueue(enemy, blockIntent, "Block");
 			}
 
@@ -219,7 +230,17 @@ namespace CombatCore.Kernel
 			else
 			{
 				// A = delay  
-				var attackIntent = new BasicIntent(TokenType.A, 0);
+				var attackEcho = new Echo
+				{
+					ActionFlags = ActionType.Basic,
+					PushMemory = TokenType.A,
+					ConsumeOnPlay = false,
+					Op = HLAop.Attack,
+					TargetType = TargetType.Target,
+					Name = "Attack",
+					CostAP = 1
+				};
+				var attackIntent = new EchoIntent(attackEcho, 0);
 				EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Attack");
 			}
 

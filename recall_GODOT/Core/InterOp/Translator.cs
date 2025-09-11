@@ -12,7 +12,6 @@ namespace CombatCore
 {
 	public delegate bool TryGetActorById(int id, out Actor actor);
 	public abstract record Intent(int? TargetId);
-	public sealed record BasicIntent(TokenType Act, int? TargetId) : Intent(TargetId);
 	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
 	public sealed record EchoIntent(Echo Echo, int? TargetId) : Intent(TargetId);
 
@@ -69,9 +68,8 @@ namespace CombatCore.InterOp
 			return intent switch
 			{
 
-				BasicIntent bi => TranslateBasicIntentInternal(bi, state.PhaseCtx, state.TryGetActor, self),
 				RecallIntent ri => TranslateRecallIntentInternal(ri, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
-				EchoIntent ei => TranslateEchoIntentInternal(ei, state.PhaseCtx, state.TryGetActor, self),
+				EchoIntent ei => TranslateEchoIntentInternal(ei, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
 				_ => TranslationResult.Fail(FailCode.UnknownIntent)
 			};
 		}
@@ -97,57 +95,6 @@ namespace CombatCore.InterOp
 
 		private static bool RecallUsedThisTurn(PhaseContext phase) => phase.RecallUsedThisTurn;
 
-		private static TranslationResult TranslateBasicIntentInternal(
-			BasicIntent intent, PhaseContext phase, TryGetActorById tryGetActor, Actor self)
-		{
-			// 嚴格目標驗證
-			var tgt = ResolveTarget(intent.TargetId, tryGetActor);
-			if (intent.Act == TokenType.A)
-			{
-				// A 必須有有效且非 self 的目標
-				if (tgt is null || ReferenceEquals(tgt, self))
-					return TranslationResult.Fail(FailCode.BadTarget);
-			}
-			else
-			{
-				// B/C 一律自我，忽略傳入 TargetId
-				tgt = self;
-			}
-
-			// 計算數值（集中管理）
-			var numbers = ComputeBasicNumbers(intent.Act, self);
-
-			// AP 檢查：只檢查不扣，真正扣除在 AtomicCmd.ConsumeAP
-			if (numbers.APCost > 0 && !self.HasAP(numbers.APCost))
-				return TranslationResult.Fail(FailCode.NoAP);
-
-			// C 操作的 Copy 上限檢查
-			int finalGainAmount = numbers.GainAmount;
-			if (intent.Act == TokenType.C && self.Copy != null)
-			{
-				// 如果已達 Copy 上限，則不獲得 Copy (GainAmount = 0)
-				if (self.Copy.Value >= COPY_MAX)
-					finalGainAmount = 0;
-			}
-
-			// 檢查是否有 Copy 待觸發 (只對 A/B 有效)
-			bool hasCopy = self.HasCopy() && (intent.Act == TokenType.A || intent.Act == TokenType.B);
-			int copyCost = hasCopy ? 1 : 0;
-
-			// 動態決定此次可用的 Charge 數量與加成 (敵人邏輯)
-			int chargeCostThisAction = 0;
-			if (intent.Act == TokenType.A || intent.Act == TokenType.B)
-				chargeCostThisAction = Math.Min(self.Charge?.Value ?? 0, CHARGE_MAX_PER_ACTION);
-
-			int dmg = numbers.Damage + (intent.Act == TokenType.A ? A_BONUS_PER_CHARGE * chargeCostThisAction : 0);
-			int blk = numbers.Block + (intent.Act == TokenType.B ? B_BONUS_PER_CHARGE * chargeCostThisAction : 0);
-
-			int finalDmg = dmg;
-			int finalBlk = blk;
-
-			var plan = new BasicPlan(intent.Act, self, tgt, finalDmg, finalBlk, chargeCostThisAction, copyCost, finalGainAmount, numbers.APCost);
-			return TranslationResult.Pass(plan, intent);
-		}
 
 		private static TranslationResult TranslateRecallIntentInternal(
 			RecallIntent intent, PhaseContext phase, RecallView memory, 
@@ -172,58 +119,33 @@ namespace CombatCore.InterOp
 		}
 
 		private static TranslationResult TranslateEchoIntentInternal(
-			EchoIntent intent, PhaseContext phase, TryGetActorById tryGetActor, Actor self)
+			EchoIntent intent, PhaseContext phase, RecallView memory, 
+			TryGetActorById tryGetActor, Actor self)
 		{
-
-			// AP 檢查
-			if (!self.HasAP(intent.Echo.CostAP))
-				return TranslationResult.Fail(FailCode.NoAP);
-
-			// 目標驗證
-			var target = ValidateEchoTarget(intent.Echo.TargetType, intent.TargetId, tryGetActor, self);
-			if (target == null)
+			var echo = intent.Echo;
+			
+			// 目標解析
+			var target = ResolveTarget(intent.TargetId, tryGetActor);
+			if (echo.TargetType == TargetType.Target && (target == null || ReferenceEquals(target, self)))
 				return TranslationResult.Fail(FailCode.BadTarget);
-
-			// Op 映射 (僅支援 A/B/C)
-			var plan = MapEchoToBasicPlan(intent.Echo, self, target);
-			return plan != null
-				? TranslationResult.Pass(plan, intent)
-				: TranslationResult.Fail(FailCode.NoRecipe);
-		}
-
-		private static Actor? ValidateEchoTarget(TargetType targetType, int? targetId, TryGetActorById tryGetActor, Actor self)
-		{
-			return targetType switch
+			if (echo.TargetType == TargetType.Self)
+				target = self;
+			
+			// AP 檢查
+			if (echo.CostAP > 0 && !self.HasAP(echo.CostAP))
+				return TranslationResult.Fail(FailCode.NoAP);
+			
+			// 根據 HLAop 生成計劃
+			var plan = echo.Op switch
 			{
-				TargetType.Self => self,
-				TargetType.Target => targetId.HasValue && tryGetActor(targetId.Value, out var t) ? t : null,
-				TargetType.None => self, // 預設自己
-				TargetType.All => null,  // 暫不支援，返回 null 觸發 BadTarget
-				_ => null
+				HLAop.Attack => new BasicPlan(TokenType.A, self, target!, 5, 0, 0, 0, 0, echo.CostAP),
+				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 6, 0, 0, 0, echo.CostAP),
+				HLAop.Charge => new BasicPlan(TokenType.C, self, self, 0, 0, 0, 0, 2, echo.CostAP),
+				_ => throw new ArgumentException($"Unsupported HLAop: {echo.Op}")
 			};
+			
+			return TranslationResult.Pass(plan, intent);
 		}
 
-		private static BasicPlan? MapEchoToBasicPlan(Echo echo, Actor self, Actor target)
-		{
-			// 使用與 Basic 相同的數值
-			var numbers = ComputeBasicNumbers(echo.Op switch
-			{
-				HLAop.Attack => TokenType.A,
-				HLAop.Block => TokenType.B,
-				HLAop.Charge => TokenType.C,
-				_ => TokenType.A  // fallback
-			}, self);
-
-			return echo.Op switch
-			{
-				HLAop.Attack => new BasicPlan(TokenType.A, self, target,
-					numbers.Damage, 0, 0, 0, 0, echo.CostAP),
-				HLAop.Block => new BasicPlan(TokenType.B, self, self,
-					0, numbers.Block, 0, 0, 0, echo.CostAP),
-				HLAop.Charge => new BasicPlan(TokenType.C, self, self,
-					0, 0, 0, 0, numbers.GainAmount, echo.CostAP),
-				_ => null  // CA 等其他返回 null
-			};
-		}
 	}
 }

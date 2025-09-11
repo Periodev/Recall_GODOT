@@ -21,6 +21,40 @@ public partial class Combat : Control
 	[Export] public EchoPanel EchoPanel;
 	[Export] public ErrorLabel ErrorLabel;
 
+	// Basic Echo 常數 - 取代原 BasicIntent
+	private static readonly Echo AttackEcho = new()
+	{
+		ActionFlags = ActionType.Basic,
+		PushMemory = TokenType.A,
+		ConsumeOnPlay = false,
+		Op = HLAop.Attack,
+		TargetType = TargetType.Target,
+		Name = "Attack",
+		CostAP = 1
+	};
+
+	private static readonly Echo BlockEcho = new()
+	{
+		ActionFlags = ActionType.Basic,
+		PushMemory = TokenType.B,
+		ConsumeOnPlay = false,
+		Op = HLAop.Block,
+		TargetType = TargetType.Self,
+		Name = "Block",
+		CostAP = 1
+	};
+
+	private static readonly Echo ChargeEcho = new()
+	{
+		ActionFlags = ActionType.Basic,
+		PushMemory = TokenType.C,
+		ConsumeOnPlay = false,
+		Op = HLAop.Charge,
+		TargetType = TargetType.Self,
+		Name = "Charge",
+		CostAP = 1
+	};
+
 	public CombatState State => CombatNode!.State;
 
 	public override void _Ready()
@@ -67,13 +101,20 @@ public partial class Combat : Control
 	{
 		GD.Print($"[CombatUI] TryRunBasic: {act}, target: {targetId}");
 
-		// 設定玩家意圖
-		var intent = new BasicIntent(act, targetId);
+		// 選擇對應的 Basic Echo
+		var echo = act switch
+		{
+			TokenType.A => AttackEcho,
+			TokenType.B => BlockEcho,
+			TokenType.C => ChargeEcho,
+			_ => throw new ArgumentException($"Unknown TokenType: {act}")
+		};
+
+		// 統一使用 EchoIntent
+		var intent = new EchoIntent(echo, targetId);
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
 
 		GD.Print($"[CombatUI] Basic action result: {result}, Current step: {State.PhaseCtx.Step}");
-
-		// 刷新 UI
 		RefreshAllUI();
 	}
 
