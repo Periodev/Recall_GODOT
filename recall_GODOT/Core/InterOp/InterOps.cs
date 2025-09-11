@@ -11,7 +11,7 @@ namespace CombatCore.InterOp
 	public abstract record Plan(Actor Source, int APCost);
 
 	public sealed record BasicPlan(
-		ActionType Act,
+		TokenType Act,
 		Actor Source,
 		Actor Target,
 		int Damage,       // A
@@ -47,7 +47,7 @@ namespace CombatCore.InterOp
 
 			switch (plan.Act)
 			{
-				case ActionType.A:
+				case TokenType.A:
 					// 玩家：先消耗 Copy，再執行攻擊
 					if (plan.CopyCost > 0)
 						list.Add(AtomicCmd.ConsumeCopy(plan.Source, plan.CopyCost));
@@ -64,7 +64,7 @@ namespace CombatCore.InterOp
 					}
 					break;
 
-				case ActionType.B:
+				case TokenType.B:
 					// 類似 A 的邏輯
 					if (plan.CopyCost > 0)
 						list.Add(AtomicCmd.ConsumeCopy(plan.Source, plan.CopyCost));
@@ -79,7 +79,7 @@ namespace CombatCore.InterOp
 					}
 					break;
 
-				case ActionType.C:
+				case TokenType.C:
 					// 根據角色的組件類型決定獲得什麼
 					// 有 Copy 組件的角色獲得 Copy，有 Charge 組件的角色獲得 Charge
 					if (plan.GainAmount > 0)

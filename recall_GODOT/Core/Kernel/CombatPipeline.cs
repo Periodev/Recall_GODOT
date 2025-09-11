@@ -129,9 +129,22 @@ namespace CombatCore.Kernel
 		{
 			if (!execResult.Success) return;
 
-			if (intent is BasicIntent basicIntent)
+			// 處理 Echo 行為（統一邏輯）
+			if (intent is EchoIntent echoIntent)
 			{
-				state.Mem?.Push(basicIntent.Act, state.PhaseCtx.TurnNum);
+				var echo = echoIntent.Echo;
+				
+				// Basic Echo：推入記憶
+				if (echo.ActionFlags.HasFlag(ActionType.Basic) && echo.PushMemory.HasValue)
+				{
+					state.Mem?.Push(echo.PushMemory.Value, state.PhaseCtx.TurnNum);
+				}
+				
+				// 消耗型 Echo：從 Store 移除
+				if (echo.ConsumeOnPlay)
+				{
+					state.echoStore.TryRemove(echo);
+				}
 			}
 
 			if (intent is RecallIntent recallIntent)
@@ -153,12 +166,6 @@ namespace CombatCore.Kernel
 				// RecallIntent does not write to Memory
 			}
 
-			// 新增 Echo 處理
-			if (intent is EchoIntent echoIntent)
-			{
-				state.echoStore.TryRemove(echoIntent.Echo);
-				// Echo 不寫入 Memory
-			}
 		}
 
 		/// <summary>
@@ -193,9 +200,9 @@ namespace CombatCore.Kernel
 		/// </summary>
 		private static bool IsInstantAction(Intent intent)
 		{
-			if (intent is BasicIntent basicIntent)
+			if (intent is EchoIntent echoIntent)
 			{
-				return basicIntent.Act == ActionType.B || basicIntent.Act == ActionType.C;
+				return echoIntent.Echo.Op == HLAop.Block || echoIntent.Echo.Op == HLAop.Charge;
 			}
 			return false;
 		}
@@ -211,18 +218,35 @@ namespace CombatCore.Kernel
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
 				// B = instant
-				var blockIntent = new BasicIntent(ActionType.B, null);
+				var blockEcho = CreateEnemyBasicEcho(HLAop.Block, TokenType.B);
+				var blockIntent = new EchoIntent(blockEcho, null);
 				EnemyInstantQueue.Enqueue(enemy, blockIntent, "Block");
 			}
-
-
 			else
 			{
 				// A = delay  
-				var attackIntent = new BasicIntent(ActionType.A, 0);
+				var attackEcho = CreateEnemyBasicEcho(HLAop.Attack, TokenType.A);
+				var attackIntent = new EchoIntent(attackEcho, 0);
 				EnemyDelayedQueue.Enqueue(enemy, attackIntent, "Attack");
 			}
 
+		}
+
+		/// <summary>
+		/// 輔助方法：建立敵人 Basic Echo
+		/// </summary>
+		private static Echo CreateEnemyBasicEcho(HLAop op, TokenType pushToken)
+		{
+			return new Echo
+			{
+				ActionFlags = ActionType.Basic,
+				PushMemory = pushToken,
+				ConsumeOnPlay = false,
+				Op = op,
+				TargetType = op == HLAop.Attack ? TargetType.Target : TargetType.Self,
+				Name = op.ToString(),
+				CostAP = 0  // 敵人不消耗 AP
+			};
 		}
 
 		/// <summary>

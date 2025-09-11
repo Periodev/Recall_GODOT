@@ -20,9 +20,9 @@ public partial class BasicMoveUI : Control
 		BtnB.Pressed += () => OnBasicMovePressed("B");
 		BtnC.Pressed += () => OnBasicMovePressed("C");
 		*/
-		BtnA.Pressed += () => CombatCtrl.TryRunBasic(ActionType.A, 1);
-		BtnB.Pressed += () => CombatCtrl.TryRunBasic(ActionType.B, null);
-		BtnC.Pressed += () => CombatCtrl.TryRunBasic(ActionType.C, null);
+		BtnA.Pressed += () => CombatCtrl.TryRunBasic(TokenType.A, 1);
+		BtnB.Pressed += () => CombatCtrl.TryRunBasic(TokenType.B, null);
+		BtnC.Pressed += () => CombatCtrl.TryRunBasic(TokenType.C, null);
 		BtnEnd.Pressed += () => CombatCtrl.TryEndTurn();
 
 	}

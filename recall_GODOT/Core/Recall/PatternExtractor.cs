@@ -34,7 +34,7 @@ namespace CombatCore.Recall
 		/// 只處理 AB-only，忽略 C
 		/// </summary>
 
-		public static int Encode(ActionType[] actions)
+		public static int Encode(TokenType[] actions)
 		{
 			int result = 0;
 			foreach (var action in actions)
@@ -44,13 +44,13 @@ namespace CombatCore.Recall
 			return result;
 		}
 
-		private static int ActionToDigit(ActionType action)
+		private static int ActionToDigit(TokenType action)
 		{
 			return action switch
 			{
-				ActionType.A => 1,
-				ActionType.B => 2,
-				ActionType.C => 3,
+				TokenType.A => 1,
+				TokenType.B => 2,
+				TokenType.C => 3,
 				_ => throw new ArgumentException($"Unsupported action: {action}")
 			};
 		}
