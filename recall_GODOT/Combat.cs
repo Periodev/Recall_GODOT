@@ -279,52 +279,52 @@ public partial class Combat : Control
 		{
 			new Echo
 			{
-				Id = 101, 
-				ActionFlags = ActionType.Basic, 
+				Id = 101,
+				ActionFlags = ActionType.Basic,
 				PushMemory = TokenType.A,
-				ConsumeOnPlay = false, 
-				CooldownTurns = 0, 
+				ConsumeOnPlay = false,
+				CooldownTurns = 1,
 				Op = HLAop.Attack,
-				TargetType = TargetType.Target, 
-				Name = "Attack", 
+				TargetType = TargetType.Target,
+				Name = "Attack",
 				CostAP = 1
 			},
 			new Echo
 			{
-				Id = 102, 
-				ActionFlags = ActionType.Basic, 
+				Id = 102,
+				ActionFlags = ActionType.Basic,
 				PushMemory = TokenType.B,
-				ConsumeOnPlay = false, 
-				CooldownTurns = 0, 
+				ConsumeOnPlay = false,
+				CooldownTurns = 1,
 				Op = HLAop.Block,
-				TargetType = TargetType.Self, 
-				Name = "Block", 
+				TargetType = TargetType.Self,
+				Name = "Block",
 				CostAP = 1
 			},
 			new Echo
 			{
-				Id = 103, 
-				ActionFlags = ActionType.Basic, 
+				Id = 103,
+				ActionFlags = ActionType.Basic,
 				PushMemory = TokenType.C,
-				ConsumeOnPlay = false, 
-				CooldownTurns = 1, 
+				ConsumeOnPlay = false,
+				CooldownTurns = 2,
 				Op = HLAop.Charge,
-				TargetType = TargetType.Self, 
-				Name = "Charge", 
+				TargetType = TargetType.Self,
+				Name = "Copy",
 				CostAP = 1
 			}
 		};
 
 		// 加入到 EchoStore
-		var result1 = State.echoStore.TryAdd(attackEcho);
-		var result2 = State.echoStore.TryAdd(shieldEcho);
+		//var result1 = State.echoStore.TryAdd(attackEcho);
+		//var result2 = State.echoStore.TryAdd(shieldEcho);
 		
 		foreach (var echo in basicEchoes)
 			State.echoStore.TryAdd(echo);
 
-		GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
-		GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
-		GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
+		//GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
+		//GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
+		//GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
 		GD.Print($"[Combat] - Basic Action Slots added");
 	}
 

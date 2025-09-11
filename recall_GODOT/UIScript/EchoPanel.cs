@@ -103,17 +103,28 @@ public partial class EchoPanel : Control
 		}
 		else
 		{
-			// 有 Echo 的槽位
-			btn.Text = echo.Name;
-			btn.Disabled = false;
-
-			if (isSelected)
+			// 有 Echo 的槽位 - 檢查冷卻狀態
+			if (!echo.IsReady)
 			{
-				btn.Modulate = new Color(0.3f, 0.5f, 1.0f, 1.0f); // 藍色高亮
+				// 冷卻中的 Echo
+				btn.Text = $"{echo.Name} ({echo.CooldownCounter})";
+				btn.Disabled = true; // 冷卻中不能點擊
+				btn.Modulate = new Color(1.0f, 0.4f, 0.4f, 0.8f); // 紅色淡化表示冷卻中
 			}
 			else
 			{
-				btn.Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f); // 原色
+				// 可用的 Echo
+				btn.Text = echo.Name;
+				btn.Disabled = false;
+
+				if (isSelected)
+				{
+					btn.Modulate = new Color(0.3f, 0.5f, 1.0f, 1.0f); // 藍色高亮
+				}
+				else
+				{
+					btn.Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f); // 原色
+				}
 			}
 		}
 	}
@@ -128,6 +139,15 @@ public partial class EchoPanel : Control
 		if (!CombatCtrl.State.echoStore.TryGet(slotIndex, out var echo) || echo == null)
 		{
 			GD.Print($"[EchoPanel] Slot {slotIndex} is empty");
+			ShowReason("Empty slot");
+			return;
+		}
+
+		// 檢查 Echo 是否冷卻中
+		if (!echo.IsReady)
+		{
+			GD.Print($"[EchoPanel] Echo {echo.Name} is on cooldown ({echo.CooldownCounter} turns remaining)");
+			ShowReason($"{echo.Name} is on cooldown ({echo.CooldownCounter} turns)");
 			return;
 		}
 
@@ -141,6 +161,7 @@ public partial class EchoPanel : Control
 		RefreshEchoSlots();
 		UpdateEchoInfo(echo);
 		UpdateActionButtons();
+		ClearReason(); // 選擇成功時清除錯誤訊息
 	}
 
 	// === 資訊顯示 ===

@@ -21,8 +21,8 @@ namespace CombatCore
 		RecallUsed,
 		BadIndex, IndexOutOfBound, IndexLimited,
         NoRecipe, IndexNotContiguous, EchoSlotsFull,
+		EchoCooldown,
 		PhaseLocked,
 		UnknownIntent,
-		EchoCooldown,
 	}
 }
