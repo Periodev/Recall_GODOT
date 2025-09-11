@@ -23,5 +23,6 @@ namespace CombatCore
         NoRecipe, IndexNotContiguous, EchoSlotsFull,
 		PhaseLocked,
 		UnknownIntent,
+		EchoCooldown,
 	}
 }

@@ -29,6 +29,12 @@ namespace CombatCore.Kernel
 			SelfOp.ClearShield(state.Player);
 			SelfOp.ClearCharge(state.Player);
 
+			// 冷卻倒數
+			foreach (var echo in state.echoStore.Items)
+			{
+				if (echo.CooldownCounter > 0)
+					echo.CooldownCounter--;
+			}
 
 			// 🎯 推進到下一階段
 			state.PhaseCtx.Step = PhaseStep.PlayerDraw;

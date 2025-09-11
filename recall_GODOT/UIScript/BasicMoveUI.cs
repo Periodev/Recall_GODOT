@@ -20,11 +20,24 @@ public partial class BasicMoveUI : Control
 		BtnB.Pressed += () => OnBasicMovePressed("B");
 		BtnC.Pressed += () => OnBasicMovePressed("C");
 		*/
-		BtnA.Pressed += () => CombatCtrl.TryRunBasic(TokenType.A, 1);
-		BtnB.Pressed += () => CombatCtrl.TryRunBasic(TokenType.B, null);
-		BtnC.Pressed += () => CombatCtrl.TryRunBasic(TokenType.C, null);
+		BtnA.Pressed += () => TryRunBasicSlot(101, 1); // Basic Attack slot
+		BtnB.Pressed += () => TryRunBasicSlot(102, null); // Basic Block slot
+		BtnC.Pressed += () => TryRunBasicSlot(103, null); // Basic Charge slot
 		BtnEnd.Pressed += () => CombatCtrl.TryEndTurn();
+	}
 
+	private void TryRunBasicSlot(int echoId, int? targetId)
+	{
+		// Find the Basic Action Slot Echo by ID
+		var slots = CombatCtrl.State.echoStore.ToSlots();
+		foreach (var echo in slots)
+		{
+			if (echo?.Id == echoId)
+			{
+				CombatCtrl.TryRunEcho(echo, targetId);
+				break;
+			}
+		}
 	}
 
 }

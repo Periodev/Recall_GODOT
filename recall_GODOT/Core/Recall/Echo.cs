@@ -26,6 +26,10 @@ namespace CombatCore.Recall
 		public TokenType? PushMemory { get; init; } = null;      // A/B/C or null
 		public bool ConsumeOnPlay { get; init; } = true;         // Echo=true, Basic=false
 		public int CooldownTurns { get; init; } = 0;             // 未來擴展用
+		
+		// === 冷卻計數器 ===
+		public int CooldownCounter { get; set; } = 0;
+		public bool IsReady => CooldownCounter <= 0;
 
 	}
 

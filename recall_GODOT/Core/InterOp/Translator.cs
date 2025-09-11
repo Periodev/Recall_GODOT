@@ -124,6 +124,10 @@ namespace CombatCore.InterOp
 		{
 			var echo = intent.Echo;
 			
+			// 冷卻檢查
+			if (!echo.IsReady)
+				return TranslationResult.Fail(FailCode.EchoCooldown);
+			
 			// 目標解析
 			var target = ResolveTarget(intent.TargetId, tryGetActor);
 			if (echo.TargetType == TargetType.Target && (target == null || ReferenceEquals(target, self)))
