@@ -53,7 +53,7 @@ namespace CombatCore.Kernel
 			Debug.Print($"[PhaseRunner] Player ending turn");
 
 			// ✅ 直接跳到敵人延遲執行階段
-			state.PhaseCtx.Step = PhaseStep.EnemyExecDelayed;
+			state.PhaseCtx.Step = PhaseStep.EnemyExec;
 			return AdvanceUntilInput(state);
 		}
 

@@ -17,8 +17,8 @@ namespace CombatCore
 		EnemyInit = 0x10,
 		EnemyIntent = 0x11,
 		EnemyPlanning = 0x12,     // 🆕 新增
-		EnemyExecInstant = 0x13,  // 🆕 修改編號
-		EnemyExecDelayed = 0x14,  // 🆕 修改編號
+		EnemyExecMark = 0x13,  // 🆕 修改編號
+		EnemyExec = 0x14,  // 🆕 修改編號
 
 		// === Turn Phase (0xFX) ===
 		TurnStart = 0xF0,

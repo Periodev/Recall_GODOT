@@ -10,9 +10,9 @@ namespace CombatCore
 	/// </summary>
 	public enum ExecuteQueue : byte
 	{
-		EnemyInstant = 1,    // 敵人立即執行
+		EnemyMark = 1,    	// 敵人下回執行
 		Player = 2,          // 玩家執行  
-		EnemyDelayed = 3,    // 敵人延遲執行
+		EnemyAct = 3,    	// 敵人執行
 		TurnEnd = 4          // 回合結束執行
 	}
 

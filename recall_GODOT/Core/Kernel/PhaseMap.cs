@@ -54,19 +54,19 @@ namespace CombatCore.Kernel
 
 			// === Enemy Phase ===
 			{ PhaseStep.EnemyInit, (CombatState state) => {
-				state.PhaseCtx.Step = PhaseStep.EnemyIntent;
+				state.PhaseCtx.Step = PhaseStep.EnemyExecMark;
 				return PhaseResult.Continue;
 			}},
 			
 			// 直接調用 PhaseFunction
+			{ PhaseStep.EnemyExecMark, (CombatState state) =>
+				PhaseFunction.HandleEnemyMarkExecution(state) },
+
 			{ PhaseStep.EnemyIntent, (CombatState state) =>
 				PhaseFunction.HandleEnemyAI(state) },
 
-			{ PhaseStep.EnemyExecInstant, (CombatState state) =>
-				PhaseFunction.HandleEnemyInstantExecution(state) },
-
-			{ PhaseStep.EnemyExecDelayed, (CombatState state) =>
-				PhaseFunction.HandleEnemyDelayed(state) }
+			{ PhaseStep.EnemyExec, (CombatState state) =>
+				PhaseFunction.HandleEnemyAction(state) }
 		};
 	}
 }

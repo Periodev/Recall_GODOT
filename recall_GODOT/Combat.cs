@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+
 using CombatCore;
 using CombatCore.Kernel;
 using CombatCore.ActorOp;
@@ -7,6 +9,7 @@ using CombatCore.InterOp;
 using CombatCore.Recall;
 using CombatCore.Command;
 using CombatCore.UI;
+using System.Linq;
 
 /// <summary>
 /// Combat 控制器 - 負責 UI 與戰鬥系統的整合
@@ -136,6 +139,8 @@ public partial class Combat : Control
 		// Error message
 		SignalHub.OnErrorOccurred += ShowError;
 
+		SignalHub.OnEnemyIntentUpdated += UpdateEnemyIntent;
+		SignalHub.OnEnemyIntentCleared += ClearEnemyIntent;
 	}
 
 	private void CleanupUIListeners()
@@ -146,6 +151,8 @@ public partial class Combat : Control
 		SignalHub.OnAPChanged -= OnStatusChanged;
 		SignalHub.OnPlayerDrawComplete -= OnPlayerDrawComplete;
 		SignalHub.OnErrorOccurred -= ShowError;
+		SignalHub.OnEnemyIntentUpdated -= UpdateEnemyIntent;
+		SignalHub.OnEnemyIntentCleared -= ClearEnemyIntent;
 	}
 
 	private void BindActorsToUI()
@@ -208,8 +215,8 @@ public partial class Combat : Control
 			case PhaseStep.EnemyInit:
 			case PhaseStep.EnemyIntent:
 			case PhaseStep.EnemyPlanning:
-			case PhaseStep.EnemyExecInstant:
-			case PhaseStep.EnemyExecDelayed:
+			case PhaseStep.EnemyExecMark:
+			case PhaseStep.EnemyExec:
 				RecallPanel.EnterEnemyPhase();
 				break;
 
@@ -242,6 +249,16 @@ public partial class Combat : Control
 	private void ShowError(FailCode code)
 	{
 		ErrorLabel.ShowError(code);
+	}
+
+	private void UpdateEnemyIntent(int ActorID, IReadOnlyList<EnemyIntentUIItem> items)
+	{
+		EnemyView.UpdateIntent(items[0].Icon, items[0].Text);
+	}
+
+	private void ClearEnemyIntent(int ActorID)
+	{
+		EnemyView.ClearIntent();
 	}
 
 
@@ -318,14 +335,14 @@ public partial class Combat : Control
 		// 加入到 EchoStore
 		//var result1 = State.echoStore.TryAdd(attackEcho);
 		//var result2 = State.echoStore.TryAdd(shieldEcho);
-		
+
 		foreach (var echo in basicEchoes)
 			State.echoStore.TryAdd(echo);
 
 		//GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
 		//GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
 		//GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
-		GD.Print($"[Combat] - Basic Action Slots added");
+		GD.Print("[Combat] - Basic Action Slots added");
 	}
 
 }

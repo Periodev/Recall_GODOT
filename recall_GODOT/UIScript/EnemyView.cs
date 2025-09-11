@@ -6,6 +6,7 @@ public partial class EnemyView : Node2D
 {
 	[Export] public Label HpLabel;
 	[Export] public Label ShieldLabel;
+	[Export] public Label IntentLabel;
 
 	private Actor _actor;
 
@@ -23,5 +24,16 @@ public partial class EnemyView : Node2D
 		ShieldLabel.Text = $"Shield: {_actor.Shield?.Value ?? 0}";
 
 	}
+
+	public void UpdateIntent(string Icon, string Text)
+	{
+		IntentLabel.Text = $"Enemy Declare : {Text}";
+	}
+
+	public void ClearIntent()
+	{
+		IntentLabel.Text = "";
+	}
+
 
 }
