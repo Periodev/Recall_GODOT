@@ -49,7 +49,7 @@ namespace CombatCore.UI
         {
             // EchoStore full check
             if (isEchoStoreFull)
-                return RecallValidationResult.Fail(FailCode.EchoSlotsFull);
+                return RecallValidationResult.Fail(FailCode.ActSlotsFull);
 
             // 索引驗證（從 Translator 移出的邏輯）
             var indexValidation = ValidateIndices(indices, memory, currentTurn);

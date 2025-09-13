@@ -2,8 +2,8 @@ namespace CombatCore
 {
 	public static class GameConst
 	{
-		public const int A_BASE_DMG = 5;
-		public const int B_BASE_BLOCK = 6;
+		public const int A_BASE_DMG = 2;
+		public const int B_BASE_BLOCK = 1;
 		public const int C_GAIN_CHARGE = 2;
 		public const int C_GAIN_COPY = 1;  // C 操作獲得 Copy 數量
 
