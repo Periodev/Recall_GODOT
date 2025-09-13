@@ -8,29 +8,29 @@ namespace CombatCore.Recall
 
 	public partial class Act
 	{
-		// === 原有 UI 屬性 ===
+		// === Core Spec (不可變) ===
+		public HLAop Op { get; init; }
+		public TargetType TargetType { get; init; }
+		
+		// === Changeable Spec ===
+		public int CostAP { get; init; } = 1;
+		public TokenType? PushMemory { get; init; } = null;
+		public bool ConsumeOnPlay { get; init; } = true;
+		public int CooldownTurns { get; init; } = 0;
+		
+		// === 建立時確定的識別符 ===
+		public ActionType ActionFlags { get; init; } = ActionType.Echo;
 		public int Id { get; set; }
-		public int RecipeId { get; init; }
-
+		
+		// === Runtime 變數 ===
+		public int CooldownCounter { get; set; } = 0;
+		public bool IsReady => CooldownCounter <= 0;
+		
+		// === UI 顯示 ===
+		public int RecipeId { get; init; }  // debug only
 		public string Name { get; init; } = "";
 		public string RecipeLabel { get; init; } = "";
 		public string Summary { get; init; } = "";
-
-		// === 原有 HLA 屬性 ===
-		public int CostAP { get; init; } = 1;
-		public HLAop Op { get; init; }
-		public TargetType TargetType { get; init; }
-
-		// === 新增：行為分類與執行規則 ===
-		public ActionType ActionFlags { get; init; } = ActionType.Echo;
-		public TokenType? PushMemory { get; init; } = null;      // A/B/C or null
-		public bool ConsumeOnPlay { get; init; } = true;         // Echo=true, Basic=false
-		public int CooldownTurns { get; init; } = 0;             // 未來擴展用
-		
-		// === 冷卻計數器 ===
-		public int CooldownCounter { get; set; } = 0;
-		public bool IsReady => CooldownCounter <= 0;
-
 	}
 
 	public static class ActFactory
