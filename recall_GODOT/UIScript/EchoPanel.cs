@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using CombatCore;
 using CombatCore.Recall;
+using CombatCore.InterOp;
 
 public partial class EchoPanel : Control
 {

@@ -39,7 +39,7 @@ public partial class Combat : Control
 
 		GD.Print("Combat system initializing...");
 
-		CreateDebugEchos();
+		CreateDebugActs();
 
 
 		// 設定 UI 事件監聽
@@ -80,7 +80,7 @@ public partial class Combat : Control
 
 	public void TryRunAct(Act act, int? targetId)
 	{
-		GD.Print($"[Combat] TryRunEcho: {act.Name}, target: {targetId}");
+		GD.Print($"[Combat] TryRunAct: {act.Name}, target: {targetId}");
 
 		// 找到選中的槽位索引
 		var slots = State.actStore.ToSlots();
@@ -263,85 +263,20 @@ public partial class Combat : Control
 
 
 	// debug function
-	private void CreateDebugEchos()
+	private void CreateDebugActs()
 	{
-		// Act1: 攻擊類 (對敵人)
-		var attackAct= new Act
+		var basicActs = new[]
 		{
-			//Id = 0,
-			RecipeId = 1,
-			Name = "Attack",
-			RecipeLabel = "A",
-			Summary = "[Test] Basic attack",
-			CostAP = 1,
-			Op = HLAop.Attack,
-			TargetType = TargetType.Target
+			ActFactory.BuildFromRecipe(1),  // Attack
+			ActFactory.BuildFromRecipe(2),  // Block  
+			ActFactory.BuildFromRecipe(3),  // Copy
 		};
 
-		// Act2: 防禦類 (對自己)
-		var shieldAct= new Act
-		{
-			//Id = 0,
-			RecipeId = 2,
-			Name = "Block",
-			RecipeLabel = "B",
-			Summary = "[Test] Basic Block",
-			CostAP = 1,
-			Op = HLAop.Block,
-			TargetType = TargetType.Self
-		};
 
-		// 初始化 Basic Action Slots
-		var basicEchoes = new[]
-		{
-			new Act
-			{
-				Id = 101,
-				ActionFlags = ActionType.Basic,
-				PushMemory = TokenType.A,
-				ConsumeOnPlay = false,
-				CooldownTurns = 1,
-				Op = HLAop.Attack,
-				TargetType = TargetType.Target,
-				Name = "Attack",
-				CostAP = 1
-			},
-			new Act
-			{
-				Id = 102,
-				ActionFlags = ActionType.Basic,
-				PushMemory = TokenType.B,
-				ConsumeOnPlay = false,
-				CooldownTurns = 1,
-				Op = HLAop.Block,
-				TargetType = TargetType.Self,
-				Name = "Block",
-				CostAP = 1
-			},
-			new Act
-			{
-				Id = 103,
-				ActionFlags = ActionType.Basic,
-				PushMemory = TokenType.C,
-				ConsumeOnPlay = false,
-				CooldownTurns = 2,
-				Op = HLAop.Charge,
-				TargetType = TargetType.Self,
-				Name = "Copy",
-				CostAP = 1
-			}
-		};
-
-		// 加入到 EchoStore
-		//var result1 = State.actStore.TryAdd(attackEcho);
-		//var result2 = State.actStore.TryAdd(shieldEcho);
-
-		foreach (var act in basicEchoes)
+		foreach (var act in basicActs)
 			State.actStore.TryAdd(act);
 
-		//GD.Print($"[Combat] Created debug Echos: {State.actStore.Count}/5");
-		//GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
-		//GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
+
 		GD.Print("[Combat] - Basic Action Slots added");
 	}
 
