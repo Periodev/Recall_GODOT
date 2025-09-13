@@ -26,15 +26,15 @@ public partial class BasicMoveUI : Control
 		BtnEnd.Pressed += () => CombatCtrl.TryEndTurn();
 	}
 
-	private void TryRunBasicSlot(int echoId, int? targetId)
+	private void TryRunBasicSlot(int actId, int? targetId)
 	{
-		// Find the Basic Action Slot Echo by ID
-		var slots = CombatCtrl.State.echoStore.ToSlots();
-		foreach (var echo in slots)
+		// Find the Basic Action Slot Act by ID
+		var slots = CombatCtrl.State.actStore.ToSlots();
+		foreach (var act in slots)
 		{
-			if (echo?.Id == echoId)
+			if (act?.Id == actId)
 			{
-				CombatCtrl.TryRunEcho(echo, targetId);
+				CombatCtrl.TryRunAct(act, targetId);
 				break;
 			}
 		}

@@ -13,7 +13,13 @@ namespace CombatCore
 	public delegate bool TryGetActorById(int id, out Actor actor);
 	public abstract record Intent(int? TargetId);
 	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
-	public sealed record EchoIntent(Echo Echo, int? TargetId) : Intent(TargetId);
+	public sealed record ActIntent(Act Act, int? TargetId) : Intent(TargetId);
+
+[Obsolete("Use ActIntent instead")]
+public sealed record EchoIntent(Act Act, int? TargetId) : Intent(TargetId)
+{
+	public Act Echo => Act; // Backward compatibility
+}
 
 	public readonly struct RecallView
 	{
@@ -69,7 +75,8 @@ namespace CombatCore.InterOp
 			{
 
 				RecallIntent ri => TranslateRecallIntentInternal(ri, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
-				EchoIntent ei => TranslateEchoIntentInternal(ei, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
+				ActIntent ai => TranslateActIntentInternal(ai, state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self),
+			EchoIntent ei => TranslateActIntentInternal(new ActIntent(ei.Act, ei.TargetId), state.PhaseCtx, state.GetRecallView(), state.TryGetActor, self), // 向後相容
 				_ => TranslationResult.Fail(FailCode.UnknownIntent)
 			};
 		}
@@ -118,34 +125,34 @@ namespace CombatCore.InterOp
 			return TranslationResult.Pass(plan, intent);
 		}
 
-		private static TranslationResult TranslateEchoIntentInternal(
-			EchoIntent intent, PhaseContext phase, RecallView memory, 
+		private static TranslationResult TranslateActIntentInternal(
+			ActIntent intent, PhaseContext phase, RecallView memory,
 			TryGetActorById tryGetActor, Actor self)
 		{
-			var echo = intent.Echo;
+			var act = intent.Act;
 			
 			// 冷卻檢查
-			if (!echo.IsReady)
+			if (!act.IsReady)
 				return TranslationResult.Fail(FailCode.EchoCooldown);
 			
 			// 目標解析
 			var target = ResolveTarget(intent.TargetId, tryGetActor);
-			if (echo.TargetType == TargetType.Target && (target == null || ReferenceEquals(target, self)))
+			if (act.TargetType == TargetType.Target && (target == null || ReferenceEquals(target, self)))
 				return TranslationResult.Fail(FailCode.BadTarget);
-			if (echo.TargetType == TargetType.Self)
+			if (act.TargetType == TargetType.Self)
 				target = self;
 			
 			// AP 檢查
-			if (echo.CostAP > 0 && !self.HasAP(echo.CostAP))
+			if (act.CostAP > 0 && !self.HasAP(act.CostAP))
 				return TranslationResult.Fail(FailCode.NoAP);
 			
 			// 根據 HLAop 生成計劃
-			var plan = echo.Op switch
+			var plan = act.Op switch
 			{
-				HLAop.Attack => new BasicPlan(TokenType.A, self, target!, 2, 0, 0, 0, 0, echo.CostAP),
-				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 1, 0, 0, 0, echo.CostAP),
-				HLAop.Charge => new BasicPlan(TokenType.C, self, self, 0, 0, 0, 0, 2, echo.CostAP),
-				_ => throw new ArgumentException($"Unsupported HLAop: {echo.Op}")
+				HLAop.Attack => new BasicPlan(TokenType.A, self, target!, 2, 0, 0, 0, 0, act.CostAP),
+				HLAop.Block => new BasicPlan(TokenType.B, self, self, 0, 1, 0, 0, 0, act.CostAP),
+				HLAop.Charge => new BasicPlan(TokenType.C, self, self, 0, 0, 0, 0, 2, act.CostAP),
+				_ => throw new ArgumentException($"Unsupported HLAop: {act.Op}")
 			};
 			
 			return TranslationResult.Pass(plan, intent);

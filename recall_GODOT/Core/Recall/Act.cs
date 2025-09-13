@@ -6,7 +6,7 @@ namespace CombatCore.Recall
 	[Flags]
 	public enum ActionType { Basic = 1, Echo = 2 }
 
-	public partial class Echo
+	public partial class Act
 	{
 		// === 原有 UI 屬性 ===
 		public int Id { get; set; }
@@ -33,21 +33,21 @@ namespace CombatCore.Recall
 
 	}
 
-	public static class EchoFactory
+	public static class ActFactory
 	{
 		/// <summary>
-		/// Creates an Echo from a recipe ID using pure lookup table approach.
-		/// Returns Echo with all fields populated from RecipeRegistry lookup.
-		/// Initial ID will be updated during echoStore.TryAdd to ensure uniqueness.
+		/// Creates an Act from a recipe ID using pure lookup table approach.
+		/// Returns Act with all fields populated from RecipeRegistry lookup.
+		/// Initial ID will be updated during actStore.TryAdd to ensure uniqueness.
 		/// </summary>
-		public static Echo BuildFromRecipe(int recipeId)
+		public static Act BuildFromRecipe(int recipeId)
 		{
 			if (!RecipeRegistry.TryGetRecipe(recipeId, out var recipe))
 			{
 				throw new ArgumentException($"Recipe with ID {recipeId} not found", nameof(recipeId));
 			}
 			
-			return new Echo
+			return new Act
 			{
 				Id = 0,		// unassigned
 				RecipeId = recipeId,

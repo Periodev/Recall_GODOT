@@ -30,10 +30,10 @@ namespace CombatCore.Kernel
 			SelfOp.ClearCharge(state.Player);
 
 			// 冷卻倒數
-			foreach (var echo in state.echoStore.Items)
+			foreach (var act in state.actStore.Items)
 			{
-				if (echo.CooldownCounter > 0)
-					echo.CooldownCounter--;
+				if (act.CooldownCounter > 0)
+					act.CooldownCounter--;
 			}
 
 			// 🎯 推進到下一階段

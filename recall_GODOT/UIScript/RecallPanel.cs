@@ -285,7 +285,7 @@ public partial class RecallPanel : Control
 			_selected.ToArray(),
 			CombatCtrl.State.GetRecallView(),
 			CombatCtrl.State.PhaseCtx.TurnNum,
-			CombatCtrl.State.IsEchoStoreFull);
+			CombatCtrl.State.IsActStoreFull);
 
 		if (!result.IsValid)
 		{
