@@ -1,7 +1,8 @@
 using System;
 using CombatCore;
+using CombatCore.Recall;
 
-namespace CombatCore.Recall
+namespace CombatCore.InterOp
 {
 	[Flags]
 	public enum ActionType { Basic = 1, Echo = 2 }

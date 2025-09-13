@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CombatCore;
+using CombatCore.InterOp;
 
 namespace CombatCore.Recall
 {
@@ -44,16 +45,62 @@ namespace CombatCore.Recall
 
 		private static void InitializeRecipes()
 		{
-			// Basic recipes (1L)
+			// 原生 Basic Slots (無法被 encode，永久不消耗)
+			AddRecipe(1, new Act
+			{
+				RecipeId = 1,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.A,
+				ConsumeOnPlay = false,  // 原生不消耗
+				CooldownTurns = 1,
+				Name = "Attack",
+				RecipeLabel = "A",
+				Summary = "Basic attack"
+			});
+
+			AddRecipe(2, new Act
+			{
+				RecipeId = 2,
+				Op = HLAop.Block,
+				TargetType = TargetType.Self,
+				CostAP = 1,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.B,
+				ConsumeOnPlay = false,  // 原生不消耗
+				CooldownTurns = 1,
+				Name = "Block",
+				RecipeLabel = "B",
+				Summary = "Basic defense"
+			});
+
+			AddRecipe(3, new Act
+			{
+				RecipeId = 3,
+				Op = HLAop.Charge,
+				TargetType = TargetType.Self,
+				CostAP = 1,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.C,
+				ConsumeOnPlay = false,  // 原生不消耗
+				CooldownTurns = 2,
+				Name = "Copy",
+				RecipeLabel = "C",
+				Summary = "Copy"
+			});
+
+			// Recall 生成的 Basic (11, 21 等，可被 encode，一次性消耗)
 			AddRecipe(11, new Act
 			{
 				RecipeId = 11,
 				Op = HLAop.Attack,
 				TargetType = TargetType.Target,
 				CostAP = 1,
-				ActionFlags = ActionType.Basic,
+				ActionFlags = ActionType.Echo,
 				PushMemory = TokenType.A,
-				ConsumeOnPlay = false,
+				ConsumeOnPlay = true,
 				CooldownTurns = 0,
 				Name = "Attack",
 				RecipeLabel = "A",
@@ -66,9 +113,9 @@ namespace CombatCore.Recall
 				Op = HLAop.Block,
 				TargetType = TargetType.Self,
 				CostAP = 1,
-				ActionFlags = ActionType.Basic,
+				ActionFlags = ActionType.Echo,
 				PushMemory = TokenType.B,
-				ConsumeOnPlay = false,
+				ConsumeOnPlay = true,
 				CooldownTurns = 0,
 				Name = "Block",
 				RecipeLabel = "B",

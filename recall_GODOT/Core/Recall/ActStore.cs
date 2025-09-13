@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CombatCore;
+using CombatCore.InterOp;
 
 namespace CombatCore.Recall
 {
