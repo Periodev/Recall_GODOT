@@ -132,34 +132,34 @@ namespace CombatCore.Kernel
 			if (!execResult.Success) return;
 
 			// 處理 Echo 行為（統一邏輯）
-			if (intent is EchoIntent echoIntent)
+			if (intent is ActIntent actIntent)
 			{
-				var echo = echoIntent.Echo;
+				var act = actIntent.Act;
 
 				// 觸發冷卻
-				if (echo.CooldownTurns > 0)
-					echo.CooldownCounter = echo.CooldownTurns;
+				if (act.CooldownTurns > 0)
+					act.CooldownCounter = act.CooldownTurns;
 
 				// 推入記憶
-				if (echo.ActionFlags.HasFlag(ActionType.Basic) && echo.PushMemory.HasValue)
+				if (act.ActionFlags.HasFlag(ActionType.Basic) && act.PushMemory.HasValue)
 				{
-					state.Mem?.Push(echo.PushMemory.Value, state.PhaseCtx.TurnNum);
+					state.Mem?.Push(act.PushMemory.Value, state.PhaseCtx.TurnNum);
 				}
 
 				// 移除消耗型 Echo
-				if (echo.ConsumeOnPlay)
+				if (act.ConsumeOnPlay)
 				{
-					state.echoStore.TryRemove(echo);
+					state.actStore.TryRemove(act);
 				}
 			}
 
 			if (intent is RecallIntent recallIntent)
 			{
-				// Use RecipeId lookup to build Echo directly
-				var echo = EchoFactory.BuildFromRecipe(recallIntent.RecipeId);
+				// Use RecipeId lookup to build Act directly
+				var act = ActFactory.BuildFromRecipe(recallIntent.RecipeId);
 
 				// Only mark RecallUsed if successfully added to store
-				if (state.echoStore.TryAdd(echo) == FailCode.None)
+				if (state.actStore.TryAdd(act) == FailCode.None)
 				{
 					state.PhaseCtx.MarkRecallUsed();
 				}
@@ -208,9 +208,9 @@ namespace CombatCore.Kernel
 		/// </summary>
 		private static bool IsMarkAction(Intent intent)
 		{
-			if (intent is EchoIntent echoIntent)
+			if (intent is ActIntent actIntent)
 			{
-				return echoIntent.Echo.Op == HLAop.Block || echoIntent.Echo.Op == HLAop.Charge;
+				return actIntent.Act.Op == HLAop.Block || actIntent.Act.Op == HLAop.Charge;
 			}
 			return false;
 		}
@@ -226,8 +226,8 @@ namespace CombatCore.Kernel
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
 				// B = mark
-				var blockEcho = CreateEnemyBasicEcho(HLAop.Block, TokenType.B);
-				var blockIntent = new EchoIntent(blockEcho, null);
+				var blockAct = CreateEnemyBasicAct(HLAop.Block, TokenType.B);
+				var blockIntent = new ActIntent(blockAct, null);
 				EnemyMarkQueue.Enqueue(enemy, blockIntent, "Block");
 
 
@@ -241,8 +241,8 @@ namespace CombatCore.Kernel
 			else
 			{
 				// A = delay  
-				var attackEcho = CreateEnemyBasicEcho(HLAop.Attack, TokenType.A);
-				var attackIntent = new EchoIntent(attackEcho, 0);
+				var attackAct = CreateEnemyBasicAct(HLAop.Attack, TokenType.A);
+				var attackIntent = new ActIntent(attackAct, 0);
 				EnemyActionQueue.Enqueue(enemy, attackIntent, "Attack");
 
 				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
@@ -256,11 +256,11 @@ namespace CombatCore.Kernel
 		}
 
 		/// <summary>
-		/// 輔助方法：建立敵人 Basic Echo
+		/// 輔助方法：建立敵人 Basic Act
 		/// </summary>
-		private static Echo CreateEnemyBasicEcho(HLAop op, TokenType pushToken)
+		private static Act CreateEnemyBasicAct(HLAop op, TokenType pushToken)
 		{
-			return new Echo
+			return new Act
 			{
 				ActionFlags = ActionType.Basic,
 				PushMemory = pushToken,

@@ -78,16 +78,16 @@ public partial class Combat : Control
 
 	}
 
-	public void TryRunEcho(Echo echo, int? targetId)
+	public void TryRunAct(Act act, int? targetId)
 	{
-		GD.Print($"[Combat] TryRunEcho: {echo.Name}, target: {targetId}");
+		GD.Print($"[Combat] TryRunEcho: {act.Name}, target: {targetId}");
 
 		// 找到選中的槽位索引
-		var slots = State.echoStore.ToSlots();
+		var slots = State.actStore.ToSlots();
 		int slotIndex = -1;
 		for (int i = 0; i < slots.Length; i++)
 		{
-			if (slots[i]?.Id == echo.Id)
+			if (slots[i]?.Id == act.Id)
 			{
 				slotIndex = i;
 				break;
@@ -96,14 +96,14 @@ public partial class Combat : Control
 
 		if (slotIndex == -1)
 		{
-			GD.Print("[Combat] Echo not found in store");
+			GD.Print("[Combat] Actnot found in store");
 			return;
 		}
 
-		var intent = new EchoIntent(echo, targetId);
+		var intent = new ActIntent(act, targetId);
 		var result = PhaseRunner.TryExecutePlayerAction(State, intent);
 
-		GD.Print($"[Combat] Echo result: {result}");
+		GD.Print($"[Combat] Actresult: {result}");
 		RefreshAllUI();
 	}
 
@@ -265,8 +265,8 @@ public partial class Combat : Control
 	// debug function
 	private void CreateDebugEchos()
 	{
-		// Echo 1: 攻擊類 (對敵人)
-		var attackEcho = new Echo
+		// Act1: 攻擊類 (對敵人)
+		var attackAct= new Act
 		{
 			//Id = 0,
 			RecipeId = 1,
@@ -278,8 +278,8 @@ public partial class Combat : Control
 			TargetType = TargetType.Target
 		};
 
-		// Echo 2: 防禦類 (對自己)
-		var shieldEcho = new Echo
+		// Act2: 防禦類 (對自己)
+		var shieldAct= new Act
 		{
 			//Id = 0,
 			RecipeId = 2,
@@ -294,7 +294,7 @@ public partial class Combat : Control
 		// 初始化 Basic Action Slots
 		var basicEchoes = new[]
 		{
-			new Echo
+			new Act
 			{
 				Id = 101,
 				ActionFlags = ActionType.Basic,
@@ -306,7 +306,7 @@ public partial class Combat : Control
 				Name = "Attack",
 				CostAP = 1
 			},
-			new Echo
+			new Act
 			{
 				Id = 102,
 				ActionFlags = ActionType.Basic,
@@ -318,7 +318,7 @@ public partial class Combat : Control
 				Name = "Block",
 				CostAP = 1
 			},
-			new Echo
+			new Act
 			{
 				Id = 103,
 				ActionFlags = ActionType.Basic,
@@ -333,13 +333,13 @@ public partial class Combat : Control
 		};
 
 		// 加入到 EchoStore
-		//var result1 = State.echoStore.TryAdd(attackEcho);
-		//var result2 = State.echoStore.TryAdd(shieldEcho);
+		//var result1 = State.actStore.TryAdd(attackEcho);
+		//var result2 = State.actStore.TryAdd(shieldEcho);
 
-		foreach (var echo in basicEchoes)
-			State.echoStore.TryAdd(echo);
+		foreach (var act in basicEchoes)
+			State.actStore.TryAdd(act);
 
-		//GD.Print($"[Combat] Created debug Echos: {State.echoStore.Count}/5");
+		//GD.Print($"[Combat] Created debug Echos: {State.actStore.Count}/5");
 		//GD.Print($"[Combat] - {attackEcho.Name} ({attackEcho.TargetType}) - {result1}");
 		//GD.Print($"[Combat] - {shieldEcho.Name} ({shieldEcho.TargetType}) - {result2}");
 		GD.Print("[Combat] - Basic Action Slots added");

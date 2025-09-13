@@ -24,7 +24,7 @@ public partial class EchoPanel : Control
 
 	private readonly List<Button> _slotButtons = new();
 	private int _selectedSlotIndex = -1;
-	private Echo? _selectedEcho = null;
+	private Act _selectedAct = null;
 
 	public override void _Ready()
 	{
@@ -61,10 +61,10 @@ public partial class EchoPanel : Control
 	// === 槽位管理 ===
 
 	/// <summary>
-	/// 刷新 Echo 槽位顯示
+	/// 刷新 Act槽位顯示
 	public void RefreshEchoSlots()
 	{
-		var store = CombatCtrl?.State?.echoStore;
+		var store = CombatCtrl?.State?.actStore;
 
 		if (store is null)
 		{
@@ -75,26 +75,26 @@ public partial class EchoPanel : Control
 			return;
 		}
 
-		var echoSlots = store.ToSlots();
+		var actSlots = store.ToSlots();
 
 		for (int i = 0; i < _slotButtons.Count; i++)
 		{
-			var echo = echoSlots[i];
+			var act = actSlots[i];
 			bool isSelected = (i == _selectedSlotIndex);
-			UpdateSlotButton(i, echo, isSelected);
+			UpdateSlotButton(i, act, isSelected);
 		}
 	}
 
 	/// <summary>
 	/// 更新單個槽位按鈕的顯示
 	/// </summary>
-	private void UpdateSlotButton(int index, Echo echo, bool isSelected)
+	private void UpdateSlotButton(int index, Act act, bool isSelected)
 	{
 		if (index >= _slotButtons.Count) return;
 
 		var btn = _slotButtons[index];
 
-		if (echo == null)
+		if (act == null)
 		{
 			// 空槽位
 			btn.Text = "-";
@@ -103,18 +103,18 @@ public partial class EchoPanel : Control
 		}
 		else
 		{
-			// 有 Echo 的槽位 - 檢查冷卻狀態
-			if (!echo.IsReady)
+			// 有 Act的槽位 - 檢查冷卻狀態
+			if (!act.IsReady)
 			{
 				// 冷卻中的 Echo
-				btn.Text = $"{echo.Name} ({echo.CooldownCounter})";
+				btn.Text = $"{act.Name} ({act.CooldownCounter})";
 				btn.Disabled = true; // 冷卻中不能點擊
 				btn.Modulate = new Color(1.0f, 0.4f, 0.4f, 0.8f); // 紅色淡化表示冷卻中
 			}
 			else
 			{
 				// 可用的 Echo
-				btn.Text = echo.Name;
+				btn.Text = act.Name;
 				btn.Disabled = false;
 
 				if (isSelected)
@@ -133,33 +133,33 @@ public partial class EchoPanel : Control
 	/// 處理槽位點擊事件
 	private void OnSlotPressed(int slotIndex)
 	{
-		if (CombatCtrl?.State?.echoStore == null) return;
+		if (CombatCtrl?.State?.actStore == null) return;
 
 		// 檢查槽位是否有 Echo
-		if (!CombatCtrl.State.echoStore.TryGet(slotIndex, out var echo) || echo == null)
+		if (!CombatCtrl.State.actStore.TryGet(slotIndex, out var act) || act == null)
 		{
 			GD.Print($"[EchoPanel] Slot {slotIndex} is empty");
 			ShowReason("Empty slot");
 			return;
 		}
 
-		// 檢查 Echo 是否冷卻中
-		if (!echo.IsReady)
+		// 檢查 Act是否冷卻中
+		if (!act.IsReady)
 		{
-			GD.Print($"[EchoPanel] Echo {echo.Name} is on cooldown ({echo.CooldownCounter} turns remaining)");
-			ShowReason($"{echo.Name} is on cooldown ({echo.CooldownCounter} turns)");
+			GD.Print($"[EchoPanel] Act{act.Name} is on cooldown ({act.CooldownCounter} turns remaining)");
+			ShowReason($"{act.Name} is on cooldown ({act.CooldownCounter} turns)");
 			return;
 		}
 
 		// 更新選擇狀態
 		_selectedSlotIndex = slotIndex;
-		_selectedEcho = echo;
+		_selectedAct = act;
 
-		GD.Print($"[EchoPanel] Selected slot {slotIndex}, ID {echo.Id}: {echo.Name}");
+		GD.Print($"[EchoPanel] Selected slot {slotIndex}, ID {act.Id}: {act.Name}");
 
 		// 刷新 UI
 		RefreshEchoSlots();
-		UpdateEchoInfo(echo);
+		UpdateEchoInfo(act);
 		UpdateActionButtons();
 		ClearReason(); // 選擇成功時清除錯誤訊息
 	}
@@ -167,30 +167,31 @@ public partial class EchoPanel : Control
 	// === 資訊顯示 ===
 
 	/// <summary>
-	/// 更新右側 Echo 資訊顯示
-	private void UpdateEchoInfo(Echo echo)
+	/// 更新右側 Act資訊顯示
+	/// </summary>
+	private void UpdateEchoInfo(Act act)
 	{
-		if (EchoName != null) EchoName.Text = echo.Name;
-		if (Recipe != null) Recipe.Text = echo.RecipeLabel;
-		if (Summary != null) Summary.Text = echo.Summary;
+		if (EchoName != null) EchoName.Text = act.Name;
+		if (Recipe != null) Recipe.Text = act.RecipeLabel;
+		if (Summary != null) Summary.Text = act.Summary;
 
-		GD.Print($"[EchoPanel] Updated info for: {echo.Name}");
+		GD.Print($"[EchoPanel] Updated info for: {act.Name}");
 	}
 
 	/// <summary>
-	/// 清空 Echo 資訊顯示
+	/// 清空 Act資訊顯示
 	private void ClearEchoInfo()
 	{
 		if (EchoName != null) EchoName.Text = "-";
 		if (Recipe != null) Recipe.Text = "-";
-		if (Summary != null) Summary.Text = "Select an Echo to view details";
+		if (Summary != null) Summary.Text = "Select an Actto view details";
 	}
 
 	/// <summary>
 	/// 更新操作按鈕狀態
 	private void UpdateActionButtons()
 	{
-		bool hasSelection = _selectedEcho != null;
+		bool hasSelection = _selectedAct!= null;
 
 		if (BtnPlay != null)
 		{
@@ -209,27 +210,27 @@ public partial class EchoPanel : Control
 	/// 處理 Play 按鈕點擊
 	private void OnPlayPressed()
 	{
-		if (_selectedEcho == null)
+		if (_selectedAct== null)
 		{
-			ShowReason("No Echo selected");
+			ShowReason("No Actselected");
 			return;
 		}
 
 		// 檢查階段（可選，Translator 會再檢）
 		if (CombatCtrl?.State?.PhaseCtx.Step != PhaseStep.PlayerInput)
 		{
-			ShowReason("Can only use Echo during player input phase");
+			ShowReason("Can only use Actduring player input phase");
 			return;
 		}
 
-		GD.Print($"[EchoPanel] Playing Echo: {_selectedEcho.Name}");
+		GD.Print($"[EchoPanel] Playing Echo: {_selectedAct.Name}");
 
-		int? targetId = DetermineTargetId(_selectedEcho.TargetType);
+		int? targetId = DetermineTargetId(_selectedAct.TargetType);
 
 		// 呼叫 Combat 執行
-		CombatCtrl?.TryRunEcho(_selectedEcho, targetId);
+		CombatCtrl?.TryRunAct(_selectedAct, targetId);
 
-		// 清空選擇（Echo 使用後會被移除）
+		// 清空選擇（Act使用後會被移除）
 		ClearSelection();
 		CallDeferred(nameof(RefreshEchoSlots));
 	}
@@ -247,7 +248,7 @@ public partial class EchoPanel : Control
 	private void ClearSelection()
 	{
 		_selectedSlotIndex = -1;
-		_selectedEcho = null;
+		_selectedAct= null;
 
 		RefreshEchoSlots();
 		ClearEchoInfo();
@@ -302,11 +303,11 @@ public partial class EchoPanel : Control
 	public void RefreshPanel()
 	{
 		// 檢查當前選擇是否仍有效
-		if (_selectedSlotIndex >= 0 && _selectedEcho != null)
+		if (_selectedSlotIndex >= 0 && _selectedAct!= null)
 		{
-			if (CombatCtrl?.State?.echoStore != null &&
-				CombatCtrl.State.echoStore.TryGet(_selectedSlotIndex, out var currentEcho) &&
-				currentEcho?.Id == _selectedEcho.Id)
+			if (CombatCtrl?.State?.actStore != null &&
+				CombatCtrl.State.actStore.TryGet(_selectedSlotIndex, out var currentEcho) &&
+				currentEcho?.Id == _selectedAct.Id)
 			{
 				// 選擇仍有效，保持選中狀態
 				RefreshEchoSlots();

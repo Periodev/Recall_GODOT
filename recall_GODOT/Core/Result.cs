@@ -20,8 +20,13 @@ namespace CombatCore
 		BadTarget, SelfDead,
 		RecallUsed,
 		BadIndex, IndexOutOfBound, IndexLimited,
-        NoRecipe, IndexNotContiguous, EchoSlotsFull,
-		EchoCooldown,
+        NoRecipe, IndexNotContiguous, ActSlotsFull,
+		ActCooldown,
+
+	[Obsolete("Use ActSlotsFull")]
+	EchoSlotsFull = ActSlotsFull,
+	[Obsolete("Use ActCooldown")]
+	EchoCooldown = ActCooldown,
 		PhaseLocked,
 		UnknownIntent,
 	}

@@ -12,8 +12,8 @@ namespace CombatCore
 		public Actor Enemy { get; private set; }  // default enemy
 		public MemoryQueue Mem { get; private set; } = new MemoryQueue(5);
 
-		public EchoStore echoStore { get; private set; } = new EchoStore();
-		public bool IsEchoStoreFull => echoStore.IsFull;
+		public ActStore actStore { get; private set; } = new ActStore();
+		public bool IsActStoreFull => actStore.IsFull;
 
 
 		public CombatState()
