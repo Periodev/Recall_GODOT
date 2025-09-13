@@ -15,12 +15,6 @@ namespace CombatCore
 	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
 	public sealed record ActIntent(Act Act, int? TargetId) : Intent(TargetId);
 
-[Obsolete("Use ActIntent instead")]
-public sealed record EchoIntent(Act Act, int? TargetId) : Intent(TargetId)
-{
-	public Act Echo => Act; // Backward compatibility
-}
-
 	public readonly struct RecallView
 	{
 		public RecallView(IReadOnlyList<TokenType> ops, IReadOnlyList<int> turns)
@@ -75,7 +69,6 @@ namespace CombatCore.InterOp
 			{
 				ActIntent actIntent => TranslateAct(actIntent, state, self),
 				RecallIntent recallIntent => TranslateRecall(recallIntent, state, self),
-				EchoIntent ei => TranslateAct(new ActIntent(ei.Act, ei.TargetId), state, self), // 向後相容
 				_ => TranslationResult.Fail(FailCode.UnknownIntent)
 			};
 		}

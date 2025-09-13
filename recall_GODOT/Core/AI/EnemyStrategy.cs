@@ -15,9 +15,9 @@ namespace CombatCore.AI
         {
             return intent switch
             {
-                EchoIntent ei when ei.Echo.Op == HLAop.Attack => ExecuteTiming.Action,
-                EchoIntent ei when ei.Echo.Op == HLAop.Block => ExecuteTiming.Mark,
-                EchoIntent ei when ei.Echo.Op == HLAop.Charge => ExecuteTiming.Mark,
+                ActIntent ai when ai.Act.Op == HLAop.Attack => ExecuteTiming.Action,
+                ActIntent ai when ai.Act.Op == HLAop.Block => ExecuteTiming.Mark,
+                ActIntent ai when ai.Act.Op == HLAop.Charge => ExecuteTiming.Mark,
                 _ => ExecuteTiming.Mark
             };
         }

@@ -131,12 +131,6 @@ namespace CombatCore.Kernel
 			if (!execResult.Success) return;
 
 			// 統一 Commit 處理
-			CommitAction(intent, state);
-		}
-
-		// 新增統一 Commit 方法：
-		private static void CommitAction(Intent intent, CombatState state)
-		{
 			switch (intent)
 			{
 				case ActIntent actIntent:
