@@ -34,8 +34,7 @@ namespace CombatCore.Kernel
 				return PipelineResult.Fail(translationResult.ErrorCode);
 			}
 
-			var commands = InterOps.Build(translationResult.Plan);
-			return PipelineResult.Pass(commands, translationResult.OriginalIntent);
+			return PipelineResult.Pass(translationResult.Commands, translationResult.OriginalIntent);
 		}
 
 
@@ -131,47 +130,50 @@ namespace CombatCore.Kernel
 		{
 			if (!execResult.Success) return;
 
-			// 處理 Echo 行為（統一邏輯）
-			if (intent is ActIntent actIntent)
+			// 統一 Commit 處理
+			CommitAction(intent, state);
+		}
+
+		// 新增統一 Commit 方法：
+		private static void CommitAction(Intent intent, CombatState state)
+		{
+			switch (intent)
 			{
-				var act = actIntent.Act;
+				case ActIntent actIntent:
+					CommitAct(actIntent.Act, state);
+					break;
+				case RecallIntent recallIntent:
+					CommitRecall(recallIntent, state);
+					break;
+			}
+		}
 
-				// 觸發冷卻
-				if (act.CooldownTurns > 0)
-					act.CooldownCounter = act.CooldownTurns;
+		private static void CommitAct(Act act, CombatState state)
+		{
+			// 冷卻起算
+			if (act.CooldownTurns > 0)
+				act.CooldownCounter = act.CooldownTurns;
 
-				// 推入記憶
-				if (act.ActionFlags.HasFlag(ActionType.Basic) && act.PushMemory.HasValue)
-				{
-					state.Mem?.Push(act.PushMemory.Value, state.PhaseCtx.TurnNum);
-				}
-
-				// 移除消耗型 Echo
-				if (act.ConsumeOnPlay)
-				{
-					state.actStore.TryRemove(act);
-				}
+			// 推入記憶（只有 Basic + 有 PushMemory）
+			if (act.ActionFlags.HasFlag(ActionType.Basic) && act.PushMemory.HasValue)
+			{
+				state.Mem?.Push(act.PushMemory.Value, state.PhaseCtx.TurnNum);
 			}
 
-			if (intent is RecallIntent recallIntent)
+			// 移除消耗型 Act
+			if (act.ConsumeOnPlay)
 			{
-				// Use RecipeId lookup to build Act directly
-				var act = ActFactory.BuildFromRecipe(recallIntent.RecipeId);
-
-				// Only mark RecallUsed if successfully added to store
-				if (state.actStore.TryAdd(act) == FailCode.None)
-				{
-					state.PhaseCtx.MarkRecallUsed();
-				}
-				else
-				{
-					// Echo slot full or add failed → don't mark RecallUsed, don't write to Memory
-					// (If AP already consumed during execution, consider AP restoration logic here)
-					return;
-				}
-				// RecallIntent does not write to Memory
+				state.actStore.TryRemove(act);
 			}
+		}
 
+		private static void CommitRecall(RecallIntent intent, CombatState state)
+		{
+			var act = ActFactory.BuildFromRecipe(intent.RecipeId);
+			if (state.actStore.TryAdd(act) == FailCode.None)
+			{
+				state.PhaseCtx.MarkRecallUsed();
+			}
 		}
 
 		/// <summary>
