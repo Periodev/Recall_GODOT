@@ -40,25 +40,27 @@ namespace CombatCore.Recall
 		/// Returns Act with all fields populated from RecipeRegistry lookup.
 		/// Initial ID will be updated during actStore.TryAdd to ensure uniqueness.
 		/// </summary>
+
 		public static Act BuildFromRecipe(int recipeId)
 		{
-			if (!RecipeRegistry.TryGetRecipe(recipeId, out var recipe))
-			{
-				throw new ArgumentException($"Recipe with ID {recipeId} not found", nameof(recipeId));
-			}
+			var template = RecipeRegistry.GetRecipe(recipeId);
 			
+			// 手動複製模板並重置 ID
 			return new Act
 			{
-				Id = 0,		// unassigned
-				RecipeId = recipeId,
-				Op = recipe.Op,
-				TargetType = recipe.TargetType,
-				CostAP = recipe.CostAP,
-				
-				// Display fields filled from RecipeRegistry
-				Name = recipe.Name,
-				RecipeLabel = recipe.Label,
-				Summary = recipe.Summary
+				Id = 0, // 待 ActStore 分配
+				RecipeId = template.RecipeId,
+				Op = template.Op,
+				TargetType = template.TargetType,
+				CostAP = template.CostAP,
+				ActionFlags = template.ActionFlags,
+				PushMemory = template.PushMemory,
+				ConsumeOnPlay = template.ConsumeOnPlay,
+				CooldownTurns = template.CooldownTurns,
+				CooldownCounter = 0, // 重置運行時狀態
+				Name = template.Name,
+				RecipeLabel = template.RecipeLabel,
+				Summary = template.Summary
 			};
 		}
 	}

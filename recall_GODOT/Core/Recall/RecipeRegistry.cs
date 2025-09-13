@@ -4,34 +4,21 @@ using CombatCore;
 
 namespace CombatCore.Recall
 {
-	public readonly struct RecipeData
-	{
-		public int Id { get; init; }
-		public HLAop Op { get; init; }
-		public TargetType TargetType { get; init; }
-		public int CostAP { get; init; }
-
-		// UI display strings (not used in Echo itself)
-		public string Name { get; init; }
-		public string Label { get; init; }
-		public string Summary { get; init; }
-	}
-
 	public static class RecipeRegistry
 	{
-		private static readonly Dictionary<int, RecipeData> _recipes = new();
+		private static readonly Dictionary<int, Act> _recipes = new();
 
 		static RecipeRegistry()
 		{
 			InitializeRecipes();
 		}
 
-		public static bool TryGetRecipe(int recipeId, out RecipeData recipe)
+		public static bool TryGetRecipe(int recipeId, out Act recipe)
 		{
 			return _recipes.TryGetValue(recipeId, out recipe);
 		}
 
-		public static RecipeData GetRecipe(int recipeId)
+		public static Act GetRecipe(int recipeId)
 		{
 			if (_recipes.TryGetValue(recipeId, out var recipe))
 				return recipe;
@@ -44,42 +31,144 @@ namespace CombatCore.Recall
 			return _recipes.ContainsKey(recipeId);
 		}
 
-		private static void InitializeRecipes()
+		// 新增：用於 RecipeSystem 的模式過濾
+		public static IEnumerable<Act> GetAllRecipes()
 		{
-			// Sample recipes - these would be populated from actual game data
-			AddRecipe(11, HLAop.Attack, TargetType.Target, 1, "Attack", "A", "Basic attack");
-			AddRecipe(21, HLAop.Block, TargetType.Self, 1, "Block", "B", "Basic defense");
-			//AddRecipe(31, HLAop.Charge, TargetType.Self, 1, "Charge", "C", "Gain charge/copy");
-
-			// ----------------------------------------------------
-			// Echo (2L) — 對應 PatternKey: AA=11, AB=12, BA=21, BB=22
-			// ID 規劃：11x/12x = 2L Echo（採用直觀數字對應）
-			// TargetType 原則：只要含 A（攻擊）就需要 Target；純 B 給 Self
-			// ----------------------------------------------------
-			AddRecipe(111, HLAop.Attack, TargetType.Target, 1, "Double Strike", "A+A", "double hit");
-			AddRecipe(112, HLAop.Attack, TargetType.Target, 1, "Heavy Strike", "A+A", "Heavy Strike");
-
-			AddRecipe(121, HLAop.Attack, TargetType.Target, 1, "Strike + Guard", "A+B", "attack then block");
-
-			AddRecipe(211, HLAop.Attack, TargetType.Target, 1, "Guard + Strike", "B+A", "block then attack");
-			AddRecipe(212, HLAop.Attack, TargetType.Target, 1, "Bash Attack", "B+A", "Bash Attack");
-
-			AddRecipe(221, HLAop.Block, TargetType.Self, 1, "Fortify", "B+B", "reinforce shield");
-
+			return _recipes.Values;
 		}
 
-		private static void AddRecipe(int id, HLAop op, TargetType targetType, int costAP, string name, string label, string summary)
+		public static IEnumerable<int> GetAllRecipeIds()
 		{
-			var recipe = new RecipeData
+			return _recipes.Keys;
+		}
+
+		private static void InitializeRecipes()
+		{
+			// Basic recipes (1L)
+			AddRecipe(11, new Act
 			{
-				Id = id,
-				Op = op,
-				TargetType = targetType,
-				CostAP = costAP,
-				Name = name,
-				Label = label,
-				Summary = summary
-			};
+				RecipeId = 11,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.A,
+				ConsumeOnPlay = false,
+				CooldownTurns = 0,
+				Name = "Attack",
+				RecipeLabel = "A",
+				Summary = "Basic attack"
+			});
+
+			AddRecipe(21, new Act
+			{
+				RecipeId = 21,
+				Op = HLAop.Block,
+				TargetType = TargetType.Self,
+				CostAP = 1,
+				ActionFlags = ActionType.Basic,
+				PushMemory = TokenType.B,
+				ConsumeOnPlay = false,
+				CooldownTurns = 0,
+				Name = "Block",
+				RecipeLabel = "B",
+				Summary = "Basic defense"
+			});
+
+			// Echo recipes (2L)
+			AddRecipe(111, new Act
+			{
+				RecipeId = 111,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Echo,
+				PushMemory = null,
+				ConsumeOnPlay = true,
+				CooldownTurns = 0,
+				Name = "Double Strike",
+				RecipeLabel = "A+A",
+				Summary = "double hit"
+			});
+
+			AddRecipe(112, new Act
+			{
+				RecipeId = 112,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Echo,
+				PushMemory = null,
+				ConsumeOnPlay = true,
+				CooldownTurns = 0,
+				Name = "Heavy Strike",
+				RecipeLabel = "A+A",
+				Summary = "Heavy Strike"
+			});
+
+			AddRecipe(121, new Act
+			{
+				RecipeId = 121,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Echo,
+				PushMemory = null,
+				ConsumeOnPlay = true,
+				CooldownTurns = 0,
+				Name = "Strike + Guard",
+				RecipeLabel = "A+B",
+				Summary = "attack then block"
+			});
+
+			AddRecipe(211, new Act
+			{
+				RecipeId = 211,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Echo,
+				PushMemory = null,
+				ConsumeOnPlay = true,
+				CooldownTurns = 0,
+				Name = "Guard + Strike",
+				RecipeLabel = "B+A",
+				Summary = "block then attack"
+			});
+
+			AddRecipe(212, new Act
+			{
+				RecipeId = 212,
+				Op = HLAop.Attack,
+				TargetType = TargetType.Target,
+				CostAP = 1,
+				ActionFlags = ActionType.Echo,
+				PushMemory = null,
+				ConsumeOnPlay = true,
+				CooldownTurns = 0,
+				Name = "Bash Attack",
+				RecipeLabel = "B+A",
+				Summary = "Bash Attack"
+			});
+
+			AddRecipe(221, new Act
+			{
+				RecipeId = 221,
+				Op = HLAop.Block,
+				TargetType = TargetType.Self,
+				CostAP = 1,
+				ActionFlags = ActionType.Echo,
+				PushMemory = null,
+				ConsumeOnPlay = true,
+				CooldownTurns = 0,
+				Name = "Fortify",
+				RecipeLabel = "B+B",
+				Summary = "reinforce shield"
+			});
+		}
+
+		private static void AddRecipe(int id, Act recipe)
+		{
 			_recipes[id] = recipe;
 		}
 	}
