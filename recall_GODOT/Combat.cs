@@ -24,6 +24,8 @@ public partial class Combat : Control
 	[Export] public EchoPanel EchoPanel;
 	[Export] public ErrorLabel ErrorLabel;
 
+	// 添加 Actor ID 到 EnemyView 映射
+	private Dictionary<int, EnemyView> _enemyViews = new();
 
 	public CombatState State => CombatNode!.State;
 
@@ -47,6 +49,9 @@ public partial class Combat : Control
 
 		// 綁定角色到 UI
 		BindActorsToUI();
+
+		// 初始化敵人 View 映射
+		InitializeEnemyViews();
 
 		// 使用新的 PhaseRunner API 推進遊戲流程
 
@@ -170,6 +175,15 @@ public partial class Combat : Control
 		}
 	}
 
+	// 初始化敵人 View 映射
+	private void InitializeEnemyViews()
+	{
+		if (EnemyView != null && State.Enemy != null)
+		{
+			_enemyViews[State.Enemy.Id] = EnemyView;
+		}
+	}
+
 	private void RefreshAllUI()
 	{
 		// 刷新角色狀態顯示
@@ -251,14 +265,20 @@ public partial class Combat : Control
 		ErrorLabel.ShowError(code);
 	}
 
-	private void UpdateEnemyIntent(int ActorID, IReadOnlyList<EnemyIntentUIItem> items)
+	private void UpdateEnemyIntent(int enemyId, IReadOnlyList<EnemyIntentUIItem> items)
 	{
-		EnemyView.UpdateIntent(items[0].Icon, items[0].Text);
+		if (_enemyViews.TryGetValue(enemyId, out var enemyView))
+		{
+			enemyView.UpdateIntent(items[0].Icon, items[0].Text);
+		}
 	}
 
-	private void ClearEnemyIntent(int ActorID)
+	private void ClearEnemyIntent(int enemyId)
 	{
-		EnemyView.ClearIntent();
+		if (_enemyViews.TryGetValue(enemyId, out var enemyView))
+		{
+			enemyView.ClearIntent();
+		}
 	}
 
 
