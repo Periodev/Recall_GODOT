@@ -79,17 +79,17 @@ namespace CombatCore.Kernel
 
 			while (PlayerQueue.TryDequeue(out var queuedIntent))
 			{
-				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
-				if (!translationResult.Success)
+				if (!pipelineResult.Success)
 				{
 #if DEBUG
-					Debug.Print($"[Pipeline] Translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] failed: {pipelineResult.ErrorCode}");
 #endif
 					continue;
 				}
 
-				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				var execResult = ExecuteCommands(state, pipelineResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					CommitPlayerAction(state, queuedIntent.Intent, execResult);
@@ -106,22 +106,22 @@ namespace CombatCore.Kernel
 
 			while (EnemyMarkQueue.TryDequeue(out var queuedIntent))
 			{
-				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
-				if (!translationResult.Success)
+				if (!pipelineResult.Success)
 				{
-					Debug.Print($"[Pipeline] Enemy mark translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Enemy mark translation failed: {pipelineResult.ErrorCode}");
 					continue;
 				}
 
-				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				var execResult = ExecuteCommands(state, pipelineResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					results.Add(execResult);
 				}
 			}
 
-			SignalHub.NotifyEnemyIntentCleared(1);
+			SignalHub.NotifyEnemyIntentCleared(state.Enemy.Id);
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -179,22 +179,22 @@ namespace CombatCore.Kernel
 
 			while (EnemyActionQueue.TryDequeue(out var queuedIntent))
 			{
-				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
-				if (!translationResult.Success)
+				if (!pipelineResult.Success)
 				{
-					Debug.Print($"[Pipeline] Enemy action translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Enemy action translation failed: {pipelineResult.ErrorCode}");
 					continue;
 				}
 
-				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				var execResult = ExecuteCommands(state, pipelineResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					results.Add(execResult);
 				}
 			}
 
-			SignalHub.NotifyEnemyIntentCleared(1);
+			SignalHub.NotifyEnemyIntentCleared(state.Enemy.Id);
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -222,7 +222,7 @@ namespace CombatCore.Kernel
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
 				// B = mark
-				var blockAct = CreateEnemyBasicAct(HLAop.Block, TokenType.B);
+				var blockAct = CreateEnemyBasicAct(HLAop.Block);
 				var blockIntent = new ActIntent(blockAct, null);
 				EnemyMarkQueue.Enqueue(enemy, blockIntent, "Block");
 
@@ -232,12 +232,12 @@ namespace CombatCore.Kernel
 					new CombatCore.UI.EnemyIntentUIItem("🛡", "Block 1"),  // Block(1) → 下回合開始會套上
 				};
 
-				SignalHub.NotifyEnemyIntentUpdated(1, Declare);
+				SignalHub.NotifyEnemyIntentUpdated(enemy.Id, Declare);
 			}
 			else
 			{
 				// A = delay  
-				var attackAct = CreateEnemyBasicAct(HLAop.Attack, TokenType.A);
+				var attackAct = CreateEnemyBasicAct(HLAop.Attack);
 				var attackIntent = new ActIntent(attackAct, 0);
 				EnemyActionQueue.Enqueue(enemy, attackIntent, "Attack");
 
@@ -246,7 +246,7 @@ namespace CombatCore.Kernel
 					new CombatCore.UI.EnemyIntentUIItem("⚔", "Attack 2"),
 				};
 
-				SignalHub.NotifyEnemyIntentUpdated(1, Declare);
+				SignalHub.NotifyEnemyIntentUpdated(enemy.Id, Declare);
 			}
 
 		}
@@ -254,12 +254,11 @@ namespace CombatCore.Kernel
 		/// <summary>
 		/// 輔助方法：建立敵人 Basic Act
 		/// </summary>
-		private static Act CreateEnemyBasicAct(HLAop op, TokenType pushToken)
+		private static Act CreateEnemyBasicAct(HLAop op)
 		{
 			return new Act
 			{
 				ActionFlags = ActionType.Basic,
-				PushMemory = pushToken,
 				ConsumeOnPlay = false,
 				Op = op,
 				TargetType = op == HLAop.Attack ? TargetType.Target : TargetType.Self,
@@ -277,8 +276,6 @@ namespace CombatCore.Kernel
 			TurnEndQueue.Clear();
 			return ExecutionResult.Pass(new CmdLog());
 		}
-
-
 	}
 
 
