@@ -108,6 +108,13 @@ namespace CombatCore.Kernel
 
 			while (EnemyMarkQueue.TryDequeue(out var queuedIntent))
 			{
+				// 跳過死亡敵人的意圖
+				if (!queuedIntent.Actor.IsAlive)
+				{
+					Debug.Print($"[Pipeline] Skipping intent from dead actor: {queuedIntent.Actor.DebugName}");
+					continue;
+				}
+
 				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
 				if (!pipelineResult.Success)
@@ -187,6 +194,13 @@ namespace CombatCore.Kernel
 
 			while (EnemyActionQueue.TryDequeue(out var queuedIntent))
 			{
+				// 跳過死亡敵人的意圖
+				if (!queuedIntent.Actor.IsAlive)
+				{
+					Debug.Print($"[Pipeline] Skipping intent from dead actor: {queuedIntent.Actor.DebugName}");
+					continue;
+				}
+
 				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
 				if (!pipelineResult.Success)
