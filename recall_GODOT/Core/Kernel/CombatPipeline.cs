@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
@@ -215,40 +216,39 @@ namespace CombatCore.Kernel
 		/// 使用時機：EnemyIntent 階段
 		public static void GenerateAndEnqueueEnemyActions(CombatState state)
 		{
-			// 簡單 AI 邏輯：生成多個敵人行為
-			var enemy = state.Enemy;
+			// 簡化敵人AI - 只有第一隻行動
+			var enemies = state.GetAllEnemies();
+			if (enemies.Count == 0) return;
 
-			// 偶數回合防禦(mark)，奇數回合攻擊(delay)
+			// 只處理第一個活著的敵人
+			var firstAliveEnemy = enemies.FirstOrDefault(e => e.IsAlive);
+			if (firstAliveEnemy == null) return;
+
+			// 現有 AI 邏輯，只針對第一個敵人
 			if (state.PhaseCtx.TurnNum % 2 == 1)
 			{
-				// B = mark
 				var blockAct = CreateEnemyBasicAct(HLAop.Block);
 				var blockIntent = new ActIntent(blockAct, null);
-				EnemyMarkQueue.Enqueue(enemy, blockIntent, "Block");
+				EnemyMarkQueue.Enqueue(firstAliveEnemy, blockIntent, "Block");
 
-
-				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+				var declare = new List<EnemyIntentUIItem>
 				{
-					new CombatCore.UI.EnemyIntentUIItem("🛡", "Block 1"),  // Block(1) → 下回合開始會套上
+					new("🛡", "Block 1")
 				};
-
-				SignalHub.NotifyEnemyIntentUpdated(enemy.Id, Declare);
+				SignalHub.NotifyEnemyIntentUpdated(firstAliveEnemy.Id, declare);
 			}
 			else
 			{
-				// A = delay  
 				var attackAct = CreateEnemyBasicAct(HLAop.Attack);
 				var attackIntent = new ActIntent(attackAct, 0);
-				EnemyActionQueue.Enqueue(enemy, attackIntent, "Attack");
+				EnemyActionQueue.Enqueue(firstAliveEnemy, attackIntent, "Attack");
 
-				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+				var declare = new List<EnemyIntentUIItem>
 				{
-					new CombatCore.UI.EnemyIntentUIItem("⚔", "Attack 2"),
+					new("⚔", "Attack 2")
 				};
-
-				SignalHub.NotifyEnemyIntentUpdated(enemy.Id, Declare);
+				SignalHub.NotifyEnemyIntentUpdated(firstAliveEnemy.Id, declare);
 			}
-
 		}
 
 		/// <summary>

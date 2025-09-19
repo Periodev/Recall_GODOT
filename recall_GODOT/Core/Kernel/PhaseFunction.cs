@@ -149,11 +149,30 @@ namespace CombatCore.Kernel
 
 		private static bool CheckCombatEnd(CombatState state)
 		{
-			if (!state.Player.IsAlive || !state.Enemy.IsAlive)
+			// 玩家死亡 → 戰鬥結束
+			if (!state.Player.IsAlive)
 			{
 				state.PhaseCtx.Step = PhaseStep.CombatEnd;
 				return true;
 			}
+
+			// 所有敵人死亡 → 戰鬥結束
+			bool anyEnemyAlive = false;
+			foreach (var enemy in state.GetAllEnemies())
+			{
+				if (enemy.IsAlive)
+				{
+					anyEnemyAlive = true;
+					break;
+				}
+			}
+
+			if (!anyEnemyAlive)
+			{
+				state.PhaseCtx.Step = PhaseStep.CombatEnd;
+				return true;
+			}
+
 			return false;
 		}
 

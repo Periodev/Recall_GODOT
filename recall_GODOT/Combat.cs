@@ -20,6 +20,7 @@ public partial class Combat : Control
 	[Export] public CombatStateNode CombatNode;
 	[Export] public PlayerView PlayerView;
 	[Export] public EnemyView EnemyView;
+	[Export] public EnemyView EnemyView2;
 	[Export] public RecallPanel RecallPanel;
 	[Export] public EchoPanel EchoPanel;
 	[Export] public ErrorLabel ErrorLabel;
@@ -162,26 +163,23 @@ public partial class Combat : Control
 
 	private void BindActorsToUI()
 	{
-		if (PlayerView != null && State.Player != null)
-		{
-			PlayerView.BindActor(State.Player);
-			State.Player.DebugName = "Player";
-		}
+		PlayerView?.BindActor(State.Player);
+		State.Player.DebugName = "Player";
 
-		if (EnemyView != null && State.Enemy != null)
-		{
-			EnemyView.BindActor(State.Enemy);
-			State.Enemy.DebugName = "Enemy";
-		}
+		var enemies = State.GetAllEnemies();
+		EnemyView?.BindActor(enemies.ElementAtOrDefault(0));
+		EnemyView2?.BindActor(enemies.ElementAtOrDefault(1));
 	}
 
 	// 初始化敵人 View 映射
 	private void InitializeEnemyViews()
 	{
-		if (EnemyView != null && State.Enemy != null)
-		{
-			_enemyViews[State.Enemy.Id] = EnemyView;
-		}
+		var enemies = State.GetAllEnemies();
+		if (enemies.Count > 0 && EnemyView != null)
+			_enemyViews[enemies[0].Id] = EnemyView;
+
+		if (enemies.Count > 1 && EnemyView2 != null)
+			_enemyViews[enemies[1].Id] = EnemyView2;
 	}
 
 	private void RefreshAllUI()
@@ -189,6 +187,7 @@ public partial class Combat : Control
 		// 刷新角色狀態顯示
 		PlayerView?.UpdateVisual();
 		EnemyView?.UpdateVisual();
+		EnemyView2?.UpdateVisual();
 
 		// 刷新記憶時間線
 		RefreshTimelineSnapshot();
