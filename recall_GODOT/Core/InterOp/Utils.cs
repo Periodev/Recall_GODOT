@@ -1,6 +1,6 @@
-
 using System;
 using CombatCore;
+using CombatCore.InterOp;
 
 namespace CombatCore
 {
@@ -19,6 +19,27 @@ namespace CombatCore
 	}
 
 	public enum TargetType { None, Self, Target, All };
+}
+
+namespace CombatCore
+{
+	public delegate bool TryGetActorById(int id, out Actor actor);
+	public abstract record Intent(int? TargetId);
+	public sealed record RecallIntent(int RecipeId) : Intent((int?)null);
+	public sealed record ActIntent(Act Act, int? TargetId) : Intent(TargetId);
+
+	public readonly struct RecallView
+	{
+		public RecallView(IReadOnlyList<TokenType> ops, IReadOnlyList<int> turns)
+		{
+			Ops = ops ?? Array.Empty<TokenType>();
+			Turns = turns ?? Array.Empty<int>();
+		}
+
+		public IReadOnlyList<TokenType> Ops { get; }
+		public IReadOnlyList<int> Turns { get; }
+		public int Count => Ops.Count;
+	}
 }
 
 namespace Recall.InterOp

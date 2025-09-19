@@ -7,6 +7,7 @@ namespace CombatCore
 {
 	public class Actor
 	{
+		public int Id { get; set; } = -1; // 未指派時為 -1
 		public HP HP { get; }
 		public Shield Shield { get; }
 		public AP? AP { get; }
@@ -28,16 +29,6 @@ namespace CombatCore
 		public bool IsAlive => HP.Value > 0;
 		public bool HasAP(int cost) => AP?.Value >= cost;
 		public bool HasCharge(int cost) => Charge?.Value >= cost;
-		/*
-				public T? Get<T>() where T : Component
-				{
-					if (typeof(T) == typeof(HP)) return HP as T;
-					if (typeof(T) == typeof(Shield)) return Shield as T;
-					if (typeof(T) == typeof(Charge)) return Charge as T;
-					if (typeof(T) == typeof(Copy)) return Copy as T;
-					return null;
-				}
-		*/
 	}
 
 	public static class ActorExtensions

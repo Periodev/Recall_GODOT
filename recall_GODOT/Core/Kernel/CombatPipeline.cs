@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using CombatCore;
 using CombatCore.Command;
 using CombatCore.InterOp;
@@ -79,17 +80,17 @@ namespace CombatCore.Kernel
 
 			while (PlayerQueue.TryDequeue(out var queuedIntent))
 			{
-				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
 
-				if (!translationResult.Success)
+				if (!pipelineResult.Success)
 				{
 #if DEBUG
-					Debug.Print($"[Pipeline] Translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] failed: {pipelineResult.ErrorCode}");
 #endif
 					continue;
 				}
 
-				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				var execResult = ExecuteCommands(state, pipelineResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					CommitPlayerAction(state, queuedIntent.Intent, execResult);
@@ -103,25 +104,38 @@ namespace CombatCore.Kernel
 		public static ExecutionResult ProcessEnemyMarkQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
+			var processedEnemies = new HashSet<int>();
 
 			while (EnemyMarkQueue.TryDequeue(out var queuedIntent))
 			{
-				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
-
-				if (!translationResult.Success)
+				// 跳過死亡敵人的意圖
+				if (!queuedIntent.Actor.IsAlive)
 				{
-					Debug.Print($"[Pipeline] Enemy mark translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Skipping intent from dead actor: {queuedIntent.Actor.DebugName}");
 					continue;
 				}
 
-				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+
+				if (!pipelineResult.Success)
+				{
+					Debug.Print($"[Pipeline] Enemy mark translation failed: {pipelineResult.ErrorCode}");
+					continue;
+				}
+
+				var execResult = ExecuteCommands(state, pipelineResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					results.Add(execResult);
+					processedEnemies.Add(queuedIntent.Actor.Id);
 				}
 			}
 
-			SignalHub.NotifyEnemyIntentCleared(1);
+			// 清除所有已處理敵人的意圖
+			foreach (var enemyId in processedEnemies)
+			{
+				SignalHub.NotifyEnemyIntentCleared(enemyId);
+			}
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -176,25 +190,38 @@ namespace CombatCore.Kernel
 		public static ExecutionResult ProcessEnemyActionQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
+			var processedEnemies = new HashSet<int>();
 
 			while (EnemyActionQueue.TryDequeue(out var queuedIntent))
 			{
-				var translationResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
-
-				if (!translationResult.Success)
+				// 跳過死亡敵人的意圖
+				if (!queuedIntent.Actor.IsAlive)
 				{
-					Debug.Print($"[Pipeline] Enemy action translation failed: {translationResult.ErrorCode}");
+					Debug.Print($"[Pipeline] Skipping intent from dead actor: {queuedIntent.Actor.DebugName}");
 					continue;
 				}
 
-				var execResult = ExecuteCommands(state, translationResult.Commands, queuedIntent.Intent);
+				var pipelineResult = TranslateIntent(state, queuedIntent.Actor, queuedIntent.Intent);
+
+				if (!pipelineResult.Success)
+				{
+					Debug.Print($"[Pipeline] Enemy action translation failed: {pipelineResult.ErrorCode}");
+					continue;
+				}
+
+				var execResult = ExecuteCommands(state, pipelineResult.Commands, queuedIntent.Intent);
 				if (execResult.Success)
 				{
 					results.Add(execResult);
+					processedEnemies.Add(queuedIntent.Actor.Id);
 				}
 			}
 
-			SignalHub.NotifyEnemyIntentCleared(1);
+			// 清除所有已處理敵人的意圖
+			foreach (var enemyId in processedEnemies)
+			{
+				SignalHub.NotifyEnemyIntentCleared(enemyId);
+			}
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -215,51 +242,62 @@ namespace CombatCore.Kernel
 		/// 使用時機：EnemyIntent 階段
 		public static void GenerateAndEnqueueEnemyActions(CombatState state)
 		{
-			// 簡單 AI 邏輯：生成多個敵人行為
-			var enemy = state.Enemy;
+			var enemies = state.GetAllEnemies();
+			if (enemies.Count == 0) return;
 
-			// 偶數回合防禦(mark)，奇數回合攻擊(delay)
-			if (state.PhaseCtx.TurnNum % 2 == 1)
+			// 處理所有活著的敵人
+			foreach (var enemy in enemies.Where(e => e.IsAlive))
 			{
-				// B = mark
-				var blockAct = CreateEnemyBasicAct(HLAop.Block, TokenType.B);
-				var blockIntent = new ActIntent(blockAct, null);
-				EnemyMarkQueue.Enqueue(enemy, blockIntent, "Block");
-
-
-				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+				if (enemy.Id == 1) // 第一個敵人 (Enemy1): 交替攻擊/防禦
 				{
-					new CombatCore.UI.EnemyIntentUIItem("🛡", "Block 1"),  // Block(1) → 下回合開始會套上
-				};
+					if (state.PhaseCtx.TurnNum % 2 == 1)
+					{
+						var blockAct = CreateEnemyBasicAct(HLAop.Block);
+						var blockIntent = new ActIntent(blockAct, null);
+						EnemyMarkQueue.Enqueue(enemy, blockIntent, "Enemy1 Block");
 
-				SignalHub.NotifyEnemyIntentUpdated(1, Declare);
-			}
-			else
-			{
-				// A = delay  
-				var attackAct = CreateEnemyBasicAct(HLAop.Attack, TokenType.A);
-				var attackIntent = new ActIntent(attackAct, 0);
-				EnemyActionQueue.Enqueue(enemy, attackIntent, "Attack");
+						var declare = new List<EnemyIntentUIItem>
+						{
+							new("🛡", "Block 1")
+						};
+						SignalHub.NotifyEnemyIntentUpdated(enemy.Id, declare);
+					}
+					else
+					{
+						var attackAct = CreateEnemyBasicAct(HLAop.Attack);
+						var attackIntent = new ActIntent(attackAct, 0);
+						EnemyActionQueue.Enqueue(enemy, attackIntent, "Enemy1 Attack");
 
-				var Declare = new List<CombatCore.UI.EnemyIntentUIItem>
+						var declare = new List<EnemyIntentUIItem>
+						{
+							new("⚔", "Attack 2")
+						};
+						SignalHub.NotifyEnemyIntentUpdated(enemy.Id, declare);
+					}
+				}
+				else if (enemy.Id == 2) // 第二個敵人 (Enemy2): 持續格檔
 				{
-					new CombatCore.UI.EnemyIntentUIItem("⚔", "Attack 2"),
-				};
+					var blockAct = CreateEnemyBasicAct(HLAop.Block);
+					var blockIntent = new ActIntent(blockAct, null);
+					EnemyMarkQueue.Enqueue(enemy, blockIntent, "Enemy2 Block");
 
-				SignalHub.NotifyEnemyIntentUpdated(1, Declare);
+					var declare = new List<EnemyIntentUIItem>
+					{
+						new("🛡", "Defend")
+					};
+					SignalHub.NotifyEnemyIntentUpdated(enemy.Id, declare);
+				}
 			}
-
 		}
 
 		/// <summary>
 		/// 輔助方法：建立敵人 Basic Act
 		/// </summary>
-		private static Act CreateEnemyBasicAct(HLAop op, TokenType pushToken)
+		private static Act CreateEnemyBasicAct(HLAop op)
 		{
 			return new Act
 			{
 				ActionFlags = ActionType.Basic,
-				PushMemory = pushToken,
 				ConsumeOnPlay = false,
 				Op = op,
 				TargetType = op == HLAop.Attack ? TargetType.Target : TargetType.Self,
@@ -277,8 +315,6 @@ namespace CombatCore.Kernel
 			TurnEndQueue.Clear();
 			return ExecutionResult.Pass(new CmdLog());
 		}
-
-
 	}
 
 
