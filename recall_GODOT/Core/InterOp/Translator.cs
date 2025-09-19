@@ -58,7 +58,7 @@ namespace CombatCore.InterOp
 			{
 				TargetType.None => null,
 				TargetType.Self => self,
-				TargetType.Target => targetId.HasValue && tryGetActor(targetId.Value, out var actor) && !ReferenceEquals(actor, self) ? actor : null,
+				TargetType.Target => targetId.HasValue && tryGetActor(targetId.Value, out var actor) && !ReferenceEquals(actor, self) && actor.IsAlive ? actor : null,
 				TargetType.All => null, // 暫不處理群體目標
 				_ => null
 			};
