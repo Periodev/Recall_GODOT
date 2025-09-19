@@ -104,6 +104,7 @@ namespace CombatCore.Kernel
 		public static ExecutionResult ProcessEnemyMarkQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
+			var processedEnemies = new HashSet<int>();
 
 			while (EnemyMarkQueue.TryDequeue(out var queuedIntent))
 			{
@@ -119,10 +120,15 @@ namespace CombatCore.Kernel
 				if (execResult.Success)
 				{
 					results.Add(execResult);
+					processedEnemies.Add(queuedIntent.Actor.Id);
 				}
 			}
 
-			SignalHub.NotifyEnemyIntentCleared(state.Enemy.Id);
+			// 清除所有已處理敵人的意圖
+			foreach (var enemyId in processedEnemies)
+			{
+				SignalHub.NotifyEnemyIntentCleared(enemyId);
+			}
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -177,6 +183,7 @@ namespace CombatCore.Kernel
 		public static ExecutionResult ProcessEnemyActionQueue(CombatState state)
 		{
 			var results = new List<ExecutionResult>();
+			var processedEnemies = new HashSet<int>();
 
 			while (EnemyActionQueue.TryDequeue(out var queuedIntent))
 			{
@@ -192,10 +199,15 @@ namespace CombatCore.Kernel
 				if (execResult.Success)
 				{
 					results.Add(execResult);
+					processedEnemies.Add(queuedIntent.Actor.Id);
 				}
 			}
 
-			SignalHub.NotifyEnemyIntentCleared(state.Enemy.Id);
+			// 清除所有已處理敵人的意圖
+			foreach (var enemyId in processedEnemies)
+			{
+				SignalHub.NotifyEnemyIntentCleared(enemyId);
+			}
 
 			return results.Count > 0 ? results[0] : ExecutionResult.Pass(new CmdLog());
 		}
@@ -216,38 +228,51 @@ namespace CombatCore.Kernel
 		/// 使用時機：EnemyIntent 階段
 		public static void GenerateAndEnqueueEnemyActions(CombatState state)
 		{
-			// 簡化敵人AI - 只有第一隻行動
 			var enemies = state.GetAllEnemies();
 			if (enemies.Count == 0) return;
 
-			// 只處理第一個活著的敵人
-			var firstAliveEnemy = enemies.FirstOrDefault(e => e.IsAlive);
-			if (firstAliveEnemy == null) return;
-
-			// 現有 AI 邏輯，只針對第一個敵人
-			if (state.PhaseCtx.TurnNum % 2 == 1)
+			// 處理所有活著的敵人
+			foreach (var enemy in enemies.Where(e => e.IsAlive))
 			{
-				var blockAct = CreateEnemyBasicAct(HLAop.Block);
-				var blockIntent = new ActIntent(blockAct, null);
-				EnemyMarkQueue.Enqueue(firstAliveEnemy, blockIntent, "Block");
-
-				var declare = new List<EnemyIntentUIItem>
+				if (enemy.Id == 1) // 第一個敵人 (Enemy1): 交替攻擊/防禦
 				{
-					new("🛡", "Block 1")
-				};
-				SignalHub.NotifyEnemyIntentUpdated(firstAliveEnemy.Id, declare);
-			}
-			else
-			{
-				var attackAct = CreateEnemyBasicAct(HLAop.Attack);
-				var attackIntent = new ActIntent(attackAct, 0);
-				EnemyActionQueue.Enqueue(firstAliveEnemy, attackIntent, "Attack");
+					if (state.PhaseCtx.TurnNum % 2 == 1)
+					{
+						var blockAct = CreateEnemyBasicAct(HLAop.Block);
+						var blockIntent = new ActIntent(blockAct, null);
+						EnemyMarkQueue.Enqueue(enemy, blockIntent, "Enemy1 Block");
 
-				var declare = new List<EnemyIntentUIItem>
+						var declare = new List<EnemyIntentUIItem>
+						{
+							new("🛡", "Block 1")
+						};
+						SignalHub.NotifyEnemyIntentUpdated(enemy.Id, declare);
+					}
+					else
+					{
+						var attackAct = CreateEnemyBasicAct(HLAop.Attack);
+						var attackIntent = new ActIntent(attackAct, 0);
+						EnemyActionQueue.Enqueue(enemy, attackIntent, "Enemy1 Attack");
+
+						var declare = new List<EnemyIntentUIItem>
+						{
+							new("⚔", "Attack 2")
+						};
+						SignalHub.NotifyEnemyIntentUpdated(enemy.Id, declare);
+					}
+				}
+				else if (enemy.Id == 2) // 第二個敵人 (Enemy2): 持續格檔
 				{
-					new("⚔", "Attack 2")
-				};
-				SignalHub.NotifyEnemyIntentUpdated(firstAliveEnemy.Id, declare);
+					var blockAct = CreateEnemyBasicAct(HLAop.Block);
+					var blockIntent = new ActIntent(blockAct, null);
+					EnemyMarkQueue.Enqueue(enemy, blockIntent, "Enemy2 Block");
+
+					var declare = new List<EnemyIntentUIItem>
+					{
+						new("🛡", "Defend")
+					};
+					SignalHub.NotifyEnemyIntentUpdated(enemy.Id, declare);
+				}
 			}
 		}
 
