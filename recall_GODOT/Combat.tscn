@@ -59,7 +59,7 @@ offset_bottom = 514.0
 CombatCtrl = NodePath("../../Control")
 
 [node name="EnemyView" parent="UI" instance=ExtResource("6_brs8u")]
-position = Vector2(743, 258)
+position = Vector2(422, 21)
 
 [node name="EchoPanel" parent="UI" node_paths=PackedStringArray("CombatCtrl") instance=ExtResource("7_e5xpt")]
 offset_left = 568.0
@@ -73,3 +73,25 @@ offset_left = 192.0
 offset_top = 392.0
 offset_right = 232.0
 offset_bottom = 432.0
+
+[node name="EnemyContainer" type="GridContainer" parent="UI"]
+custom_minimum_size = Vector2(80, 80)
+offset_left = 583.0
+offset_top = 69.0
+offset_right = 1092.0
+offset_bottom = 369.0
+size_flags_horizontal = 3
+columns = 2
+
+[node name="EnemyView0" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
+position = Vector2(0, -1)
+
+[node name="EnemyView1" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
+
+[node name="EnemyView2" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
+
+[node name="EnemyView3" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
+
+[node name="EnemyView4" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
+
+[node name="EnemyView5" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]

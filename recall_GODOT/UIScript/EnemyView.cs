@@ -4,9 +4,10 @@ using CombatCore;
 
 public partial class EnemyView : Node2D
 {
+	[Export] public Label IDLabel;
+	[Export] public Label IntentLabel;
 	[Export] public Label HpLabel;
 	[Export] public Label ShieldLabel;
-	[Export] public Label IntentLabel;
 
 	private Actor _actor;
 
