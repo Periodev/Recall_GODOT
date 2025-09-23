@@ -1,6 +1,12 @@
-[gd_scene format=3 uid="uid://dyxyodjchs73t"]
+[gd_scene load_steps=3 format=3 uid="uid://dyxyodjchs73t"]
 
-[node name="EnemyContainer" type="Node2D"]
+[ext_resource type="Script" uid="uid://yvb10jh0oejm" path="res://UIScript/EnemySlot.cs" id="1_h6bfu"]
+[ext_resource type="Script" uid="uid://d1b1lr88lca8j" path="res://EnemyContainer.cs" id="1_ir0ck"]
+
+[node name="EnemyContainer" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ir0ck")
 
 [node name="GridContainer" type="GridContainer" parent="."]
 custom_minimum_size = Vector2(128, 128)
@@ -10,9 +16,14 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 3
 
-[node name="EnemySlot0" type="Button" parent="GridContainer"]
+[node name="EnemySlot0" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
 custom_minimum_size = Vector2(128, 128)
 layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
 
 [node name="IDLabel" type="Label" parent="GridContainer/EnemySlot0"]
 layout_mode = 0
