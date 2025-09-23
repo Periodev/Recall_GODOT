@@ -73,25 +73,3 @@ offset_left = 192.0
 offset_top = 392.0
 offset_right = 232.0
 offset_bottom = 432.0
-
-[node name="EnemyContainer" type="GridContainer" parent="UI"]
-custom_minimum_size = Vector2(80, 80)
-offset_left = 583.0
-offset_top = 69.0
-offset_right = 1092.0
-offset_bottom = 369.0
-size_flags_horizontal = 3
-columns = 2
-
-[node name="EnemyView0" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
-position = Vector2(0, -1)
-
-[node name="EnemyView1" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
-
-[node name="EnemyView2" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
-
-[node name="EnemyView3" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
-
-[node name="EnemyView4" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]
-
-[node name="EnemyView5" parent="UI/EnemyContainer" instance=ExtResource("6_brs8u")]

@@ -25,6 +25,13 @@ namespace CombatCore.UI
 		public static Action<FailCode>? OnErrorOccurred { get; set; }
 		public static Action? OnPlayerDrawComplete { get; set; }
 
+		// SignalHub.cs 新增
+		public static Action<int, int?>? OnEnemySlotClicked { get; set; }
+		public static Action<int?>? OnEnemySelected { get; set; }
+
+
+
+
 		// ===== 新增：敵方意圖（簡化版） =====
 		/// <summary>
 		/// 覆寫指定敵人的意圖清單。Queue 在「宣告」或「結算後」自行決定何時呼叫。
@@ -46,5 +53,12 @@ namespace CombatCore.UI
 			=> OnEnemyIntentUpdated?.Invoke(enemyId, items);
 
 		public static void NotifyEnemyIntentCleared(int enemyId) => OnEnemyIntentCleared(enemyId);
+
+
+		public static void NotifyEnemySlotClicked(int slotIndex, int? enemyId) 
+			=> OnEnemySlotClicked?.Invoke(slotIndex, enemyId);
+		public static void NotifyEnemySelected(int? enemyId) 
+			=> OnEnemySelected?.Invoke(enemyId);
+
 	}
 }

@@ -20,6 +20,6 @@ public partial class EnemySlot : Button
 
 	private void OnPressed()
 	{
-		//TODO SignalHub.NotifyEnemySlotClicked(SlotIndex, EnemyId);
+		SignalHub.NotifyEnemySlotClicked(SlotIndex, EnemyId);
 	}
 }

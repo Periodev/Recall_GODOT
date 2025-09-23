@@ -15,21 +15,25 @@ offset_right = 128.0
 offset_bottom = 128.0
 
 [node name="IDLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
 offset_right = 56.0
 offset_bottom = 23.0
 
 [node name="IntentLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
 offset_top = 32.0
 offset_right = 206.0
 offset_bottom = 60.0
 theme_override_font_sizes/font_size = 20
 
 [node name="HPLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
 offset_top = 64.0
 offset_right = 56.0
 offset_bottom = 87.0
 
 [node name="ShieldLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
 offset_top = 102.0
 offset_right = 48.0
 offset_bottom = 128.0

@@ -18,16 +18,14 @@ public partial class EnemyContainer : Control
 			slots[i].SlotIndex = i;
 		}
 
-		//TODO 		SignalHub.OnEnemySlotClicked += OnSlotClicked;
+		SignalHub.OnEnemySlotClicked += OnSlotClicked;
 	}
 	
 	private void OnSlotClicked(int slotIndex, int? enemyId)
 	{
-		/* TODO */
-		/*
+
 		selectedSlotIndex = slotIndex;
-		UpdateSelection();
+		//TODO 	UpdateSelection();
 		SignalHub.NotifyEnemySelected(enemyId);
-		*/
 	}
 }
