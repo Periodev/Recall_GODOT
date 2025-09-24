@@ -23,9 +23,25 @@ public partial class EnemyContainer : Control
 	
 	private void OnSlotClicked(int slotIndex, int? enemyId)
 	{
-
 		selectedSlotIndex = slotIndex;
-		//TODO 	UpdateSelection();
+		UpdateSelection();
 		SignalHub.NotifyEnemySelected(enemyId);
+	}
+
+	public void BindEnemyToSlot(int slotIndex, Actor enemy)
+	{
+		if (slotIndex >= 0 && slotIndex < slots.Length)
+		{
+			slots[slotIndex].EnemyId = enemy?.Id;
+			slots[slotIndex].BindActor(enemy);
+		}
+	}
+
+	private void UpdateSelection()
+	{
+		for (int i = 0; i < slots.Length; i++)
+		{
+			slots[i].SetSelected(i == selectedSlotIndex);
+		}
 	}
 }
