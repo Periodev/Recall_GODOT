@@ -24,9 +24,11 @@ public partial class Combat : Control
 	[Export] public RecallPanel RecallPanel;
 	[Export] public EchoPanel EchoPanel;
 	[Export] public ErrorLabel ErrorLabel;
+	[Export] public EnemyContainer EnemyContainer;
 
 	// 添加 Actor ID 到 EnemyView 映射
 	private Dictionary<int, EnemyView> _enemyViews = new();
+	private int? selectedEnemyId = null;
 
 	public CombatState State => CombatNode!.State;
 
@@ -86,6 +88,7 @@ public partial class Combat : Control
 
 	public void TryRunAct(Act act, int? targetId)
 	{
+		targetId ??= selectedEnemyId ?? 1;
 		GD.Print($"[Combat] TryRunAct: {act.Name}, target: {targetId}");
 
 		// 找到選中的槽位索引
@@ -147,6 +150,7 @@ public partial class Combat : Control
 
 		SignalHub.OnEnemyIntentUpdated += UpdateEnemyIntent;
 		SignalHub.OnEnemyIntentCleared += ClearEnemyIntent;
+		SignalHub.OnEnemySelected += OnEnemySelected;
 	}
 
 	private void CleanupUIListeners()
@@ -159,6 +163,7 @@ public partial class Combat : Control
 		SignalHub.OnErrorOccurred -= ShowError;
 		SignalHub.OnEnemyIntentUpdated -= UpdateEnemyIntent;
 		SignalHub.OnEnemyIntentCleared -= ClearEnemyIntent;
+		SignalHub.OnEnemySelected -= OnEnemySelected;
 	}
 
 	private void BindActorsToUI()
@@ -167,8 +172,18 @@ public partial class Combat : Control
 		State.Player.DebugName = "Player";
 
 		var enemies = State.GetAllEnemies();
-		EnemyView?.BindActor(enemies.ElementAtOrDefault(0));
-		EnemyView2?.BindActor(enemies.ElementAtOrDefault(1));
+		// EnemyView?.BindActor(enemies.ElementAtOrDefault(0));
+		// EnemyView2?.BindActor(enemies.ElementAtOrDefault(1));
+
+		// 使用 EnemyContainer 綁定敵人
+		if (EnemyContainer != null)
+		{
+			EnemyContainer.BindEnemyToSlot(0, enemies.ElementAtOrDefault(0));
+			for (int i = 1; i < 6; i++)
+			{
+				EnemyContainer.BindEnemyToSlot(i, null);
+			}
+		}
 	}
 
 	// 初始化敵人 View 映射
@@ -278,6 +293,11 @@ public partial class Combat : Control
 		{
 			enemyView.ClearIntent();
 		}
+	}
+
+	private void OnEnemySelected(int? enemyId)
+	{
+		selectedEnemyId = enemyId;
 	}
 
 
