@@ -25,7 +25,7 @@ public partial class EnemySlot : Button
 
 	public void BindActor(Actor actor)
 	{
-		if (actor != null || !actor.IsAlive)
+		if (actor != null && actor.IsAlive)
 		{
 			IDLabel.Text = $"ID:{actor.Id}";
 			HPLabel.Text = $"HP:{actor.HP.Value}";
@@ -46,7 +46,7 @@ public partial class EnemySlot : Button
 		HPLabel.Text = "";
 		ShieldLabel.Text = "";
 		Disabled = true;
-		Visible = false;
+		//Visible = false;
 		// 清除選擇高亮
 		SetSelected(false);
 		ReleaseFocus();
