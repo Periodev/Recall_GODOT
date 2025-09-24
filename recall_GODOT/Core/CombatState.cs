@@ -25,6 +25,9 @@ namespace CombatCore
 
 		// 添加 ID 映射
 		private Dictionary<int, Actor> _actorById = new();
+		// 每場戰鬥私有的配號器（0 保留給 Player）
+		private int _nextActorId = 1;
+
 
 		public IReadOnlyList<Actor> GetAllEnemies() => _enemies;
 		public IReadOnlyList<Actor> GetAliveEnemies() => _enemies.Where(e => e.IsAlive).ToList();
@@ -49,6 +52,29 @@ namespace CombatCore
 			return deadIds;
 		}
 
+		/// <summary>配發新 ActorId（本場戰鬥內唯一且不重用）。</summary>
+		private int AllocateActorId()
+		{
+			var id = _nextActorId;
+			_nextActorId += 1;
+			return id;
+		}
+
+		/// <summary>加入敵人（初始/增援皆走此路徑），回傳配發的 Id。</summary>
+		public int AddEnemy(Actor enemy)
+		{
+			if (enemy == null) throw new ArgumentNullException(nameof(enemy));
+			// 若這個實例已經在名冊中，直接回傳既有 Id（避免重複加入）
+			if (_actorById.TryGetValue(enemy.Id, out var existing) && ReferenceEquals(existing, enemy))
+				return enemy.Id;
+
+			var id = AllocateActorId();
+			enemy.Id = id;
+			_enemies.Add(enemy);
+			_actorById[id] = enemy;
+			return id;
+		}
+
 
 		public CombatState()
 		{
@@ -59,20 +85,11 @@ namespace CombatCore
 			Player.DebugName = "Player";
 			_actorById[Player.Id] = Player;
 
-			// 測試：創建兩個敵人
-			var enemy1 = new Actor(maxHP: 8, withAP: false, withCharge: false);
-			var enemy2 = new Actor(maxHP: 3, withAP: false, withCharge: false);
-
-			enemy1.Id = 1;
-			enemy2.Id = 2;
-			enemy1.DebugName = "Enemy1";
-			enemy2.DebugName = "Enemy2";
-
-			_enemies.Add(enemy1);
-			_enemies.Add(enemy2);
-
-			_actorById[enemy1.Id] = enemy1;
-			_actorById[enemy2.Id] = enemy2;
+			// 測試：創建兩個敵人（改用 AddEnemy 分配 Id）
+			var enemy1 = new Actor(maxHP: 8, withAP: false, withCharge: false) { DebugName = "Enemy1" };
+			var enemy2 = new Actor(maxHP: 3, withAP: false, withCharge: false) { DebugName = "Enemy2" };
+			AddEnemy(enemy1);
+			AddEnemy(enemy2);
 		}
 
 
