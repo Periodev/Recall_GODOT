@@ -46,7 +46,6 @@ public partial class EnemyContainer : Control
 	{
 		selectedSlotIndex = slotIndex;
 		UpdateSelection();
-		SignalHub.NotifyEnemySelected(enemyId);
 	}
 
 	public void BindEnemyToSlot(int slotIndex, Actor enemy)

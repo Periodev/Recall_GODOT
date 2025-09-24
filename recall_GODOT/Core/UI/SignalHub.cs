@@ -27,7 +27,6 @@ namespace CombatCore.UI
 
 		// SignalHub.cs 新增
 		public static Action<int, int?>? OnEnemySlotClicked { get; set; }
-		public static Action<int?>? OnEnemySelected { get; set; }
 
 
 
@@ -55,10 +54,8 @@ namespace CombatCore.UI
 		public static void NotifyEnemyIntentCleared(int enemyId) => OnEnemyIntentCleared(enemyId);
 
 
-		public static void NotifyEnemySlotClicked(int slotIndex, int? enemyId) 
+		public static void NotifyEnemySlotClicked(int slotIndex, int? enemyId)
 			=> OnEnemySlotClicked?.Invoke(slotIndex, enemyId);
-		public static void NotifyEnemySelected(int? enemyId) 
-			=> OnEnemySelected?.Invoke(enemyId);
 
 	}
 }
