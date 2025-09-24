@@ -19,8 +19,6 @@ public partial class Combat : Control
 {
 	[Export] public CombatStateNode CombatNode;
 	[Export] public PlayerView PlayerView;
-	[Export] public EnemyView EnemyView;
-	[Export] public EnemyView EnemyView2;
 	[Export] public RecallPanel RecallPanel;
 	[Export] public EchoPanel EchoPanel;
 	[Export] public ErrorLabel ErrorLabel;
@@ -34,10 +32,11 @@ public partial class Combat : Control
 	/// <summary>
 	/// 獲取默認目標ID，委派給 EnemyContainer 處理選取邏輯
 	/// </summary>
-	public int GetDefaultTargetId()
+	/// <returns>目標敵人ID，如果沒有有效目標則返回 null</returns>
+	public int? GetDefaultTargetId()
 	{
 		var enemies = State?.GetAllEnemies();
-		return EnemyContainer?.GetDefaultTargetId(enemies) ?? 1;
+		return EnemyContainer?.GetDefaultTargetId(enemies);
 	}
 
 	public override void _Ready()
@@ -61,8 +60,6 @@ public partial class Combat : Control
 		// 綁定角色到 UI
 		BindActorsToUI();
 
-		// 初始化敵人 View 映射
-		InitializeEnemyViews();
 
 		// 使用新的 PhaseRunner API 推進遊戲流程
 
@@ -97,6 +94,14 @@ public partial class Combat : Control
 	public void TryRunAct(Act act, int? targetId)
 	{
 		targetId ??= GetDefaultTargetId();
+
+		// 如果沒有有效目標，顯示友善錯誤訊息
+		if (!targetId.HasValue)
+		{
+			ErrorLabel?.ShowError(FailCode.BadTarget);
+			return;
+		}
+
 		GD.Print($"[Combat] TryRunAct: {act.Name}, target: {targetId}");
 
 		// 找到選中的槽位索引
@@ -178,38 +183,12 @@ public partial class Combat : Control
 		State.Player.DebugName = "Player";
 
 		var enemies = State.GetAllEnemies();
-		// EnemyView?.BindActor(enemies.ElementAtOrDefault(0));
-		// EnemyView2?.BindActor(enemies.ElementAtOrDefault(1));
-
-		// 使用 EnemyContainer 綁定敵人
-		if (EnemyContainer != null)
-		{
-			// 綁定所有敵人到對應槽位
-			for (int i = 0; i < 6; i++)
-			{
-				var enemy = enemies.ElementAtOrDefault(i);
-				EnemyContainer.BindEnemyToSlot(i, enemy);
-			}
-		}
-	}
-
-	// 初始化敵人 View 映射
-	private void InitializeEnemyViews()
-	{
-		var enemies = State.GetAllEnemies();
-		if (enemies.Count > 0 && EnemyView != null)
-			_enemyViews[enemies[0].Id] = EnemyView;
-
-		if (enemies.Count > 1 && EnemyView2 != null)
-			_enemyViews[enemies[1].Id] = EnemyView2;
 	}
 
 	private void RefreshAllUI()
 	{
 		// 刷新角色狀態顯示
 		PlayerView?.UpdateVisual();
-		EnemyView?.UpdateVisual();
-		EnemyView2?.UpdateVisual();
 
 		// 刷新 EnemyContainer
 		if (EnemyContainer != null)

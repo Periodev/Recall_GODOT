@@ -40,7 +40,7 @@ namespace CombatCore
 
 			// 測試：創建兩個敵人
 			var enemy1 = new Actor(maxHP: 8, withAP: false, withCharge: false);
-			var enemy2 = new Actor(maxHP: 6, withAP: false, withCharge: false);
+			var enemy2 = new Actor(maxHP: 3, withAP: false, withCharge: false);
 
 			enemy1.Id = 1;
 			enemy2.Id = 2;

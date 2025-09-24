@@ -25,20 +25,31 @@ public partial class EnemySlot : Button
 
 	public void BindActor(Actor actor)
 	{
-		if (actor != null)
+		if (actor != null || !actor.IsAlive)
 		{
 			IDLabel.Text = $"ID:{actor.Id}";
 			HPLabel.Text = $"HP:{actor.HP.Value}";
 			ShieldLabel.Text = $"Shield:{actor.Shield.Value}";
 			Disabled = false;
+			Visible = true;
 		}
 		else
 		{
-			IDLabel.Text = "";
-			HPLabel.Text = "";
-			ShieldLabel.Text = "";
-			Disabled = true;
+			Unbind();
 		}
+	}
+
+	public void Unbind()
+	{
+		IDLabel.Text = "";
+		IntentLabel.Text = "";
+		HPLabel.Text = "";
+		ShieldLabel.Text = "";
+		Disabled = true;
+		Visible = false;
+		// 清除選擇高亮
+		SetSelected(false);
+		ReleaseFocus();
 	}
 
 	public void SetSelected(bool selected)

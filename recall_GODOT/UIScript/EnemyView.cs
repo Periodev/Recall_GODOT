@@ -20,6 +20,8 @@ public partial class EnemyView : Node2D
 	public void UpdateVisual()
 	{
 		if (_actor == null) return;
+		if (!_actor.IsAlive) return;
+
 		HpLabel.Text = $"HP: {_actor.HP.Value}/{_actor.HP.Max}";
 		//ChargeLabel.Text = $"Charge: {_actor.Charge?.Value ?? 0}/3";
 		ShieldLabel.Text = $"Shield: {_actor.Shield?.Value ?? 0}";

@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Linq;
 using CombatCore;
@@ -41,7 +41,12 @@ public partial class EnemyContainer : Control
 
 		SignalHub.OnEnemySlotClicked += OnSlotClicked;
 	}
-	
+
+	public override void _ExitTree()
+	{
+		SignalHub.OnEnemySlotClicked -= OnSlotClicked;
+	}
+
 	private void OnSlotClicked(int slotIndex, int? enemyId)
 	{
 		selectedSlotIndex = slotIndex;
@@ -64,15 +69,21 @@ public partial class EnemyContainer : Control
 	{
 		if (!IsValidSlot(slotIndex)) return;
 
-		// 只有當敵人ID改變時才重新綁定
-		if (slots[slotIndex].EnemyId != enemy?.Id)
+		// 死亡或不存在 ⇒ 立即清槽，並處理選取回退
+		if (enemy == null || !enemy.IsAlive)
 		{
-			BindEnemyToSlot(slotIndex, enemy);
+			slots[slotIndex].Unbind();          	// 清空文字、EnemyId=null、Disabled/Visible 狀態
+			return;                               // 結束：不要再往下刷新文字了
 		}
-		else if (enemy != null)
+
+		// 活著 ⇒ ID 改變就 Rebind；相同 ID 就只更新數值
+		if (slots[slotIndex].EnemyId != enemy.Id)
 		{
-			// 同一個敵人，只更新顯示數據
-			slots[slotIndex].BindActor(enemy);
+			BindEnemyToSlot(slotIndex, enemy);   // 內部會設定 Visible=true 等
+		}
+		else
+		{
+			slots[slotIndex].BindActor(enemy);    // 同一敵人：刷新 HP/Shield/Intent 文案
 		}
 	}
 
@@ -82,17 +93,30 @@ public partial class EnemyContainer : Control
 		{
 			if (IsValidSlot(i))
 			{
-				slots[i].SetSelected(i == selectedSlotIndex);
+				// 只有活著的敵人且為選中槽位才高亮
+				bool isSelected = i == selectedSlotIndex && slots[i].EnemyId.HasValue;
+				slots[i].SetSelected(isSelected);
 			}
 		}
 	}
 
 	public void RefreshUI(System.Collections.Generic.IReadOnlyList<Actor> enemies)
 	{
+		bool hadSelection = selectedSlotIndex.HasValue;
+
+		// 為每個槽位找到對應的敵人（根據 EnemyId 匹配）
 		for (int i = 0; i < slots.Length; i++)
 		{
 			var enemy = enemies.ElementAtOrDefault(i);
 			RefreshSlot(i, enemy);
+		}
+
+		// 如果之前有選擇但現在沒有了，立即觸發選擇同步
+		if (hadSelection && !selectedSlotIndex.HasValue)
+		{
+			// 立即尋找新目標並同步高亮
+			var targetId = GetDefaultTargetId(enemies);
+			// GetDefaultTargetId 會自動處理選擇和高亮同步
 		}
 	}
 
@@ -102,9 +126,10 @@ public partial class EnemyContainer : Control
 	}
 
 	/// <summary>
-	/// 獲取默認目標ID，優先使用選中的敵人，否則使用第一個活著的敵人
+	/// 獲取默認目標ID，優先使用選中的敵人，否則自動選擇第一個活著的敵人並同步高亮狀態
 	/// </summary>
-	public int GetDefaultTargetId(System.Collections.Generic.IReadOnlyList<Actor> enemies)
+	/// <returns>目標敵人ID，如果沒有有效目標則返回 null</returns>
+	public int? GetDefaultTargetId(System.Collections.Generic.IReadOnlyList<Actor> enemies)
 	{
 		// 如果有選中的敵人且還活著
 		if (selectedSlotIndex.HasValue && IsValidSlot(selectedSlotIndex.Value))
@@ -118,7 +143,25 @@ public partial class EnemyContainer : Control
 			}
 		}
 
-		// 否則返回第一個活著的敵人
-		return enemies.FirstOrDefault(e => e.IsAlive)?.Id ?? 1;
+		// 當前選擇無效，尋找第一個活著的敵人並自動選擇它
+		var firstAliveEnemy = enemies.FirstOrDefault(e => e.IsAlive);
+		if (firstAliveEnemy != null)
+		{
+			// 找到對應的槽位索引並自動選擇
+			for (int i = 0; i < slots.Length; i++)
+			{
+				if (IsValidSlot(i) && slots[i].EnemyId == firstAliveEnemy.Id)
+				{
+					selectedSlotIndex = i;
+					UpdateSelection(); // 同步高亮狀態
+					return firstAliveEnemy.Id;
+				}
+			}
+		}
+
+		// 沒有找到任何活著的敵人
+		selectedSlotIndex = null;
+		UpdateSelection();
+		return null;
 	}
 }

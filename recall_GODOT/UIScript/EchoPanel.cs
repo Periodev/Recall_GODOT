@@ -229,6 +229,13 @@ public partial class EchoPanel : Control
 
 		int? targetId = DetermineTargetId(_selectedAct.TargetType);
 
+		// 檢查是否需要目標但沒有有效目標
+		if (_selectedAct.TargetType == TargetType.Target && !targetId.HasValue)
+		{
+			ShowReason("請選取目標");
+			return;
+		}
+
 		// 呼叫 Combat 執行
 		CombatCtrl?.TryRunAct(_selectedAct, targetId);
 
@@ -279,7 +286,7 @@ public partial class EchoPanel : Control
 	/// </summary>
 	private int? GetSelectedEnemyId()
 	{
-		return CombatCtrl?.GetDefaultTargetId() ?? 1;
+		return CombatCtrl?.GetDefaultTargetId();
 	}
 
 	/// <summary>
