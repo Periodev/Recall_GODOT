@@ -27,6 +27,27 @@ namespace CombatCore
 		private Dictionary<int, Actor> _actorById = new();
 
 		public IReadOnlyList<Actor> GetAllEnemies() => _enemies;
+		public IReadOnlyList<Actor> GetAliveEnemies() => _enemies.Where(e => e.IsAlive).ToList();
+		
+		/// <summary>依 Id 移除敵人；成功回傳 true。</summary>
+		public bool RemoveEnemyById(int id)
+		{
+			var idx = _enemies.FindIndex(e => e.Id == id);
+			if (idx < 0) return false;
+			_enemies.RemoveAt(idx);
+			_actorById.Remove(id);
+			return true;
+		}
+
+		/// <summary>剔除死亡敵人並回傳被移除的 Id 清單（純資料操作，不發事件）。</summary>
+		public List<int> PurgeDeadEnemies()
+		{
+			var deadIds = _enemies.Where(e => !e.IsAlive).Select(e => e.Id).ToList();
+			if (deadIds.Count == 0) return deadIds;
+			_enemies.RemoveAll(e => deadIds.Contains(e.Id));
+			foreach (var id in deadIds) _actorById.Remove(id);
+			return deadIds;
+		}
 
 
 		public CombatState()

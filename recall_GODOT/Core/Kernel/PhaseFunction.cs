@@ -55,8 +55,11 @@ namespace CombatCore.Kernel
 
 			var result = CombatPipeline.ProcessPlayerQueue(state);
 
+			PurgeDeadAndNotify(state);
+
 			if (CheckCombatEnd(state))
 				return PhaseResult.CombatEnd;
+
 
 			state.PhaseCtx.Step = PhaseStep.PlayerInput;
 			return PhaseResult.WaitInput;
@@ -75,8 +78,11 @@ namespace CombatCore.Kernel
 
 				var result = CombatPipeline.ProcessEnemyMarkQueue(state);
 
+				PurgeDeadAndNotify(state);
+
 				if (CheckCombatEnd(state))
 					return PhaseResult.CombatEnd;
+
 			}
 #if DEBUG
 			else
@@ -117,8 +123,11 @@ namespace CombatCore.Kernel
 
 				var result = CombatPipeline.ProcessEnemyActionQueue(state);
 
+				PurgeDeadAndNotify(state);
+
 				if (CheckCombatEnd(state))
 					return PhaseResult.CombatEnd;
+
 			}
 #if DEBUG
 			else
@@ -139,14 +148,18 @@ namespace CombatCore.Kernel
 		{
 			var result = CombatPipeline.ProcessTurnEndQueue(state);
 
+			PurgeDeadAndNotify(state);
+
 			if (CheckCombatEnd(state))
 				return PhaseResult.CombatEnd;
+
 
 			// 回合結束後，推進到下一個回合的開始
 			state.PhaseCtx.Step = PhaseStep.TurnStart;
 			return PhaseResult.Continue;
 		}
 
+		// check functions
 		private static bool CheckCombatEnd(CombatState state)
 		{
 			// 玩家死亡 → 戰鬥結束
@@ -174,6 +187,23 @@ namespace CombatCore.Kernel
 			}
 
 			return false;
+		}
+
+
+		/// <summary>
+		/// 清除死亡敵人（資料層）並對外發送 UI 事件（Intent 清空與移除）。
+		/// 單一出口，避免重複樣板碼。
+		/// </summary>
+		private static void PurgeDeadAndNotify(CombatState state)
+		{
+			var removed = state.PurgeDeadEnemies();
+			if (removed.Count == 0) return;
+
+			foreach (var id in removed)
+			{
+				//TODO	SignalHub.NotifyEnemyIntentCleared(id);
+				//TODO	SignalHub.NotifyEnemyRemoved(id);
+			}
 		}
 
 	}
