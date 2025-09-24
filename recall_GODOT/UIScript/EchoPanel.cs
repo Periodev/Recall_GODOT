@@ -261,16 +261,38 @@ public partial class EchoPanel : Control
 
 	/// <summary>
 	/// 根據 TargetType 決定目標 ID
-	private static int? DetermineTargetId(TargetType targetType)
+	private int? DetermineTargetId(TargetType targetType)
 	{
 		return targetType switch
 		{
 			TargetType.None => null,
 			TargetType.Self => 0,        // Player ID = 0
-			TargetType.Target => 1,      // Enemy ID = 1
+			TargetType.Target => GetSelectedEnemyId(), // 使用玩家選中的敵人 ID
 			TargetType.All => null,      // 全體攻擊，暫時用 null
 			_ => null
 		};
+	}
+
+	/// <summary>
+	/// 獲取當前選中的敵人 ID
+	/// </summary>
+	private int? GetSelectedEnemyId()
+	{
+		// 通過 Combat 系統獲取選中的敵人 ID，如果沒有選中則默認為 1
+		var selectedId = CombatCtrl?.SelectedEnemyId;
+		if (selectedId.HasValue)
+		{
+			return selectedId.Value;
+		}
+
+		// 如果沒有選中任何敵人，默認攻擊第一個敵人
+		var enemies = CombatCtrl?.State?.GetAllEnemies();
+		if (enemies != null && enemies.Count > 0)
+		{
+			return enemies[0].Id;
+		}
+
+		return 1; // 最終fallback
 	}
 
 	/// <summary>

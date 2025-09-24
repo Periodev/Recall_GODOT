@@ -31,6 +31,7 @@ public partial class Combat : Control
 	private int? selectedEnemyId = null;
 
 	public CombatState State => CombatNode!.State;
+	public int? SelectedEnemyId => selectedEnemyId;
 
 	public override void _Ready()
 	{
@@ -50,8 +51,8 @@ public partial class Combat : Control
 		// 設定 UI 事件監聽
 		SetupUIListeners();
 
-		// 綁定角色到 UI
-		BindActorsToUI();
+		// 延遲綁定角色到 UI，確保所有子節點都已初始化
+		CallDeferred(nameof(BindActorsToUI));
 
 		// 初始化敵人 View 映射
 		InitializeEnemyViews();
@@ -178,10 +179,11 @@ public partial class Combat : Control
 		// 使用 EnemyContainer 綁定敵人
 		if (EnemyContainer != null)
 		{
-			EnemyContainer.BindEnemyToSlot(0, enemies.ElementAtOrDefault(0));
-			for (int i = 1; i < 6; i++)
+			// 綁定所有敵人到對應槽位
+			for (int i = 0; i < 6; i++)
 			{
-				EnemyContainer.BindEnemyToSlot(i, null);
+				var enemy = enemies.ElementAtOrDefault(i);
+				EnemyContainer.BindEnemyToSlot(i, enemy);
 			}
 		}
 	}
@@ -203,6 +205,13 @@ public partial class Combat : Control
 		PlayerView?.UpdateVisual();
 		EnemyView?.UpdateVisual();
 		EnemyView2?.UpdateVisual();
+
+		// 刷新 EnemyContainer
+		if (EnemyContainer != null)
+		{
+			var enemies = State.GetAllEnemies();
+			EnemyContainer.RefreshUI(enemies);
+		}
 
 		// 刷新記憶時間線
 		RefreshTimelineSnapshot();

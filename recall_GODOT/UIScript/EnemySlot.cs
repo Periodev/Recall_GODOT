@@ -9,10 +9,10 @@ public partial class EnemySlot : Button
 	[Export] public Label IntentLabel;
 	[Export] public Label HPLabel;
 	[Export] public Label ShieldLabel;
-	
+
 	public int SlotIndex { get; set; }
 	public int? EnemyId { get; set; }
-	
+
 	public override void _Ready()
 	{
 		Pressed += OnPressed;
