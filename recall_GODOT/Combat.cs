@@ -28,10 +28,17 @@ public partial class Combat : Control
 
 	// 添加 Actor ID 到 EnemyView 映射
 	private Dictionary<int, EnemyView> _enemyViews = new();
-	private int? selectedEnemyId = null;
 
 	public CombatState State => CombatNode!.State;
-	public int? SelectedEnemyId => selectedEnemyId;
+
+	/// <summary>
+	/// 獲取默認目標ID，委派給 EnemyContainer 處理選取邏輯
+	/// </summary>
+	public int GetDefaultTargetId()
+	{
+		var enemies = State?.GetAllEnemies();
+		return EnemyContainer?.GetDefaultTargetId(enemies) ?? 1;
+	}
 
 	public override void _Ready()
 	{
@@ -51,8 +58,8 @@ public partial class Combat : Control
 		// 設定 UI 事件監聽
 		SetupUIListeners();
 
-		// 延遲綁定角色到 UI，確保所有子節點都已初始化
-		CallDeferred(nameof(BindActorsToUI));
+		// 綁定角色到 UI
+		BindActorsToUI();
 
 		// 初始化敵人 View 映射
 		InitializeEnemyViews();
@@ -89,7 +96,7 @@ public partial class Combat : Control
 
 	public void TryRunAct(Act act, int? targetId)
 	{
-		targetId ??= selectedEnemyId ?? 1;
+		targetId ??= GetDefaultTargetId();
 		GD.Print($"[Combat] TryRunAct: {act.Name}, target: {targetId}");
 
 		// 找到選中的槽位索引
@@ -151,7 +158,6 @@ public partial class Combat : Control
 
 		SignalHub.OnEnemyIntentUpdated += UpdateEnemyIntent;
 		SignalHub.OnEnemyIntentCleared += ClearEnemyIntent;
-		SignalHub.OnEnemySelected += OnEnemySelected;
 	}
 
 	private void CleanupUIListeners()
@@ -164,7 +170,6 @@ public partial class Combat : Control
 		SignalHub.OnErrorOccurred -= ShowError;
 		SignalHub.OnEnemyIntentUpdated -= UpdateEnemyIntent;
 		SignalHub.OnEnemyIntentCleared -= ClearEnemyIntent;
-		SignalHub.OnEnemySelected -= OnEnemySelected;
 	}
 
 	private void BindActorsToUI()
@@ -303,12 +308,6 @@ public partial class Combat : Control
 			enemyView.ClearIntent();
 		}
 	}
-
-	private void OnEnemySelected(int? enemyId)
-	{
-		selectedEnemyId = enemyId;
-	}
-
 
 	// debug function
 	private void CreateDebugActs()

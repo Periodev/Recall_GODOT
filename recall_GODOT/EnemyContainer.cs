@@ -11,56 +11,35 @@ public partial class EnemyContainer : Control
 
 	public override void _Ready()
 	{
-		GD.Print("[EnemyContainer] _Ready() called");
-
 		try
 		{
 			var gridContainer = GetNode<GridContainer>("GridContainer");
-			//GD.Print($"[EnemyContainer] GridContainer found: {gridContainer != null}");
-
 			if (gridContainer == null)
 			{
 				GD.PrintErr("[EnemyContainer] GridContainer not found!");
 				return;
 			}
 
-			// 列出 GridContainer 的所有子節點
-			var children = gridContainer.GetChildren();
-			//GD.Print($"[EnemyContainer] GridContainer has {children.Count} children");
-			for (int i = 0; i < children.Count; i++)
-			{
-				//GD.Print($"[EnemyContainer] Child {i}: {children[i].Name} ({children[i].GetType().Name})");
-			}
-
 			for (int i = 0; i < 6; i++)
 			{
-				try
+				var slotNode = gridContainer.GetNode<EnemySlot>($"EnemySlot{i}");
+				if (slotNode != null)
 				{
-					var slotNode = gridContainer.GetNode<EnemySlot>($"EnemySlot{i}");
-					if (slotNode != null)
-					{
-						slots[i] = slotNode;
-						slots[i].SlotIndex = i;
-						GD.Print($"[EnemyContainer] EnemySlot{i} successfully initialized");
-					}
-					else
-					{
-						GD.PrintErr($"[EnemyContainer] EnemySlot{i} not found in GridContainer");
-					}
+					slots[i] = slotNode;
+					slots[i].SlotIndex = i;
 				}
-				catch (Exception slotEx)
+				else
 				{
-					GD.PrintErr($"[EnemyContainer] Error getting EnemySlot{i}: {slotEx.Message}");
+					GD.PrintErr($"[EnemyContainer] EnemySlot{i} not found");
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			GD.PrintErr($"[EnemyContainer] Error in _Ready: {ex.Message}");
+			GD.PrintErr($"[EnemyContainer] Initialization failed: {ex.Message}");
 		}
 
 		SignalHub.OnEnemySlotClicked += OnSlotClicked;
-		//GD.Print("[EnemyContainer] _Ready() completed");
 	}
 	
 	private void OnSlotClicked(int slotIndex, int? enemyId)
@@ -72,14 +51,29 @@ public partial class EnemyContainer : Control
 
 	public void BindEnemyToSlot(int slotIndex, Actor enemy)
 	{
-		if (slotIndex >= 0 && slotIndex < slots.Length && slots[slotIndex] != null)
+		if (!IsValidSlot(slotIndex))
 		{
-			slots[slotIndex].EnemyId = enemy?.Id;
-			slots[slotIndex].BindActor(enemy);
+			GD.PrintErr($"[EnemyContainer] Invalid slot: {slotIndex}");
+			return;
 		}
-		else
+
+		slots[slotIndex].EnemyId = enemy?.Id;
+		slots[slotIndex].BindActor(enemy);
+	}
+
+	public void RefreshSlot(int slotIndex, Actor enemy)
+	{
+		if (!IsValidSlot(slotIndex)) return;
+
+		// 只有當敵人ID改變時才重新綁定
+		if (slots[slotIndex].EnemyId != enemy?.Id)
 		{
-			GD.PrintErr($"[EnemyContainer] Cannot bind enemy to slot {slotIndex}: slot is null or invalid");
+			BindEnemyToSlot(slotIndex, enemy);
+		}
+		else if (enemy != null)
+		{
+			// 同一個敵人，只更新顯示數據
+			slots[slotIndex].BindActor(enemy);
 		}
 	}
 
@@ -87,7 +81,7 @@ public partial class EnemyContainer : Control
 	{
 		for (int i = 0; i < slots.Length; i++)
 		{
-			if (slots[i] != null)
+			if (IsValidSlot(i))
 			{
 				slots[i].SetSelected(i == selectedSlotIndex);
 			}
@@ -96,19 +90,36 @@ public partial class EnemyContainer : Control
 
 	public void RefreshUI(System.Collections.Generic.IReadOnlyList<Actor> enemies)
 	{
-		// 重新綁定所有已綁定的敵人以刷新顯示
 		for (int i = 0; i < slots.Length; i++)
 		{
-			if (slots[i] != null && slots[i].EnemyId.HasValue)
+			var enemy = enemies.ElementAtOrDefault(i);
+			RefreshSlot(i, enemy);
+		}
+	}
+
+	private bool IsValidSlot(int slotIndex)
+	{
+		return slotIndex >= 0 && slotIndex < slots.Length && slots[slotIndex] != null;
+	}
+
+	/// <summary>
+	/// 獲取默認目標ID，優先使用選中的敵人，否則使用第一個活著的敵人
+	/// </summary>
+	public int GetDefaultTargetId(System.Collections.Generic.IReadOnlyList<Actor> enemies)
+	{
+		// 如果有選中的敵人且還活著
+		if (selectedSlotIndex.HasValue && IsValidSlot(selectedSlotIndex.Value))
+		{
+			var selectedEnemyId = slots[selectedSlotIndex.Value].EnemyId;
+			if (selectedEnemyId.HasValue)
 			{
-				// 根據 EnemyId 找到對應的敵人並重新綁定
-				var enemyId = slots[i].EnemyId.Value;
-				var enemy = enemies.FirstOrDefault(e => e.Id == enemyId);
-				if (enemy != null)
-				{
-					slots[i].BindActor(enemy);
-				}
+				var selectedEnemy = enemies.FirstOrDefault(e => e.Id == selectedEnemyId.Value);
+				if (selectedEnemy?.IsAlive == true)
+					return selectedEnemy.Id;
 			}
 		}
+
+		// 否則返回第一個活著的敵人
+		return enemies.FirstOrDefault(e => e.IsAlive)?.Id ?? 1;
 	}
 }

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CombatCore;
 using CombatCore.Recall;
 using CombatCore.InterOp;
@@ -278,21 +279,7 @@ public partial class EchoPanel : Control
 	/// </summary>
 	private int? GetSelectedEnemyId()
 	{
-		// 通過 Combat 系統獲取選中的敵人 ID，如果沒有選中則默認為 1
-		var selectedId = CombatCtrl?.SelectedEnemyId;
-		if (selectedId.HasValue)
-		{
-			return selectedId.Value;
-		}
-
-		// 如果沒有選中任何敵人，默認攻擊第一個敵人
-		var enemies = CombatCtrl?.State?.GetAllEnemies();
-		if (enemies != null && enemies.Count > 0)
-		{
-			return enemies[0].Id;
-		}
-
-		return 1; // 最終fallback
+		return CombatCtrl?.GetDefaultTargetId() ?? 1;
 	}
 
 	/// <summary>
