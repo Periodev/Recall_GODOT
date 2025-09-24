@@ -22,4 +22,27 @@ public partial class EnemySlot : Button
 	{
 		SignalHub.NotifyEnemySlotClicked(SlotIndex, EnemyId);
 	}
+
+	public void BindActor(Actor actor)
+	{
+		if (actor != null)
+		{
+			IDLabel.Text = $"ID:{actor.Id}";
+			HPLabel.Text = $"HP:{actor.HP.Value}";
+			ShieldLabel.Text = $"Shield:{actor.Shield.Value}";
+			Disabled = false;
+		}
+		else
+		{
+			IDLabel.Text = "";
+			HPLabel.Text = "";
+			ShieldLabel.Text = "";
+			Disabled = true;
+		}
+	}
+
+	public void SetSelected(bool selected)
+	{
+		Modulate = selected ? Colors.LightBlue : Colors.White;
+	}
 }
