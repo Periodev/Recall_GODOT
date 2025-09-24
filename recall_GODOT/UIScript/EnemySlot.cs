@@ -56,4 +56,16 @@ public partial class EnemySlot : Button
 	{
 		Modulate = selected ? Colors.LightBlue : Colors.White;
 	}
+
+	public void UpdateIntent(string Icon, string Text)
+	{
+		IntentLabel.Text = $"Enemy Declare : {Text}";
+	}
+
+	public void ClearIntent()
+	{
+		IntentLabel.Text = "";
+	}
+
+
 }

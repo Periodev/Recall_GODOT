@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dyxyodjchs73t"]
 
 [ext_resource type="Script" uid="uid://yvb10jh0oejm" path="res://UIScript/EnemySlot.cs" id="1_h6bfu"]
-[ext_resource type="Script" uid="uid://d1b1lr88lca8j" path="res://EnemyContainer.cs" id="1_ir0ck"]
+[ext_resource type="Script" uid="uid://d1b1lr88lca8j" path="res://UIScript/EnemyContainer.cs" id="1_ir0ck"]
 
 [node name="EnemyContainer" type="Control"]
 layout_mode = 3
@@ -10,6 +10,7 @@ script = ExtResource("1_ir0ck")
 
 [node name="GridContainer" type="GridContainer" parent="."]
 custom_minimum_size = Vector2(128, 128)
+layout_mode = 0
 offset_right = 416.0
 offset_bottom = 280.0
 size_flags_horizontal = 3
