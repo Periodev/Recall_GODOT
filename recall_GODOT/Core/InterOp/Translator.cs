@@ -85,7 +85,7 @@ namespace CombatCore.InterOp
 				return TranslationResult.Fail(FailCode.NoRecipe);
 
 			// AP 檢查（只檢查玩家）
-			int apCost = IsPlayer(self, state) ? 1 : 0;
+			int apCost = IsPlayer(self, state) ? 0 : 0;
 			if (apCost > 0 && !self.HasAP(apCost))
 				return TranslationResult.Fail(FailCode.NoAP);
 
