@@ -80,7 +80,7 @@ namespace CombatCore
 		{
 			PhaseCtx.Init();
 
-			Player = new Actor(maxHP: 20, apPerTurn: 3, withCharge: false, withCopy: true);
+			Player = new Actor(maxHP: 10, apPerTurn: 3, withCharge: false, withCopy: true);
 			Player.Id = 0;
 			Player.DebugName = "Player";
 			_actorById[Player.Id] = Player;

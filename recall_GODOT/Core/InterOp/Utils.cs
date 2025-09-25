@@ -12,8 +12,9 @@ namespace CombatCore
 	public enum HLAop : byte
 	{
 		Attack = 0x01,      // 對應 BasicIntent(TokenType.A)
-		Block = 0x02,       // 對應 BasicIntent(TokenType.B)  
+		Block = 0x02,       // 對應 BasicIntent(TokenType.B)
 		Charge = 0x03,      // 對應 BasicIntent(TokenType.C)
+		DoubleStrike = 0x04, // Double Strike 技能
 		Recall = 0x10,      // 對應 RecallIntent
 		EndTurn = 0xFF      // 結束回合意圖
 	}

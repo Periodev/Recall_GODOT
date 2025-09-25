@@ -126,7 +126,7 @@ namespace CombatCore.Recall
 			AddRecipe(111, new Act
 			{
 				RecipeId = 111,
-				Op = HLAop.Attack,
+				Op = HLAop.DoubleStrike,
 				TargetType = TargetType.Target,
 				CostAP = 1,
 				ActionFlags = ActionType.Echo,
