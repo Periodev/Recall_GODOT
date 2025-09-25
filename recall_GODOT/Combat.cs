@@ -312,7 +312,7 @@ public partial class Combat : Control
 		var basicActs = new[]
 		{
 			ActFactory.BuildFromRecipe(1),  // Attack
-			ActFactory.BuildFromRecipe(2),  // Block  
+			ActFactory.BuildFromRecipe(2),  // Block
 			ActFactory.BuildFromRecipe(3),  // Copy
 		};
 
@@ -322,6 +322,46 @@ public partial class Combat : Control
 
 
 		GD.Print("[Combat] - Basic Action Slots added");
+	}
+
+	/// <summary>
+	/// Debug: 生成Double Strike Echo進行測試
+	/// </summary>
+	public void DebugCreateDoubleStrikeEcho()
+	{
+		if (State.actStore.IsFull)
+		{
+			GD.Print("[Debug] ActStore is full, cannot add Double Strike Echo");
+			return;
+		}
+
+		var doubleStrikeEcho = ActFactory.BuildFromRecipe(111);
+
+		var result = State.actStore.TryAdd(doubleStrikeEcho);
+		if (result == FailCode.None)
+		{
+			GD.Print("[Debug] Double Strike Echo added to ActStore");
+			GD.Print($"[Debug] Echo details: {doubleStrikeEcho.Name} (RecipeId: {doubleStrikeEcho.RecipeId})");
+			RefreshAllUI();
+		}
+		else
+		{
+			GD.Print($"[Debug] Failed to add Double Strike Echo: {result}");
+		}
+	}
+
+	// === Debug Input Handling ===
+	public override void _Input(InputEvent @event)
+	{
+		if (@event is InputEventKey keyEvent && keyEvent.Pressed)
+		{
+			switch (keyEvent.Keycode)
+			{
+				case Key.F4:
+					DebugCreateDoubleStrikeEcho();
+					break;
+			}
+		}
 	}
 
 }

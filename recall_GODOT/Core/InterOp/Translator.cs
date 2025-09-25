@@ -125,16 +125,25 @@ namespace CombatCore.InterOp
 			switch (act.Op)
 			{
 				case HLAop.Attack:
-					int damage = A_BASE_DMG;
-					if (self.HasCopy())
+					// 檢查是否為技能效果
+					if (act.RecipeId > 100) // Echo 技能
 					{
-						commands.Add(AtomicCmd.ConsumeCopy(self, 1));
-						commands.Add(AtomicCmd.DealDamage(self, target, damage));
-						commands.Add(AtomicCmd.DealDamage(self, target, damage));
+						var skillCommands = SkillEffects.BuildSkillCommands(act.RecipeId, self, target);
+						commands.AddRange(skillCommands);
 					}
-					else
+					else // 基本攻擊
 					{
-						commands.Add(AtomicCmd.DealDamage(self, target, damage));
+						int damage = A_BASE_DMG;
+						if (self.HasCopy())
+						{
+							commands.Add(AtomicCmd.ConsumeCopy(self, 1));
+							commands.Add(AtomicCmd.DealDamage(self, target, damage));
+							commands.Add(AtomicCmd.DealDamage(self, target, damage));
+						}
+						else
+						{
+							commands.Add(AtomicCmd.DealDamage(self, target, damage));
+						}
 					}
 					break;
 
