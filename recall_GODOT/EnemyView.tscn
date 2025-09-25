@@ -2,27 +2,38 @@
 
 [ext_resource type="Script" uid="uid://2xyuqvic1knc" path="res://UIScript/EnemyView.cs" id="1_4snxo"]
 
-[node name="EnemyView" type="Node2D" node_paths=PackedStringArray("HpLabel", "ShieldLabel", "IntentLabel")]
+[node name="EnemyView" type="Node2D" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HpLabel", "ShieldLabel")]
 script = ExtResource("1_4snxo")
-HpLabel = NodePath("HPLabel")
-ShieldLabel = NodePath("ShieldLabel")
-IntentLabel = NodePath("IntentLabel")
+IDLabel = NodePath("EnemyButton/IDLabel")
+IntentLabel = NodePath("EnemyButton/IntentLabel")
+HpLabel = NodePath("EnemyButton/HPLabel")
+ShieldLabel = NodePath("EnemyButton/ShieldLabel")
 
-[node name="HPLabel" type="Label" parent="."]
-offset_left = 116.0
-offset_top = 71.0
-offset_right = 262.0
-offset_bottom = 154.0
+[node name="EnemyButton" type="Button" parent="."]
+custom_minimum_size = Vector2(128, 128)
+offset_right = 128.0
+offset_bottom = 128.0
 
-[node name="ShieldLabel" type="Label" parent="."]
-offset_left = 1.0
-offset_top = 67.0
-offset_right = 95.0
-offset_bottom = 150.0
+[node name="IDLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
 
-[node name="IntentLabel" type="Label" parent="."]
-offset_left = 1.0
-offset_top = 1.0
-offset_right = 207.0
-offset_bottom = 35.0
-theme_override_font_sizes/font_size = 30
+[node name="IntentLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="EnemyButton"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0

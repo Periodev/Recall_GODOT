@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CombatCore;
 using CombatCore.Recall;
 using CombatCore.InterOp;
@@ -228,6 +229,13 @@ public partial class EchoPanel : Control
 
 		int? targetId = DetermineTargetId(_selectedAct.TargetType);
 
+		// 檢查是否需要目標但沒有有效目標
+		if (_selectedAct.TargetType == TargetType.Target && !targetId.HasValue)
+		{
+			ShowReason("請選取目標");
+			return;
+		}
+
 		// 呼叫 Combat 執行
 		CombatCtrl?.TryRunAct(_selectedAct, targetId);
 
@@ -261,16 +269,24 @@ public partial class EchoPanel : Control
 
 	/// <summary>
 	/// 根據 TargetType 決定目標 ID
-	private static int? DetermineTargetId(TargetType targetType)
+	private int? DetermineTargetId(TargetType targetType)
 	{
 		return targetType switch
 		{
 			TargetType.None => null,
 			TargetType.Self => 0,        // Player ID = 0
-			TargetType.Target => 1,      // Enemy ID = 1
+			TargetType.Target => GetSelectedEnemyId(), // 使用玩家選中的敵人 ID
 			TargetType.All => null,      // 全體攻擊，暫時用 null
 			_ => null
 		};
+	}
+
+	/// <summary>
+	/// 獲取當前選中的敵人 ID
+	/// </summary>
+	private int? GetSelectedEnemyId()
+	{
+		return CombatCtrl?.GetDefaultTargetId();
 	}
 
 	/// <summary>

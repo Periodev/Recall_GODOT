@@ -1,0 +1,216 @@
+[gd_scene load_steps=3 format=3 uid="uid://dyxyodjchs73t"]
+
+[ext_resource type="Script" uid="uid://yvb10jh0oejm" path="res://UIScript/EnemySlot.cs" id="1_h6bfu"]
+[ext_resource type="Script" uid="uid://d1b1lr88lca8j" path="res://UIScript/EnemyContainer.cs" id="1_ir0ck"]
+
+[node name="EnemyContainer" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ir0ck")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 0
+offset_right = 416.0
+offset_bottom = 280.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 3
+
+[node name="EnemySlot0" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
+
+[node name="IDLabel" type="Label" parent="GridContainer/EnemySlot0"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
+
+[node name="IntentLabel" type="Label" parent="GridContainer/EnemySlot0"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="GridContainer/EnemySlot0"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="GridContainer/EnemySlot0"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0
+
+[node name="EnemySlot1" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
+
+[node name="IDLabel" type="Label" parent="GridContainer/EnemySlot1"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
+
+[node name="IntentLabel" type="Label" parent="GridContainer/EnemySlot1"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="GridContainer/EnemySlot1"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="GridContainer/EnemySlot1"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0
+
+[node name="EnemySlot2" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
+
+[node name="IDLabel" type="Label" parent="GridContainer/EnemySlot2"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
+
+[node name="IntentLabel" type="Label" parent="GridContainer/EnemySlot2"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="GridContainer/EnemySlot2"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="GridContainer/EnemySlot2"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0
+
+[node name="EnemySlot3" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
+
+[node name="IDLabel" type="Label" parent="GridContainer/EnemySlot3"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
+
+[node name="IntentLabel" type="Label" parent="GridContainer/EnemySlot3"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="GridContainer/EnemySlot3"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="GridContainer/EnemySlot3"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0
+
+[node name="EnemySlot4" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
+
+[node name="IDLabel" type="Label" parent="GridContainer/EnemySlot4"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
+
+[node name="IntentLabel" type="Label" parent="GridContainer/EnemySlot4"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="GridContainer/EnemySlot4"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="GridContainer/EnemySlot4"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0
+
+[node name="EnemySlot5" type="Button" parent="GridContainer" node_paths=PackedStringArray("IDLabel", "IntentLabel", "HPLabel", "ShieldLabel")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+script = ExtResource("1_h6bfu")
+IDLabel = NodePath("IDLabel")
+IntentLabel = NodePath("IntentLabel")
+HPLabel = NodePath("HPLabel")
+ShieldLabel = NodePath("ShieldLabel")
+
+[node name="IDLabel" type="Label" parent="GridContainer/EnemySlot5"]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 23.0
+
+[node name="IntentLabel" type="Label" parent="GridContainer/EnemySlot5"]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+
+[node name="HPLabel" type="Label" parent="GridContainer/EnemySlot5"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 56.0
+offset_bottom = 87.0
+
+[node name="ShieldLabel" type="Label" parent="GridContainer/EnemySlot5"]
+layout_mode = 0
+offset_top = 102.0
+offset_right = 48.0
+offset_bottom = 128.0
