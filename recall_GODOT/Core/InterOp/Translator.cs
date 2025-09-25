@@ -138,12 +138,6 @@ namespace CombatCore.InterOp
 					}
 					break;
 
-				case HLAop.DoubleStrike:
-					int doubleDamage = A_BASE_DMG;
-					commands.Add(AtomicCmd.DealDamage(self, target, doubleDamage));
-					commands.Add(AtomicCmd.DealDamage(self, target, doubleDamage));
-					break;
-
 				case HLAop.Block:
 					int block = B_BASE_BLOCK;
 					if (self.HasCopy())
@@ -166,8 +160,18 @@ namespace CombatCore.InterOp
 						commands.Add(AtomicCmd.GainCharge(self, gain));
 					break;
 
+				// 非基本操作：使用 SkillEffects 系統處理
 				default:
-					return TranslationResult.Fail(FailCode.UnknownIntent);
+					try
+					{
+						var skillCommands = SkillEffects.BuildSkillCommands(act.Op, self, target);
+						commands.AddRange(skillCommands);
+					}
+					catch (NotImplementedException)
+					{
+						return TranslationResult.Fail(FailCode.UnknownIntent);
+					}
+					break;
 			}
 
 			return TranslationResult.Pass(commands.ToArray(), intent);
