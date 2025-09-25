@@ -67,6 +67,9 @@ public partial class Combat : Control
 
 		// 初始化 UI 顯示
 		RefreshAllUI();
+
+		CallDeferred(nameof(DelayedInitialization));
+
 	}
 
 	public override void _ExitTree()
@@ -183,6 +186,15 @@ public partial class Combat : Control
 		State.Player.DebugName = "Player";
 
 		var enemies = State.GetAllEnemies();
+
+		// 🔧 修復：將敵人初始綁定到 EnemyContainer 槽位
+		if (EnemyContainer != null)
+		{
+			for (int i = 0; i < enemies.Count && i < 6; i++) // 限制在6個槽位內
+			{
+				EnemyContainer.BindEnemyToSlot(i, enemies[i]);
+			}
+		}
 	}
 
 	private void RefreshAllUI()
@@ -205,6 +217,12 @@ public partial class Combat : Control
 
 		EchoPanel.RefreshPanel();
 
+	}
+
+	private void DelayedInitialization()
+	{
+		BindActorsToUI();
+		RefreshAllUI();
 	}
 
 	private void RefreshTimelineSnapshot()
