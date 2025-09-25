@@ -46,6 +46,7 @@ public partial class EnemySlot : Button
 		HPLabel.Text = "";
 		ShieldLabel.Text = "";
 		Disabled = true;
+		EnemyId = null;  // 重要：清空 EnemyId
 		//Visible = false;
 		// 清除選擇高亮
 		SetSelected(false);

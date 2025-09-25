@@ -94,6 +94,21 @@ public partial class EnemyContainer : Control
 			// 如果槽位沒有綁定敵人，保持空狀態（不做任何操作）
 		}
 
+		// 2. 為新敵人分配空槽位
+		var unboundEnemies = enemies.Where(e => !slots.Any(s => s?.EnemyId == e.Id)).ToList();
+		foreach (var newEnemy in unboundEnemies)
+		{
+			for (int i = 0; i < slots.Length; i++)
+			{
+				if (IsValidSlot(i) && !slots[i].EnemyId.HasValue)
+				{
+					BindEnemyToSlot(i, newEnemy);
+					GD.Print($"[EnemyContainer] Auto-bound {newEnemy.DebugName} to slot {i}");
+					break;
+				}
+			}
+		}
+
 		// 如果之前有選擇但現在沒有了，立即觸發選擇同步
 		if (hadSelection && (!selectedSlotIndex.HasValue || !IsSlotOccupied(selectedSlotIndex.Value)))
 		{

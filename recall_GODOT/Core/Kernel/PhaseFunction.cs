@@ -204,7 +204,36 @@ namespace CombatCore.Kernel
 				//TODO	SignalHub.NotifyEnemyIntentCleared(id);
 				//TODO	SignalHub.NotifyEnemyRemoved(id);
 			}
+
+			// === DEBUG: 壓力測試 ===
+#if DEBUG
+			//DebugSpawnEnemyTest(state);
+#endif
+
 		}
+
+		private static void DebugSpawnEnemyTest(CombatState state)
+		{
+			var aliveCount = state.GetAliveEnemies().Count;
+			var totalSlots = 6;
+			var maxSpawn = Math.Min(2, totalSlots - aliveCount);
+
+			for (int i = 0; i < maxSpawn; i++)
+			{
+
+				var newEnemy = new Actor(maxHP: 1, withAP: false, withCharge: false) { DebugName = "Enemy" };
+				state.AddEnemy(newEnemy);
+
+				Debug.Print($"[DEBUG] Spawned {newEnemy.DebugName} (ID:{newEnemy.Id}, HP:1)");
+			}
+
+			if (maxSpawn > 0)
+			{
+				// 觸發UI刷新事件
+				//SignalHub.NotifyEnemyListChanged();
+			}
+		}
+
 
 	}
 }
